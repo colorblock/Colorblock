@@ -1,0 +1,323 @@
+;(load "colorblock.repl")
+(env-data {
+  "ns": "free",
+  "cb-admin-keyset": {"keys": ["admin"]},
+  "cbmarket-admin-keyset": {"keys": ["colorblock-market"]},
+  "alice-keyset": {"keys": ["alice"]},
+  "bob-keyset": {"keys": ["bob"]},
+  "lucy-keyset": {"keys": ["lucy"]},
+  "upgrade": false
+})
+
+(begin-tx)
+;(define-namespace "free" (read-keyset 'cb-admin-keyset) (read-keyset 'cb-admin-keyset))
+(load "coin/fungible-v1.pact")
+(load "coin/coin.pact")
+(load "non-fungible-v1.pact")
+(load "colorblock.pact")
+(load "cbmarket.pact")
+(verify 'cbmarket)
+(typecheck 'cbmarket)
+(commit-tx)
+
+;; -----------------------------
+;; Initialiation
+;; -----------------------------
+
+(begin-tx)
+
+(coin.create-account "admin" (read-keyset "cb-admin-keyset"))
+(coin.create-account "bob" (read-keyset "bob-keyset"))
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]},
+  {"key": "bob", "caps": [(colorblock.OWN-ACCOUNT "bob")]}
+])
+(expect
+  "Create successfully for the first time"
+  "Write succeeded"
+  (colorblock.create-account-maybe "admin" (read-keyset "cb-admin-keyset"))
+)
+(expect
+  "Create successfully for the first time"
+  "Write succeeded"
+  (colorblock.create-account-maybe "bob" (read-keyset "bob-keyset"))
+)
+(expect 
+  "Create item for testing changing avatar"
+  "Write succeeded"
+  (colorblock.create-item "my-title" ["my-tag"] "my-desc" [
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+  ] "admin")
+)
+
+(commit-tx)
+
+;; -----------------------------
+;; interact with market
+;; -----------------------------
+
+
+(begin-tx)
+
+;
+; release
+;
+
+(env-sigs [{"key": "admin", "caps": []}])
+(expect-failure
+  "Release will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (cbmarket.release "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "admin" "colorblock-market" "FFFFFQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")]}])
+(expect-failure
+  "Release will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (cbmarket.release "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.TRANSFER "admin" "colorblock-market" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+  (colorblock.OWN-ACCOUNT "bob")
+]}])
+(expect-failure
+  "Release will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (cbmarket.release "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.TRANSFER "admin" "colorblock-market" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+  (colorblock.OWN-ACCOUNT "admin")
+]}])
+
+(expect-failure
+  "Release will fail as seller is not matched"
+  "Seller is not owner"
+  (cbmarket.release "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+(expect-failure
+  "Release will fail as item doesn't exist"
+  "row not found"
+  (cbmarket.release "admin" "FDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+(expect-failure
+  "Release will fail as price equals zero"
+  "Price must larger than zero"
+  (cbmarket.release "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 0.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.OWN-ACCOUNT "admin")
+]}])
+(expect
+  "There's no item on-sale"
+  0
+  (length (cbmarket.on-sale-items))
+)
+(expect
+  "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
+  "Write succeeded"
+  (cbmarket.release "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+(expect
+  "There's 1 item on-sale"
+  1
+  (length (cbmarket.on-sale-items))
+)
+(expect
+  "Item expected to have correct price"
+  10.0
+  (at 'price (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item expected to have correct seller"
+  "admin"
+  (at 'seller (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item expected to have correct on-sale status"
+  true
+  (at 'on-sale (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item owner expected to be market account"
+  "colorblock-market"
+  (colorblock.owner-of "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+)
+(expect
+  "admin expected to have no item anymore"
+  0
+  (colorblock.balance-of "admin")
+)
+(expect
+  "market account expected to have 1 item now"
+  1
+  (colorblock.balance-of "colorblock-market")
+)
+
+(commit-tx)
+
+(begin-tx)
+
+;
+; modification
+;
+
+(env-sigs [{"key": "admin", "caps": []}])
+(expect-failure
+  "Release will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure"
+  (cbmarket.modify "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 12.0)
+)
+(env-sigs [{"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]}])
+(cbmarket.modify "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 12.0)
+
+(commit-tx)
+
+
+(begin-tx)
+
+;
+; recall
+;
+
+(env-sigs [{"key": "bob", "caps": []}])
+(expect-failure
+  "Release will fail as account is not seller"
+  "Account is not seller"
+  (cbmarket.modify "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 12.0)
+)
+(expect-failure
+  "Release will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure"
+  (cbmarket.modify "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 12.0)
+)
+(env-sigs [{"key": "admin", "caps": []}])
+(expect
+  "Recall succeeds"
+  "Write succeeded"
+  (cbmarket.recall "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+)
+(expect
+  "Item expected to have correct price"
+  12.0
+  (at 'price (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item expected to have correct seller"
+  "admin"
+  (at 'seller (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item expected to have correct on-sale status"
+  false
+  (at 'on-sale (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item owner expected to be market account"
+  "admin"
+  (colorblock.owner-of "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+)
+(expect
+  "admin expected to have 1 item now"
+  1
+  (colorblock.balance-of "admin")
+)
+(expect
+  "market account expected to have 0 item now"
+  0
+  (colorblock.balance-of "colorblock-market")
+)
+
+(commit-tx)
+
+
+
+(begin-tx)
+
+;
+; purchase
+;
+
+(env-sigs [{"key": "bob", "caps": []}])
+(expect-failure
+  "Purchase will fail as item is not on sale"
+  "Item is not on sale"
+  (cbmarket.purchase "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+)
+
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.OWN-ACCOUNT "admin")
+]}])
+(expect
+  "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
+  "Write succeeded"
+  (cbmarket.release "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
+)
+
+; add-balance
+(test-capability (coin.CREDIT "bob"))
+(coin.credit "bob" (read-keyset "bob-keyset") 12.0)
+
+(commit-tx)
+(begin-tx)
+
+(env-sigs [{"key": "bob", "caps": [(coin.DEBIT "bob")]}])
+(expect
+  "Purchase succeeds with correct keyset and capability"
+  "Write succeeded"
+  (cbmarket.purchase "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+)
+(expect
+  "Item expected to have correct price"
+  10.0
+  (at 'price (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item expected to have correct seller"
+  "admin"
+  (at 'seller (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item expected to have correct on-sale status"
+  false
+  (at 'on-sale (at 0 (cbmarket.on-sale-items)))
+)
+(expect
+  "Item owner expected to be market account"
+  "bob"
+  (colorblock.owner-of "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+)
+(expect
+  "admin expected to have 0 item now"
+  0
+  (colorblock.balance-of "admin")
+)
+(expect
+  "bob expected to have 1 item now"
+  1
+  (colorblock.balance-of "bob")
+)
+(expect
+  "market account expected to have 0 item now"
+  0
+  (colorblock.balance-of "colorblock-market")
+)
+(expect
+  "admin account expected to have 10 coin now"
+  10.0
+  (coin.get-balance "admin")
+)
+(expect
+  "market account expected to have 0.1 coin now"
+  0.1
+  (coin.get-balance "colorblock-market")
+)
+(expect
+  "bob account expected to have 1.9 coin now"
+  1.9
+  (coin.get-balance "bob")
+)
+

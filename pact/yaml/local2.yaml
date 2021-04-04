@@ -1,0 +1,1 @@
+code: (coin.get-balance "bob")

@@ -1,0 +1,1 @@
+code: (format "{} {} {} {} {}" [(at "owner" (at 0 (colorblock.all-items))) (cbmarket.on-sale-items) (coin.get-balance "admin") (coin.get-balance "bob") (coin.get-balance "colorblock-market")])
