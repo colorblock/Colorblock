@@ -1,0 +1,7 @@
+.bucket {
+  @include icon($icon-bucket);
+
+  &:hover {
+    cursor: pointer;
+  }
+}

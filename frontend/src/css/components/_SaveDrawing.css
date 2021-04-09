@@ -1,0 +1,7 @@
+.save-drawing {
+  button {
+    @include button(gray);
+
+    width: 100%;
+  }
+}

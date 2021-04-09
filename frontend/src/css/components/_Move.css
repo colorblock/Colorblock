@@ -1,0 +1,7 @@
+.move {
+  @include icon($icon-move);
+
+  &:hover {
+    cursor: pointer;
+  }
+}

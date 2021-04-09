@@ -1,0 +1,11 @@
+.color-picker {
+  .color-picker__button {
+    @include icon($icon-paint-brush);
+
+    display: block;
+  }
+
+  &:hover {
+    cursor: pointer;
+  }
+}

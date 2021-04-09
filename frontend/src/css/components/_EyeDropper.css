@@ -1,0 +1,7 @@
+.eyedropper {
+  @include icon($icon-eyedropper);
+
+  &:hover {
+    cursor: pointer;
+  }
+}

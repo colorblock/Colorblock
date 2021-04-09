@@ -1,0 +1,22 @@
+.undo-redo {
+  lost-utility: clearfix;
+
+  button {
+    @include button(gray);
+
+    lost-column: 1/2 0 0.5em;
+    font-size: 1.2em;
+  }
+
+  .undo-redo__icon--undo {
+    @include icon($icon-undo);
+
+    display: block;
+  }
+
+  .undo-redo__icon--redo {
+    @include icon($icon-redo);
+
+    display: block;
+  }
+}
