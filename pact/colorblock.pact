@@ -17,14 +17,14 @@
           \   title: the title of item, fixed \
           \   tag: the tags of item, fixed \
           \   description: the tags of item, fixed \
-          \   frame: the width and height of each frame, need specify this for gif. [0 0] is default, fixed \
-          \   matrix: the rgb data of item, each sub-list is a row of rgb-matrix, unique, fixed \
+          \   frames: the list of data frame, each frame is rgb matrix, unique, fixed \
+          \   intervals: the intervals to control gif presentaion, in seconds, fixed \
           \   creator: the account of item creator, fixed \
           \   onwer: the account of current owner, changeable "
     @model [
       (invariant (!= "" title))
-      (invariant (!= [] frame))
-      (invariant (!= [] matrix))
+      (invariant (!= [] frames))
+      (invariant (!= [] intervals))
       (invariant (!= "" creator))
       (invariant (!= "" owner))
     ]
@@ -32,8 +32,8 @@
     title:string
     tag:[string]
     description:string
-    frame:[integer]
-    matrix:[[string]]
+    frames:[[[string]]]
+    intervals:[decimal]
     creator:string 
     owner:string
   )
@@ -154,23 +154,22 @@
   (defconst MIN_MATRIX_HEIGHT 4
     "The min height for rgb matrix"
   )
-  
   (defconst MAX_MATRIX_WIDTH 256
     "The max width for rgb matrix"
   )
   (defconst MAX_MATRIX_HEIGHT 256
     "The max height for rgb matrix"
   )
+  (defconst MAX_FRAMES_SIZE 65536
+    "The max size for frames"
+  )
 
   (defconst RGB_CELL_LENGTH 6
     "The length for every RGB cell in matrix"
   )
 
-  (defconst DEFAULT_FRAME_WIDTH 0
-    "The default width for frame, it means a static image"
-  )
-  (defconst DEFAULT_FRAME_HEIGHT 0
-    "The default height for frame, it means a static image"
+  (defconst MAX_INTERVAL 10.0
+    "The max interval limitation"
   )
 
   (defconst MAX_TITLE_LENGTH 64
@@ -203,14 +202,28 @@
     (enforce (!= "" account) "Empty identifier")
   )
 
-  (defun valid-matrix (matrix:[[string]])
+  (defun valid-frames (frames:[[[string]]])
+    @doc "check whether frames are valid \
+        \ max size can not exceed MAX_FRAMES_SIZE"
+    (enforce
+      (>= MAX_FRAMES_SIZE (fold (+) 0 (map (valid-matrix) frames)))
+      (format
+        "Frames total size could not exceed {}"
+        [MAX_FRAMES_SIZE]
+      )
+    )
+  )
+
+  (defun valid-matrix:integer (matrix:[[string]])
     @doc "check whether matrix conforms to following rules: \
         \1. matrix is a list with length ranging from min-const to max-const \
         \2. each element of matrix is also a list \
         \3. each element of sub-list is string with fix-const length \
         \4. each element of sub-list is string in specific charset \
         \5. all sub-lists have same element lengths \
-        \6. these same lengths range from min-const to max-const "
+        \6. these same lengths range from min-const to max-const \
+        \\
+        \ return matrix size = width * height "
     
     ; Validate Rule-1
     (enforce 
@@ -242,6 +255,15 @@
 
     ; Validate other rules in each sub-list
     (map (valid-matrix-row) matrix)
+
+    ; Return matrix size
+    (let 
+      (
+        (height (length matrix))
+        (width (length (at 0 matrix)))
+      )
+      (* width height)
+    )
   )
 
   (defun valid-matrix-row (sub-list:[string])
@@ -284,6 +306,26 @@
     )
   )
 
+  (defun valid-intervals
+    ( intervals:[decimal]
+      frame-count:integer
+    )
+    @doc " Check whether intervals conforms to following rules: \
+        \1.each interval not larger than MAX_INTERVAL \
+        \2.interval count equals frame-count "
+    (enforce
+      (>= MAX_INTERVAL (at 0 (reverse (sort intervals))))
+      (format
+        "Interval could not larger than {}"
+        [MAX_INTERVAL]
+      )
+    )
+    (enforce
+      (= frame-count (length intervals))
+      "Interval count must equal to frame count"
+    )
+  )
+
 
   (defun null-owner-guard ()
     (create-module-guard NULL_OWNER)
@@ -297,25 +339,8 @@
     ( title:string 
       tag:[string]
       description:string
-      matrix:[[string]]
-      creator:string 
-    )
-    (create-item-with-frame
-      title
-      tag
-      description
-      [DEFAULT_FRAME_WIDTH DEFAULT_FRAME_HEIGHT]
-      matrix
-      creator
-    )
-  )
-
-  (defun create-item-with-frame
-    ( title:string 
-      tag:[string]
-      description:string
-      frame:[integer]
-      matrix:[[string]]
+      frames:[[[string]]]
+      intervals:[decimal]
       creator:string 
     )
 
@@ -366,28 +391,16 @@
       "Creator can not be empty"
     )
 
-    ; Validate matrix, make sure it conforms to standards
-    (valid-matrix matrix)
+    ; Validate frames, make sure it conforms to standards
+    (valid-frames frames)
 
-    ; Validate frame
-    (enforce
-      (and 
-        (= 2 (length frame))
-        (and
-          (<= 0 (at 0 (sort frame)))
-          (and
-            (>= (length (at 0 matrix)) (at 0 frame))
-            (>= (length matrix) (at 1 frame))
-          )
-        )
-      )
-      "Illegal width or height of frame"
-    )
+    ; Validate intervals
+    (valid-intervals intervals (length frames))
 
     ; Insert into DB
     (let
       ; Create hash with matrix
-      ((id (hash matrix)))
+      ((id (hash frames)))
       
       ; Acquire capability
       (with-capability (OWN-ACCOUNT creator)
@@ -397,8 +410,8 @@
             "title" : title,
             "tag" : tag,
             "description" : description,
-            "frame" : frame,
-            "matrix" : matrix,
+            "frames" : frames,
+            "intervals" : intervals,
             "creator" : creator,
             "owner" : creator
           })

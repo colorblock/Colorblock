@@ -170,12 +170,12 @@
 (expect 
   "Create item for testing changing avatar"
   "Write succeeded"
-  (colorblock.create-item "my-title" ["my-tag"] "my-desc" [
+  (colorblock.create-item "my-title" ["my-tag"] "my-desc" [[
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "bob")
+  ]] [1.0] "bob")
 )
 
 (commit-tx)
@@ -277,18 +277,18 @@
 (expect-failure 
   "Creating will fail as title is blank" 
   "Title can not be empty"
-  (colorblock.create-item "" ["tag"] "" [["a"]] "admin")
+  (colorblock.create-item "" ["tag"] "" [[["a"]]] [1.0] "admin")
 )
 (expect-failure 
   "Creating will fail as tag length limit exceeded" 
   "Illegal tag: length larger than"
-  (colorblock.create-item "title" ["asdasdasdasdasdsadasddddddddddddddddddddddd"] "description" [] "admin")
+  (colorblock.create-item "title" ["asdasdasdasdasdsadasddddddddddddddddddddddd"] "description" [] [] "admin")
 )
 (expect-failure 
   "Creating will fail as tag count limit exceeded" 
   "Illegal tag: more than"
   (colorblock.create-item "title" ["sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd"] 
-   "description" [] "admin")
+   "description" [] [] "admin")
 )
 (expect-failure 
   "Creating will fail as description length limit exceeded" 
@@ -297,59 +297,59 @@
     "title" 
     ["sds" "sds" "sdsad" "sd"] 
     "description-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 
-    [] 
+    [] [] 
     "admin"
   )
 )
 (expect-failure 
   "Creating will fail as matrix is blank" 
   "matrix height expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" [] "admin")
+  (colorblock.create-item "title" ["tag"] "description" [[]] [] "admin")
 )
 (expect-failure
   "Creating will fail as creator is blank" 
   "creator can not be empty"
-  (colorblock.create-item "title" ["tag"] "description" [["a"]] "")
+  (colorblock.create-item "title" ["tag"] "description" [[["a"]]] [] "")
 )
 (expect-failure
   "Creating will fail as matrix height not matched"
   "matrix height expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" [["a"]] "admin")
+  (colorblock.create-item "title" ["tag"] "description" [[["a"]]] [] "admin")
 )
 (expect-failure
   "Creating will fail as matrix width not matched"
   "matrix width expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" [["a"] ["b"] ["c"] ["d"]] "admin")
+  (colorblock.create-item "title" ["tag"] "description" [[["a"] ["b"] ["c"] ["d"]]] [] "admin")
 )
 (expect-failure
   "Creating will fail as matrix cell length not matched"
   "matrix cell content expected as string with"
-  (colorblock.create-item "title" ["tag"] "description" [["a" "b" "c" "d"] ["a" "b" "c" "d"] ["a" "b" "c" "d"] ["a" "b" "c" "d"] ] "admin")
+  (colorblock.create-item "title" ["tag"] "description" [[["a" "b" "c" "d"] ["a" "b" "c" "d"] ["a" "b" "c" "d"] ["a" "b" "c" "d"]]] [] "admin")
 )
 (expect-failure
   "Creating will fail as matrix HEX format not matched"
   "Char.digitToInt: not a digit"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["abcdef" "bcdefg" "cdefgh" "defghi"] 
     ["abcdef" "bcdefg" "cdefgh" "defghi"] 
     ["abcdef" "bcdefg" "cdefgh" "defghi"] 
     ["abcdef" "bcdefg" "cdefgh" "defghi"] 
-  ] "admin")
+  ]] [] "admin")
 )
 (expect-failure
   "Creating will fail as matrix rows' lengths not matched"
   "matrix rows' lengths expected same, but got different lengths"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd" "eeeeee"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
+  ]] [] "admin")
 )
 (expect-failure
   "Creating will fail as matrix height not matched"
   "matrix height expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
@@ -640,27 +640,37 @@
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
+  ]] [] "admin")
 )
 (expect-failure
   "Creating will fail as matrix width not matched"
   "matrix width expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd"]
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd"]
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd"]
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd" "aaaaaa" "bbbbbb" "cccccc" "dddddd"]
-  ] "admin")
+  ]] [] "admin")
 )
 (expect-failure
   "Creating will fail as it try inserting totally same matrix"
   "row found for key"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
+  ]] [1.0] "admin")
+)
+(expect-failure
+  "Creating will fail as it try inserting totally same matrix"
+  "row found for key"
+  (colorblock.create-item "title" ["tag"] "description" [[
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+  ]] [1.0] "admin")
 )
 
 (commit-tx)
@@ -670,53 +680,42 @@
 (expect-failure
   "Creating will fail as Key doesn't match"
   "Managed capability not installed"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "bob")
+  ]] [1.0] "bob")
 )
 (expect
   "Creating will success"
   "Write succeeded"
-  (colorblock.create-item "title" ["tag"] "description" [
+  (colorblock.create-item "title" ["tag"] "description" [[
     ["000000" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ] "admin"
+    ]] [1.0] "admin"
   )
 )
 (expect-failure
-  "with no frame arguments"
-  "argument"
-  (colorblock.create-item-with-frame "title" ["tag"] "description" [
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
-)
-(expect-failure
-  "Creating will fail with wrong frame arguments"
-  "Illegal width or height of frame"
-  (colorblock.create-item-with-frame "title" ["tag"] "description" [-1, -1] [
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
-)
-(expect-failure
-  "Creating will fail with wrong frame arguments"
-  "Illegal width or height of frame"
-  (colorblock.create-item-with-frame "title" ["tag"] "description" [5, 5] [
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
+  "Creating will fail as intervals count not equal to frame"
+  "Interval count must equal to frame count"
+  (colorblock.create-item "title" ["tag"] "description" [
+    [
+      ["000000" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+    [
+      ["000000" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+  ] [1.0] "admin"
+  )
 )
 
 (commit-tx)
@@ -726,13 +725,26 @@
 (expect
   "Creating will success"
   "Write succeeded"
-  (colorblock.create-item-with-frame "title" ["tag"] "description" [3, 4] [
-    ["aaaaaa" "bbbbbb" "cccccc" "ddddde"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-    ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
-  ] "admin")
+  (colorblock.create-item "title" ["tag"] "description" [
+    [
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+    [
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+  ] [1.0 2.0] "admin"
+  )
 )
+
+
+(commit-tx)
+(begin-tx)
 
 ;
 ; query item
@@ -788,72 +800,86 @@
 (expect-failure
   "Tanfering will fail as arguments in caps must be consistent with function"
   "Managed capability not installed"
-  (colorblock.transfer "admin" "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer "admin" "bob" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
+
 (commit-tx)
 (begin-tx)
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+  (colorblock.TRANSFER "admin" "bob" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"),
+  (colorblock.OWN-ACCOUNT "admin")]}
+])
+
+(expect
+  "Tanfering will success"
+  "Write succeeded"
+  (colorblock.transfer "admin" "bob" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
+)
+
+(commit-tx)
+(begin-tx)
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.TRANSFER "admin" "bob" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"),
   (colorblock.OWN-ACCOUNT "admin")]}
 ])
 
 (expect-failure
   "Tanfering will fail as sender must be owner of item"
   "Sender is not owner"
-  (colorblock.transfer "admin" "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer "admin" "bob" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "bob" "alice" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "bob" "alice" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")]}])
 (expect-failure
   "Tanfering will fail as signer doesn't match with sender in caps"
   "Managed capability not installed"
-  (colorblock.transfer "bob" "alice" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer "bob" "alice" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 (env-sigs [{"key": "bob", "caps": [
-  (colorblock.TRANSFER "bob" "alice" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+  (colorblock.TRANSFER "bob" "alice" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"),
   (colorblock.OWN-ACCOUNT "bob")
 ]}])
 (expect-failure
   "Tanfering will fail as receiver doesn't exist"
   "row not found"
-  (colorblock.transfer "bob" "alice" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer "bob" "alice" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
-(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "bob" "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")]}])
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "bob" "admin" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")]}])
 (expect
   "Owner is belong to old account"
   "bob"
-  (colorblock.owner-of "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.owner-of "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 
 (env-sigs [{"key": "bob", "caps": [
-  (colorblock.TRANSFER "bob" "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+  (colorblock.TRANSFER "bob" "admin" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"),
   (colorblock.OWN-ACCOUNT "bob")
 ]}])
 
 (expect
   "Tanfering will fail as sender must be owner of item"
   "Write succeeded"
-  (colorblock.transfer "bob" "admin" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer "bob" "admin" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 (expect
   "Owner is swithed to new account"
   "admin"
-  (colorblock.owner-of "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.owner-of "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "alice" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+  (colorblock.TRANSFER "admin" "alice" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"),
   (colorblock.OWN-ACCOUNT "admin")
 ]}])
 
 (expect
   "Tanfer successfuly when add creating phase"
   "Write succeeded"
-  (colorblock.transfer-create "admin" "alice" (read-keyset "alice-keyset") "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer-create "admin" "alice" (read-keyset "alice-keyset") "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 (expect
   "Owner is swithed to new account"
   "alice"
-  (colorblock.owner-of "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.owner-of "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 (expect
   "Account is created after transfer-create"
@@ -862,7 +888,7 @@
 )
 (env-sigs [
   {"key": "alice", "caps": [
-    (colorblock.TRANSFER "alice" "bob" "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA"),
+    (colorblock.TRANSFER "alice" "bob" "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"),
     (colorblock.OWN-ACCOUNT "alice")
   ]},
   {"key": "bob", "caps": []}
@@ -870,5 +896,5 @@
 (expect-failure
   "Tanfering will fail as receiver already exists"
   "row found for key bob"
-  (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")
+  (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
