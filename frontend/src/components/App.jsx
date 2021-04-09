@@ -1,6 +1,6 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import CookieConsent from 'react-cookie-consent';
-import Header from './Header';
 import PreviewBox from './PreviewBox';
 import PixelCanvasContainer from './PixelCanvas';
 import CellSizeContainer from './CellSize';
@@ -26,7 +26,7 @@ import UndoRedoContainer from './UndoRedo';
 import initialSetup from '../utils/startup';
 import drawHandlersProvider from '../utils/drawHandlersProvider';
 
-export default class App extends React.Component {
+class App extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -75,7 +75,29 @@ export default class App extends React.Component {
           fadeOutTime={1500}
           duration={1500}
         />
-        <Header />
+        <header> 
+          <div className="left col-2-3">
+            <h1>COLORBLOCK</h1>
+          </div>
+          <div className="right col-1-3">
+            <div className="wallet-entry">
+              <button
+                type='button'
+                onClick={() => {
+                  this.changeModalType('wallet');
+                }}
+                data-tooltip={
+                  helpOn ? 'Connect to wallet' : null
+                }
+              >
+              { this.props.account ? 
+                `${this.props.account.slice(0, 4)}**${this.props.account.slice(-4)}` :
+                'connect to wallet' 
+              }
+              </button>
+            </div>
+          </div>
+        </header>
         <div
           className="app__frames-container"
           data-tooltip={
@@ -282,3 +304,9 @@ export default class App extends React.Component {
     );
   }
 }
+
+const mapStateToProps = state => ({
+  account: state.present.get('account')
+});
+
+export default connect(mapStateToProps)(App);

@@ -189,6 +189,13 @@ export function changeHoveredCell(cell) {
   };
 }
 
+export function setAccount(account) {
+  return {
+    type: types.SET_ACCOUNT,
+    account
+  };
+}
+
 export function undo() {
   return ActionCreators.undo();
 }
@@ -196,3 +203,4 @@ export function undo() {
 export function redo() {
   return ActionCreators.redo();
 }
+

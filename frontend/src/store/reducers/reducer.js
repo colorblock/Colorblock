@@ -12,7 +12,8 @@ function setInitialState(state) {
     cellSize,
     loading: false,
     notifications: List(),
-    duration: 1
+    duration: 1,
+    account: ''
   };
 
   return state.merge(initialState);
@@ -58,6 +59,10 @@ function generateDefaultState() {
   return setInitialState(Map(), { type: types.SET_INITIAL_STATE, state: {} });
 }
 
+function setAccount(state, account) {
+  return state.set('account', account);
+}
+
 const pipeReducers = reducers => (initialState, action) =>
   reducers.reduce((state, reducer) => reducer(state, action), initialState);
 
@@ -81,6 +86,8 @@ function partialReducer(state, action) {
       return setInitialState(state);
     case types.UPDATE_GRID_BOUNDARIES:
       return updateGridBoundaries(state, action);
+    case types.SET_ACCOUNT:
+      return setAccount(state, action.account);
     default:
   }
   return state;

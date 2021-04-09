@@ -8,19 +8,37 @@ import {
   clearAllBodyScrollLocks
 } from 'body-scroll-lock';
 import * as actionCreators from '../store/actions/actionCreators';
-
+import zelcoreImg from '../assets/zelcore.png';
 import RadioSelector from './RadioSelector';
 import LoadDrawing from './LoadDrawing';
 import Preview from './Preview';
 import CopyCSS from './CopyCSS';
 import DownloadDrawing from './DownloadDrawing';
 import KeyBindingsLegend from './KeyBindingsLegend';
+import { Button, Wrapper, Menu, MenuItem } from 'react-aria-menubutton';
 
 class Modal extends React.Component {
   static generateRadioOptions(props) {
     let options;
 
-    if (props.type !== 'load') {
+    if (props.type == 'wallet') {
+      options = [
+        {
+          value: 'zelcore',
+          description: 'Zelcore',
+          labelFor: 'Zelcore',
+          id: 1
+        },
+        {
+          value: 'chainweaver',
+          description: 'Chainweaver',
+          labelFor: 'Chainweaver',
+          id: 2
+        }
+      ];
+    }
+
+    else if (props.type !== 'load') {
       options = [
         {
           value: 'single',
@@ -88,7 +106,10 @@ class Modal extends React.Component {
     super(props);
     this.state = {
       previewType: 'single',
-      loadType: 'storage'
+      loadType: 'storage',
+      walletType: 'zelcore',
+      accounts: [],
+      selectedAccount: null
     };
     this.modalBodyRef = React.createRef();
     this.modalContainerRef = React.createRef();
@@ -100,6 +121,26 @@ class Modal extends React.Component {
     this.changeRadioType = this.changeRadioType.bind(this);
     this.scrollTop = () => this.modalBodyRef.current.scrollTo(0, 0);
     ModalReact.setAppElement('body');
+  }
+
+  mkReq(cmd) {
+    return {
+      headers: {
+        "Content-Type": "application/json"
+      },
+      method: "POST",
+      body: JSON.stringify(cmd)
+    }
+  }
+
+  async connectToWallet() {
+    const url = 'http://127.0.0.1:9467/v1/accounts';
+    const cmd = { asset: 'kadena' };
+    const result = await fetch(url, this.mkReq(cmd)).then(res => res.json());
+    const accounts = result.data;
+    this.setState({
+      accounts: accounts
+    });
   }
 
   componentWillUnmount() {
@@ -201,6 +242,93 @@ class Modal extends React.Component {
         );
         radioOptions = null;
         break;
+      case 'wallet':
+        content = (
+          <>
+            <div className="center">
+              <span>Choose Your Wallet</span>
+            </div>
+            <div>
+              <div className='modal__wallet-type'>
+                <RadioSelector
+                  name='wallet-type'
+                  selected={this.state.walletType}
+                  change={this.changeRadioType}
+                  options={options}
+                />
+              </div>
+            </div>
+            <div>
+              First step:
+              <br />
+              Log into your {this.state.walletType} wallet, and turn on server option. 
+            </div>
+            <div>
+              <img src={zelcoreImg} alt="zelcore" />
+            </div>
+            <br />
+            <div>
+              Second step:
+              <br />
+              Click the button below to connect to wallet, and confirm on the wallet page.
+            </div>
+            <div>
+              <button
+                type='button'
+                onClick={ () => this.connectToWallet() }
+              >
+              Connect to {this.state.walletType}
+              </button>
+            </div>
+            <br />
+            <div>
+              Last step:
+              <br />
+              select your {this.state.walletType} account below.
+            </div>
+            <div>
+              <Wrapper
+                className='AriaMenuButton'
+                onSelection={(account) => {
+                  this.setState({
+                    selectedAccount : account
+                  });
+                }}
+              >
+                <Button 
+                  className='AriaMenuButton-trigger'>
+                  { this.state.selectedAccount || 'select an account' }
+                </Button>
+                <Menu>
+                  <ul className='AriaMenuButton-menu'>
+                  {
+                    this.state.accounts.map((word, i) => {
+                      return (
+                        <li key={i}>
+                          <MenuItem className='MyMenuButton-menuItem'>
+                            {word}
+                          </MenuItem>
+                        </li>
+                      );
+                    })
+                  }</ul>
+                </Menu>
+              </Wrapper>
+            </div>
+            <div>
+              <button
+                type='button'
+                onClick={ () => {
+                  props.actions.setAccount(this.state.selectedAccount);
+                  this.closeModal();
+                }}
+              >
+              Let's start
+              </button>
+            </div>
+          </>
+        );
+        break;
       default:
         content = <>{previewBlock}</>;
         break;
@@ -213,7 +341,7 @@ class Modal extends React.Component {
             x
           </button>
         </div>
-        {radioOptions}
+        { props.type !== 'wallet' ? radioOptions : null }
         <div className="modal__body" ref={this.modalBodyRef}>
           {content}
         </div>
@@ -225,6 +353,8 @@ class Modal extends React.Component {
     const newState = {};
     this.scrollTop();
     switch (type) {
+      case 'wallet-type':
+        newState.walletType = value;
       case 'load-type':
         newState.loadType = value;
         break;
