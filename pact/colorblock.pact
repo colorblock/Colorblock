@@ -15,7 +15,7 @@
           \ Column definitions: \
           \   id @key: hash by item matrix \
           \   title: the title of item, fixed \
-          \   tag: the tags of item, fixed \
+          \   tags: the tags of item, fixed \
           \   description: the tags of item, fixed \
           \   frames: the list of data frame, each frame is rgb matrix, unique, fixed \
           \   intervals: the intervals to control gif presentaion, in seconds, fixed \
@@ -30,7 +30,7 @@
     ]
 
     title:string
-    tag:[string]
+    tags:[string]
     description:string
     frames:[[[string]]]
     intervals:[decimal]
@@ -179,7 +179,7 @@
     "The max num of item tags"
   )
   (defconst MAX_TAG_LENGTH 32
-    "The max length of item tag"
+    "The max length of item tags"
   )
   (defconst MAX_DESCRIPTION_LENGTH 256
     "The max length of item description"
@@ -337,7 +337,7 @@
 
   (defun create-item
     ( title:string 
-      tag:[string]
+      tags:[string]
       description:string
       frames:[[[string]]]
       intervals:[decimal]
@@ -363,19 +363,19 @@
       )
     )
     (enforce
-      (>= MAX_TAG_NUM (length tag))
+      (>= MAX_TAG_NUM (length tags))
       (format
-        "Illegal tag: more than {}"
+        "Illegal tags: more than {}"
         [ MAX_TAG_NUM ]
       )
     )
     (enforce
       (or
-        (= 0 (length tag))
-        (>= MAX_TAG_LENGTH (at 0 (reverse (sort (map (length) tag)))))
+        (= 0 (length tags))
+        (>= MAX_TAG_LENGTH (at 0 (reverse (sort (map (length) tags)))))
       )
       (format
-        "Illegal tag: length larger than {}"
+        "Illegal tags: length larger than {}"
         [ MAX_TAG_LENGTH ]
       )
     )
@@ -408,7 +408,7 @@
           ; Add entry, setting creator as owner
           (insert items id {
             "title" : title,
-            "tag" : tag,
+            "tags" : tags,
             "description" : description,
             "frames" : frames,
             "intervals" : intervals,

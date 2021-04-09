@@ -281,12 +281,12 @@
 )
 (expect-failure 
   "Creating will fail as tag length limit exceeded" 
-  "Illegal tag: length larger than"
+  "Illegal tags: length larger than"
   (colorblock.create-item "title" ["asdasdasdasdasdsadasddddddddddddddddddddddd"] "description" [] [] "admin")
 )
 (expect-failure 
   "Creating will fail as tag count limit exceeded" 
-  "Illegal tag: more than"
+  "Illegal tags: more than"
   (colorblock.create-item "title" ["sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd"] 
    "description" [] [] "admin")
 )
