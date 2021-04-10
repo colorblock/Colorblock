@@ -56,25 +56,3 @@ export const getDataFromPactServer = async (code) => {
   return result;
 
 };
-
-/*
-  useEffect(() => {
-    const sendPactCmd = async () => {
-      console.log(signingCmd)
-      const signingResult = await fetch('http://127.0.0.1:9467/v1/sign', mkReq(signingCmd)).then(res => res.json())
-      console.log(signingResult)
-      const signedCmd = {
-        cmds: [
-          signingResult.body
-        ]
-      }
-      console.log(signedCmd)
-      const result = await fetch(`${network}/api/v1/send`, mkReq(signedCmd)).then(res => res.json())
-      console.log(result)
-    }
-
-    //sendPactCmd()
-    getLocalData()
-  }, [])
-
-*/

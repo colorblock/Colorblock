@@ -1,4 +1,6 @@
 import formatPixelColorOutput from './color';
+import shortid from 'shortid';
+import { List, Map } from 'immutable';
 
 /*
  *  arrayChunks
@@ -62,7 +64,7 @@ const generateFramesOutput = ({ frames, columns, options }) =>
     );
 
 export const arrayToMatrix = (frameList, columns, rows) => {
-  // convert array list to matxi list
+  // convert array list to matrix list
   return frameList.map(frame => {
     let grid = frame.grid.map(str => str.slice(1));
     // suppose grid length = columns * rows here
@@ -73,6 +75,30 @@ export const arrayToMatrix = (frameList, columns, rows) => {
       grid = grid.slice(columns);
     }
     return matrix;
+  });
+};
+
+export const matrixToArray = (frames, intervals) => {
+  // convert matrix list to array list
+  const duration = Math.max(...intervals);
+  const columns = frames[0][0].length;
+  const rows = frames[0].length;
+  const frameList = frames.map((matrix, index) => {
+    const grid = matrix.map(row => row.map(str => `#${str}`)).flat();
+    const interval = Math.floor(100 * intervals[index] / duration);
+    const key = shortid.generate();
+    const frame = {
+      grid,
+      interval,
+      key
+    }
+    return frame;
+  });
+  return Map({
+    list: List(frameList),
+    columns,
+    rows,
+    duration
   });
 };
 

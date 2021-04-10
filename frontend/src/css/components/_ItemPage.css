@@ -1,0 +1,10 @@
+.item-page {
+  .preview {
+    margin: 0 auto;
+  }
+
+  .item-info {
+    text-align: center;
+    color: white;
+  }
+}

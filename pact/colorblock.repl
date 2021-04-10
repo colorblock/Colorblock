@@ -186,7 +186,7 @@
 (let 
   (
     (
-    key (at 0 (colorblock.items-of "bob"))
+    key (at 'id (at 0 (colorblock.items-of "bob")))
     )
   )
   (expect
@@ -209,7 +209,7 @@
 (let 
   (
     (
-    key (at 0 (colorblock.items-of "bob"))
+    key (at 'id (at 0 (colorblock.items-of "bob")))
     )
   )
   (expect-failure
@@ -241,7 +241,7 @@
 (let 
   (
     (
-    key (at 0 (colorblock.items-of "bob"))
+    key (at 'id (at 0 (colorblock.items-of "bob")))
     )
   )
   (expect
@@ -924,3 +924,11 @@
   "row found for key bob"
   (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
+
+
+(expect
+  "Get all records"
+  "[*]"
+  (typeof (colorblock.item-records "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"))
+)
+
