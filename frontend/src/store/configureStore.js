@@ -37,7 +37,7 @@ const configureStore = devMode => {
     store = createStore(
       undoable(reducer, {
         filter: createIncludedActions(),
-        debug: true,
+        debug: false,
         ignoreInitialState: true
       }),
       window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()

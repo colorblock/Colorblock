@@ -70,7 +70,7 @@
     }
   }
 
-  .app__copycss-button {
+  .app__upload-button {
     @include button(white);
 
     width: 100%;

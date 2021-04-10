@@ -4,6 +4,7 @@
   "alice-keyset": {"keys": ["alice"]},
   "bob-keyset": {"keys": ["bob"]},
   "lucy-keyset": {"keys": ["lucy"]},
+  "jack-keyset": {"keys": ["jack"]},
   "upgrade": false
 })
 
@@ -29,6 +30,7 @@
 (coin.create-account "bob" (read-keyset "bob-keyset"))
 (coin.create-account "alice" (read-keyset "alice-keyset"))
 (coin.create-account "lucy" (read-keyset "lucy-keyset"))
+(coin.create-account "jack" (read-keyset "jack-keyset"))
 
 ;
 ; create account in COLORBLOCK module
@@ -742,6 +744,30 @@
   )
 )
 
+(commit-tx)
+(begin-tx)
+(env-sigs [{"key": "jack", "caps": [(colorblock.OWN-ACCOUNT "jack")]}])
+
+(expect
+  "Creating will success"
+  "Write succeeded"
+  (colorblock.create-item-with-new-user "title" ["tag"] "description" [
+    [
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+    [
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["cccccc" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+  ] [1.0 2.0] "jack" (read-keyset "jack-keyset")
+  )
+)
+
 
 (commit-tx)
 (begin-tx)
@@ -751,7 +777,7 @@
 ;
 (expect
   "get right num of items"
-  3
+  4
   (length (colorblock.all-items))
 )
 

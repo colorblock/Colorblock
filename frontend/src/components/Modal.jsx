@@ -12,10 +12,12 @@ import zelcoreImg from '../assets/zelcore.png';
 import RadioSelector from './RadioSelector';
 import LoadDrawing from './LoadDrawing';
 import Preview from './Preview';
-import CopyCSS from './CopyCSS';
+import Form from './Form';
 import DownloadDrawing from './DownloadDrawing';
 import KeyBindingsLegend from './KeyBindingsLegend';
 import { Button, Wrapper, Menu, MenuItem } from 'react-aria-menubutton';
+import { arrayToMatrix } from '../utils/outputParse';
+import { sendToPactServer, getDataFromPactServer } from '../utils/wallet';
 
 class Modal extends React.Component {
   static generateRadioOptions(props) {
@@ -119,8 +121,14 @@ class Modal extends React.Component {
       props.close();
     };
     this.changeRadioType = this.changeRadioType.bind(this);
+    this.onSubmit = this.onSubmit.bind(this);
+    this.fetchAllProjects = this.fetchAllProjects.bind(this);
     this.scrollTop = () => this.modalBodyRef.current.scrollTo(0, 0);
     ModalReact.setAppElement('body');
+  }
+
+  componentWillUnmount() {
+    clearAllBodyScrollLocks();
   }
 
   mkReq(cmd) {
@@ -143,8 +151,56 @@ class Modal extends React.Component {
     });
   }
 
-  componentWillUnmount() {
-    clearAllBodyScrollLocks();
+  async onSubmit(values) {
+    const { title, tags, description } = values;
+    const { selectedAccount, previewType } = this.state;
+    const { account, frames, columns, rows, duration, activeFrameIndex } = this.props;
+    const frameList = frames.toJS();
+    let newFrames = arrayToMatrix(frameList, columns, rows);
+    let intervals = frameList.map(frame => Math.round(frame.interval * duration) / 100);
+    if (previewType === 'single') {
+      newFrames = newFrames.slice(activeFrameIndex, activeFrameIndex + 1);
+      intervals  = [duration];
+    }
+    const type = 1;
+    const code = `(colorblock.create-item "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}")`;
+    console.log('on Submit3', code);
+    const cmd = {
+      //code: `(colorblock.create-item "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}")`,
+      code: `(colorblock.create-item-with-new-user "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}" (read-keyset "accountKeyset"))`,
+      caps: [{
+        role: 'Identity Verification',
+        description: 'Identity Verification',
+        cap: {
+          name: 'colorblock.OWN-ACCOUNT',
+          args: [account]
+        }
+      }],
+      sender: account,
+      signingPubKey: account,
+      data: {
+        accountKeyset: { 
+          keys: [account],
+          pred: 'keys-all'
+        },
+        tags,
+        frames: newFrames,
+        intervals
+      }
+    };
+    const result = await sendToPactServer(cmd);
+    console.log('ready to fetch all projects');
+    await this.fetchAllProjects();
+  }
+
+  async fetchAllProjects() {
+    console.log('in fetch all projects');
+    const { account } = this.props;
+    //const code = `(colorblock.items-of "${account}")`;
+    const code = `(colorblock.items-of "admin")`;
+    //const code = `(colorblock.all-items)`;
+    //const code = `(colorblock.details "${account}")`;
+    const result = getDataFromPactServer(code);
   }
 
   getModalContent(props) {
@@ -201,19 +257,30 @@ class Modal extends React.Component {
           />
         );
         break;
-      case 'copycss':
+      case 'upload':
         content = (
           <>
-            {previewBlock}
-            <CopyCSS
-              frames={props.frames}
-              columns={props.columns}
-              rows={props.rows}
-              cellSize={props.cellSize}
-              activeFrameIndex={props.activeFrameIndex}
-              animationCode={previewType !== 'single'}
-              duration={props.duration}
-            />
+            <div className="col-2-4">
+              <div className="modal__preview--wrapper">
+                <Preview
+                  key="0"
+                  frames={props.frames}
+                  columns={props.columns}
+                  rows={props.rows}
+                  cellSize={ 20 * 16 / props.columns}
+                  duration={props.duration}
+                  activeFrameIndex={props.activeFrameIndex}
+                  animate={previewType === 'animation'}
+                />
+              </div>
+            </div>
+            <div className="col-2-4">
+              <Form 
+                frames={props.frames}
+                onSubmit={ this.onSubmit }
+              />
+              <button onClick={ this.fetchAllProjects }>For Test Local CMD</button>
+            </div>
           </>
         );
         break;
@@ -297,7 +364,7 @@ class Modal extends React.Component {
               >
                 <Button 
                   className='AriaMenuButton-trigger'>
-                  { this.state.selectedAccount || 'select an account' }
+                  { this.props.selectedAccount || 'select an account' }
                 </Button>
                 <Menu>
                   <ul className='AriaMenuButton-menu'>
@@ -392,6 +459,7 @@ const mapStateToProps = state => {
   const frames = state.present.get('frames');
   const activeFrameIndex = frames.get('activeIndex');
   return {
+    account: state.present.get('account'),
     frames: frames.get('list'),
     activeFrameIndex,
     activeFrame: frames.getIn(['list', activeFrameIndex]),

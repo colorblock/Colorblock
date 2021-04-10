@@ -61,4 +61,19 @@ const generateFramesOutput = ({ frames, columns, options }) =>
       ''
     );
 
+export const arrayToMatrix = (frameList, columns, rows) => {
+  // convert array list to matxi list
+  return frameList.map(frame => {
+    let grid = frame.grid.map(str => str.slice(1));
+    // suppose grid length = columns * rows here
+    const matrix = [];
+    for (var i=0; i<rows; i++) {
+      const row = grid.slice(0, columns);
+      matrix.push(row);
+      grid = grid.slice(columns);
+    }
+    return matrix;
+  });
+};
+
 export default generateFramesOutput;

@@ -8,7 +8,6 @@ import ColorPickerContainer from './ColorPicker';
 import ModalContainer from './Modal';
 import DimensionsContainer from './Dimensions';
 import KeyBindings from './KeyBindings';
-import CssDisplayContainer from './CssDisplay';
 import DurationContainer from './Duration';
 import EraserContainer from './Eraser';
 import BucketContainer from './Bucket';
@@ -189,15 +188,15 @@ class App extends React.Component {
                 <div className="app__mobile--group">
                   <button
                     type="button"
-                    className="app__copycss-button"
+                    className="app__upload-button"
                     onClick={() => {
-                      this.changeModalType('copycss');
+                      this.changeModalType('upload');
                     }}
                     data-tooltip={
-                      helpOn ? 'Check your CSS generated code' : null
+                      helpOn ? 'Upload your artwork to blockchain' : null
                     }
                   >
-                    css
+                    UPLOAD
                   </button>
                 </div>
                 <div className="app__mobile--group">

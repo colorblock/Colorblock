@@ -420,14 +420,31 @@
     )
   )
 
+  (defun create-item-with-new-user
+    ( title:string 
+      tags:[string]
+      description:string
+      frames:[[[string]]]
+      intervals:[decimal]
+      creator:string 
+      guard:guard
+    )
+    @doc "Create new user first and then create item"
+
+    (create-account-maybe creator guard)
+    (create-item title tags description frames intervals creator)
+  )
+
   (defun item-details:object{item-schema} (id:string)
     @doc "Return details of item matched by given id"
-    (read items id)
+    (+ {'id: id} (read items id))
   )
 
   (defun all-items:[object{item-schema}] ()
     @doc "Return details of all items."
     (map (item-details) (keys items))
+    ;(select items (constantly true))
+    ;(select items (where 'owner (= "admin")))
   )
 
 
@@ -583,8 +600,8 @@
     @doc "Fetch all items owned by ACCOUNT."
     ;; EXTREMELY unperformant method. Better to index with a separate table.
     ;(select items (where 'owner (= account)))
-    ;(map (read items) (filter (is-owner account) (keys items)))
-    (filter (is-owner account) (keys items))
+    (map (item-details) (filter (is-owner account) (keys items)))
+    ;(filter (is-owner account) (keys items))
   )
 
   (defun owner-of:string (id:string)

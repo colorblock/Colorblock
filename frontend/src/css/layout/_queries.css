@@ -27,7 +27,7 @@
 }
 
 @media only screen and (max-width: 730px) {
-  .app__copycss-button {
+  .app__upload-button {
     margin-top: 1.4em !important;
   }
 
@@ -36,7 +36,7 @@
       &.left {
         lost-column: none;
 
-        .app__copycss-button {
+        .app__upload-button {
           padding: 4px !important;
         }
 
@@ -91,7 +91,7 @@
     }
   }
 
-  button.app__copycss-button {
+  button.app__upload-button {
     &:hover,
     &.selected {
       background-color: $color-alto !important;
