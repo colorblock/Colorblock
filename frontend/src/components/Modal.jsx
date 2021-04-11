@@ -342,76 +342,85 @@ class Modal extends React.Component {
                 />
               </div>
             </div>
-            <div>
-              First step:
+            { this.state.walletType === 'zelcore' ? (
+              <>
+              <div>
+                First step:
+                <br />
+                Log into your {this.state.walletType} wallet, and turn on server option. 
+              </div>
+              <div>
+                <img src={zelcoreImg} alt="zelcore" />
+              </div>
               <br />
-              Log into your {this.state.walletType} wallet, and turn on server option. 
-            </div>
-            <div>
-              <img src={zelcoreImg} alt="zelcore" />
-            </div>
-            <br />
-            <div>
-              Second step:
+              <div>
+                Second step:
+                <br />
+                Click the button below to connect to wallet, and confirm on the wallet page.
+              </div>
+              <div>
+                <button
+                  type='button'
+                  onClick={ () => this.connectToWallet() }
+                >
+                Connect to {this.state.walletType}
+                </button>
+              </div>
               <br />
-              Click the button below to connect to wallet, and confirm on the wallet page.
-            </div>
-            <div>
-              <button
-                type='button'
-                onClick={ () => this.connectToWallet() }
-              >
-              Connect to {this.state.walletType}
-              </button>
-            </div>
-            <br />
-            <div>
-              Last step:
+              <div>
+                Last step:
+                <br />
+                select your {this.state.walletType} account below.
+              </div>
+              <div>
+                <Wrapper
+                  className='AriaMenuButton'
+                  onSelection={(account) => {
+                    this.setState({
+                      selectedAccount : account
+                    });
+                  }}
+                >
+                  <Button className='AriaMenuButton-trigger'>
+                    { this.state.selectedAccount || 'select an account' }
+                  </Button>
+                  <Menu>
+                    <ul className='AriaMenuButton-menu'>
+                    {
+                      this.state.accounts.map((word, i) => {
+                        return (
+                          <li key={i}>
+                            <MenuItem className='MyMenuButton-menuItem'>
+                              {word}
+                            </MenuItem>
+                          </li>
+                        );
+                      })
+                    }</ul>
+                  </Menu>
+                </Wrapper>
+              </div>
               <br />
-              select your {this.state.walletType} account below.
-            </div>
-            <div>
-              <Wrapper
-                className='AriaMenuButton'
-                onSelection={(account) => {
-                  this.setState({
-                    selectedAccount : account
-                  });
-                }}
-              >
-                <Button className='AriaMenuButton-trigger'>
-                  { this.state.selectedAccount || 'select an account' }
-                </Button>
-                <Menu>
-                  <ul className='AriaMenuButton-menu'>
-                  {
-                    this.state.accounts.map((word, i) => {
-                      return (
-                        <li key={i}>
-                          <MenuItem className='MyMenuButton-menuItem'>
-                            {word}
-                          </MenuItem>
-                        </li>
-                      );
-                    })
-                  }</ul>
-                </Menu>
-              </Wrapper>
-            </div>
-            <br />
-            <div>
-              <button
-                type='button'
-                onClick={ () => {
-                  props.actions.setAccount(this.state.selectedAccount);
-                  saveDataToStorage(localStorage, {account: this.state.selectedAccount});
-                  console.log(localStorage);
-                  this.closeModal();
-                }}
-              >
-              Let's start
-              </button>
-            </div>
+              <div>
+                <button
+                  type='button'
+                  onClick={ () => {
+                    props.actions.setAccount(this.state.selectedAccount);
+                    saveDataToStorage(localStorage, {account: this.state.selectedAccount});
+                    console.log(localStorage);
+                    this.closeModal();
+                  }}
+                >
+                Let's start
+                </button>
+              </div>
+              </>
+              ) : (
+              <div>
+                Chainweaver is not supported yet.
+              </div>
+              )
+            }
           </>
         );
         break;

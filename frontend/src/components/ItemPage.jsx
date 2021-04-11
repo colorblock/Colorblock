@@ -332,17 +332,24 @@ const ItemPage = props => {
           ) :
           ( 
             <div className="item-info">
-              <label>This artwork is on sale, price: {itemInfo.price}</label>
-              <br />
-              <form onSubmit={ values => {
-                setFormType('purchase');
-                formik.handleSubmit(values);
-              }}>
-                <label>Purchase now</label>
-                <button type='submit'>Purchase</button>
+              { itemInfo.isOnSale ? (
+                <>
+                <label>This artwork is on sale, price: {itemInfo.price}</label>
                 <br />
-                <label style={{ fontSize: '5px' }}>The purchase fees is 1% of price</label>
-              </form>
+                <form onSubmit={ values => {
+                  setFormType('purchase');
+                  formik.handleSubmit(values);
+                }}>
+                  <label>Purchase now</label>
+                  <button type='submit'>Purchase</button>
+                  <br />
+                  <label style={{ fontSize: '5px' }}>The purchase fees is 1% of price</label>
+                </form>
+                </>
+                ) : (
+                  <label>This artwork is not on sale</label>
+                )
+              }
             </div>
           )
         }
