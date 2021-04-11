@@ -56,10 +56,10 @@ const App = props => {
       }}
     >
       <header> 
-        <div className="left col-2-3">
+        <div className="left col-1-3">
           <h1><a href='/'>COLORBLOCK</a></h1>
         </div>
-        <div className="right col-1-3">
+        <div className="right col-2-3">
           <div className="wallet-entry">
             <button
               type='button'
@@ -71,6 +71,20 @@ const App = props => {
               `${account.slice(0, 4)}**${account.slice(-4)}` :
               'connect to wallet' 
             }
+            </button>
+            { account &&
+              <button
+                type='button'
+                onClick={ () => (window.location.href=`/user/${account}`) }
+              >
+              Mine
+              </button>
+            }
+            <button
+              type='button'
+              onClick={ () => (window.location.href='/create') }
+            >
+            Create
             </button>
           </div>
         </div>

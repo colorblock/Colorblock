@@ -224,7 +224,7 @@ const ItemPage = props => {
           <p>Title: { itemInfo.title }</p>
           <p>Description: { itemInfo.description }</p>
           <p>Tags: { itemInfo.tags }</p>
-          <p>Owned by: { `**${itemInfo.owner.slice(-4)}` }</p>
+          <p>Owned by: <a href={`/user/${itemInfo.owner}`}>{ `**${itemInfo.owner.slice(-4)}` }</a></p>
         </div>
       </div>
       <div className="right col-2-4 action-board">
