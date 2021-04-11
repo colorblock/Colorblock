@@ -33,33 +33,18 @@ const createIncludedActions = () =>
 
 const configureStore = devMode => {
   let store;
-  if (devMode) {
-    store = createStore(
-      undoable(reducer, {
-        filter: createIncludedActions(),
-        debug: false,
-        ignoreInitialState: true
-      }),
-      window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-    );
+  store = createStore(
+    undoable(reducer, {
+      filter: createIncludedActions(),
+      debug: false,
+      ignoreInitialState: true
+    }),
+    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+  );
 
-    store.dispatch({
-      type: SHOW_SPINNER
-    });
-  } else {
-    const initialState = window.__INITIAL_STATE__;
-    initialState.present = fromJS(initialState.present);
-
-    store = createStore(
-      undoable(reducer, {
-        filter: createIncludedActions(),
-        debug: false,
-        ignoreInitialState: true
-      }),
-      initialState,
-      window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-    );
-  }
+  store.dispatch({
+    type: SHOW_SPINNER
+  });
 
   return store;
 };

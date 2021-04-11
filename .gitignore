@@ -1,3 +1,4 @@
 frontend/node_modules
 pact/yaml/log
 pact/yaml/test
+build
