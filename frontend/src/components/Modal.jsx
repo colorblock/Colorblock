@@ -379,9 +379,8 @@ class Modal extends React.Component {
                   });
                 }}
               >
-                <Button 
-                  className='AriaMenuButton-trigger'>
-                  { this.props.selectedAccount || 'select an account' }
+                <Button className='AriaMenuButton-trigger'>
+                  { this.state.selectedAccount || 'select an account' }
                 </Button>
                 <Menu>
                   <ul className='AriaMenuButton-menu'>
@@ -399,6 +398,7 @@ class Modal extends React.Component {
                 </Menu>
               </Wrapper>
             </div>
+            <br />
             <div>
               <button
                 type='button'
