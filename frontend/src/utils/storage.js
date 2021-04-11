@@ -17,9 +17,18 @@ const STORAGE_KEY = 'colorblock-v1-0-0';
  *
  */
 
-export function saveDataToStorage(storage, data) {
+export function saveDataToStorage(storage, data, type='partial') {
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    let newData;
+    switch (type) {
+      case 'partial':
+        const preData = getDataFromStorage(storage);
+        newData = {...preData, ...data};
+        break;
+      default:
+        newData = data;
+    }
+    storage.setItem(STORAGE_KEY, JSON.stringify(newData));
     return true;
   } catch (e) {
     return false; // There was an error
