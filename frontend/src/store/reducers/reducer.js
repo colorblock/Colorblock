@@ -5,7 +5,7 @@ import activeFrameReducer from './activeFrameReducer';
 import drawingToolReducer from './drawingToolReducer';
 import * as types from '../actions/actionTypes';
 
-function setInitialState(state) {
+function setInitialState(state, setAccount=true) {
   const cellSize = 10;
 
   const initialState = {
@@ -13,9 +13,11 @@ function setInitialState(state) {
     loading: false,
     notifications: List(),
     duration: 1,
-    account: '',
     items: List()
   };
+  if (setAccount) {
+    initialState.account = '';
+  }
 
   return state.merge(initialState);
 }
@@ -88,7 +90,7 @@ function partialReducer(state, action) {
     case types.SET_DURATION:
       return setDuration(state, action.duration);
     case types.NEW_PROJECT:
-      return setInitialState(state);
+      return setInitialState(state, false);
     case types.UPDATE_GRID_BOUNDARIES:
       return updateGridBoundaries(state, action);
     case types.SET_ACCOUNT:
