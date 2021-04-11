@@ -5,12 +5,12 @@ import {
   Route,
   useParams
 } from 'react-router-dom';
+import Notifications from './Notifications';
 import ModalContainer from './Modal';
 import CreatePage from './CreatePage';
 import HomePage from './HomePage';
 import ItemPage from './ItemPage';
 import UserPage from './UserPage';
-import SimpleNotificationContainer from './SimpleNotification';
 import Spinner from './Spinner';
 import { getDataFromStorage } from '../utils/storage';
 import { setAccount } from '../store/actions/actionCreators';
@@ -44,11 +44,7 @@ const App = props => {
   return (
     <Router>
     <Spinner />
-    <SimpleNotificationContainer
-      fadeInTime={1000}
-      fadeOutTime={1500}
-      duration={1500}
-    />
+    <Notifications />
     <div 
       className="app__main"
       style={{

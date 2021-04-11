@@ -54,6 +54,7 @@
     "react-scripts": "4.0.3",
     "react-spinners": "^0.10.6",
     "react-tag-input": "^6.5.2",
+    "react-toastify": "^7.0.3",
     "react-transform-hmr": "^1.0.4",
     "react-transition-group": "^4.4.1",
     "redux": "^4.0.5",

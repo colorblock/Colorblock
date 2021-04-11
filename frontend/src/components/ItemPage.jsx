@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { hideSpinner } from '../store/actions/actionCreators';
+import { hideSpinner, sendNotification } from '../store/actions/actionCreators';
 import { matrixToArray } from '../utils/outputParse';
 import Preview from './Preview';
 import { useFormik } from 'formik';
@@ -92,8 +92,10 @@ const ItemPage = props => {
       sender: account,
       signingPubKey: account
     };
+    props.sendNotification('Please confirm request in your wallet');
     const result = await sendToPactServer(cmd);
     console.log(result);
+    props.sendNotification('Please wait one minute and then refresh page');
     const code = `(cbmarket.item-sale-status "${id}")`;
     const data = await getDataFromPactServer(code);
     console.log(data);
@@ -126,8 +128,10 @@ const ItemPage = props => {
       sender: account,
       signingPubKey: account
     };
+    props.sendNotification('Please confirm request in your wallet');
     const result = await sendToPactServer(cmd);
     console.log(result);
+    props.sendNotification('Please wait one minute and then refresh page');
     const code = `(cbmarket.item-sale-status "${id}")`;
     const data = await getDataFromPactServer(code);
     console.log(data);
@@ -160,8 +164,10 @@ const ItemPage = props => {
       sender: account,
       signingPubKey: account
     };
+    props.sendNotification('Please confirm request in your wallet');
     const result = await sendToPactServer(cmd);
     console.log(result);
+    props.sendNotification('Please wait one minute and then refresh page');
     const code = `(cbmarket.item-sale-status "${id}")`;
     const data = await getDataFromPactServer(code);
     console.log(data);
@@ -200,8 +206,10 @@ const ItemPage = props => {
       sender: account,
       signingPubKey: account
     };
+    props.sendNotification('Please confirm request in your wallet');
     const sendResult = await sendToPactServer(cmd);
     console.log(sendResult);
+    props.sendNotification('Please wait one minute and then refresh page');
     const codeBasic = `(free.${contractModules.colorblock}.item-details "${id}")`;
     const result = await getDataFromPactServer(codeBasic);
     const code = `(free.${contractModules.cbmarket}.item-sale-status "${id}")`;
@@ -350,7 +358,8 @@ const mapStateToProps = state => ({
   loading: state.present.get('loading')
 });
 const mapDispatchToProps = dispatch => ({
-  hideSpinner: () => dispatch(hideSpinner())
+  hideSpinner: () => dispatch(hideSpinner()),
+  sendNotification: (msg) => dispatch(sendNotification(msg)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ItemPage);

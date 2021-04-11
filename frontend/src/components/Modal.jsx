@@ -149,6 +149,7 @@ class Modal extends React.Component {
   async connectToWallet() {
     const url = 'http://127.0.0.1:9467/v1/accounts';
     const cmd = { asset: 'kadena' };
+    this.props.actions.sendNotification('Please confirm request in your wallet');
     const result = await fetch(url, this.mkReq(cmd)).then(res => res.json());
     const accounts = result.data;
     this.setState({
@@ -207,6 +208,7 @@ class Modal extends React.Component {
         intervals
       }
     };
+    this.props.actions.sendNotification('Please confirm request in your wallet');
     const result = await sendToPactServer(cmd);
     console.log('ready to fetch all projects');
     await this.fetchAllProjects();
