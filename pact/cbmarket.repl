@@ -28,6 +28,8 @@
 
 (coin.create-account "admin" (read-keyset "cb-admin-keyset"))
 (coin.create-account "bob" (read-keyset "bob-keyset"))
+(coin.create-account "alice" (read-keyset "alice-keyset"))
+(coin.create-account "lucy" (read-keyset "lucy-keyset"))
 (env-sigs [
   {"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]},
   {"key": "bob", "caps": [(colorblock.OWN-ACCOUNT "bob")]}
@@ -337,3 +339,50 @@
   (coin.get-balance "bob")
 )
 
+
+(env-sigs [{"key": "alice", "caps": [
+  (colorblock.OWN-ACCOUNT "alice")
+]}])
+(expect
+  "Creating will success"
+  "Write succeeded"
+  (colorblock.create-item-with-new-user "title" ["tag"] "description" [
+    [
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+    [
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
+      ["dddddd" "bbbbbb" "cccccc" "dddddd"] 
+    ]
+  ] [1.0 0.5] "alice" (read-keyset "alice-keyset")
+  )
+)
+(commit-tx)
+
+;; -----------------------------
+;; interact with market
+;; -----------------------------
+
+
+(begin-tx)
+(expect
+  "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
+  "Write succeeded"
+  (cbmarket.release "alice" "sNci4DEHNvUX5HUPnvQ45jw-iwpdw2H3u3xG2h4eQHE" 5.0)
+)
+
+; add-balance
+(test-capability (coin.CREDIT "lucy"))
+(coin.credit "lucy" (read-keyset "lucy-keyset") 12.0)
+
+(env-sigs [{"key": "lucy", "caps": [(coin.DEBIT "lucy")]}])
+(expect
+  "Purchase succeeds with correct keyset and capability"
+  "Write succeeded"
+  (cbmarket.purchase-with-new-user "lucy" "sNci4DEHNvUX5HUPnvQ45jw-iwpdw2H3u3xG2h4eQHE" (read-keyset "lucy-keyset"))
+)

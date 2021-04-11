@@ -145,6 +145,41 @@ const ItemPage = props => {
     setItemInfo({...itemInfo, ...newItemInfo});
   };
 
+  const purchaseItem = async (id) => {
+    const cmd = {
+      code: `(cbmarket.purchase-with-new-user "${account}" "${id}" (read-keyset "accountKeyset"))`,
+      caps: [{
+        role: 'Identity Verification',
+        description: 'Identity Verification',
+        cap: {
+          name: 'coin.DEBIT',
+          args: [account]
+        }
+      }],
+      data: {
+        accountKeyset: { 
+          keys: [account],
+          pred: 'keys-all'
+        }
+      },
+      sender: account,
+      signingPubKey: account
+    };
+    const sendResult = await sendToPactServer(cmd);
+    console.log(sendResult);
+    const codeBasic = `(colorblock.item-details "${id}")`;
+    const result = await getDataFromPactServer(codeBasic);
+    const code = `(cbmarket.item-sale-status "${id}")`;
+    const data = await getDataFromPactServer(code);
+    console.log(data);
+    const newItemInfo = {
+      isOnSale: data['on-sale'],
+      price: data.price,
+      owner: result.owner
+    };
+    setItemInfo({...itemInfo, ...newItemInfo});
+  };
+
   const formik = useFormik({
     initialValues: {
       price: 0,
@@ -159,6 +194,9 @@ const ItemPage = props => {
           break;
         case 'recall':
           recallItem(itemInfo.id);
+          break;
+        case 'purchase':
+          purchaseItem(itemInfo.id);
           break;
         default:
           return;
@@ -196,7 +234,7 @@ const ItemPage = props => {
               { itemInfo.isOnSale ? 
                 (
                 <>
-                <label>Your token is on sale, price: {itemInfo.price}</label>
+                <label>Your artwork is on sale, price: {itemInfo.price}</label>
                 <form onSubmit={ values => {
                   setFormType('modify');
                   formik.handleSubmit(values);
@@ -249,7 +287,20 @@ const ItemPage = props => {
               }
             </div>
           ) :
-          ( 'I am buyer'
+          ( 
+            <div className="item-info">
+              <label>This artwork is on sale, price: {itemInfo.price}</label>
+              <br />
+              <form onSubmit={ values => {
+                setFormType('purchase');
+                formik.handleSubmit(values);
+              }}>
+                <label>Purchase now</label>
+                <button type='submit'>Purchase</button>
+                <br />
+                <label style={{ fontSize: '5px' }}>The purchase fees is 1% of price</label>
+              </form>
+            </div>
           )
         }
       </div>

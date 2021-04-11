@@ -194,6 +194,16 @@
     )
   )
 
+  (defun purchase-with-new-user:string 
+    ( account:string
+      item-id:string
+      guard:guard
+    )
+    @doc " Create account and purchase item"
+    (colorblock.create-account-maybe account guard)
+    (purchase account item-id)
+  )
+
   (defun purchase:string 
     ( account:string
       item-id:string

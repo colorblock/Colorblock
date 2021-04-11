@@ -224,13 +224,7 @@
     ;; only for local testing
     (let 
       (
-        (balance 
-          (if
-            (= "admin" account)
-            12.0
-            0.0
-          )
-        )
+        (balance 12.0)
       )
       (insert coin-table account
         { "balance" : balance
