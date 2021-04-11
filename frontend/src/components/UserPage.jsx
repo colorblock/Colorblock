@@ -4,7 +4,10 @@ import { useParams } from 'react-router-dom';
 import { hideSpinner } from '../store/actions/actionCreators';
 import Gallery from "react-photo-gallery";
 import renderCanvasGIF from '../utils/canvasGIF';
-import { getDataFromPactServer } from '../utils/wallet';
+import { 
+  getDataFromPactServer,
+  contractModules
+} from '../utils/wallet';
 import { matrixToArray } from '../utils/outputParse';
 import { addItem } from '../store/actions/actionCreators';
 
@@ -18,12 +21,12 @@ const UserPage = props => {
 
     const fetchItems = async () => {
 
-      const codeUser = `(colorblock.details "${userId}")`;
+      const codeUser = `(free.${contractModules.colorblock}.details "${userId}")`;
       const fetchedUser = await getDataFromPactServer(codeUser);
       console.log(fetchedUser);
       setUserInfo(fetchedUser);
 
-      const codeMarket = `(colorblock.items-of "${userId}")`;
+      const codeMarket = `(free.${contractModules.colorblock}.items-of "${userId}")`;
       const fetchedItems = await getDataFromPactServer(codeMarket);
       fetchedItems.map(item => {
         const data = matrixToArray(item.frames, item.intervals);

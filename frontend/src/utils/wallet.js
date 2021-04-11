@@ -1,9 +1,13 @@
 import Pact from 'pact-lang-api';
-
-
 const NETWORKID = 'mainnet01';
 const chainId = '0';
-const network = 'https://api.colorblock.art';
+const network = `https://api.chainweb.com/chainweb/0.0/${NETWORKID}/chain/${chainId}/pact`;
+
+export const contractModules = {
+  colorblock: 'colorblock-test-v1',
+  cbmarket: 'cbmarket-test-v1',
+  marketAccount: 'colorblock-test-v1-market'
+};
 
 export const mkReq = (cmd) => {
   return {
@@ -18,8 +22,8 @@ export const mkReq = (cmd) => {
 export const sendToPactServer = async (inputCmd) => {
   // set cmd correctly
   const fixedCmd = {
-    gasPrice: 0.000001,
-    gasLimit: 2000,
+    gasPrice: 0.00001,
+    gasLimit: 14999,
     chainId: chainId,
     ttl: 600,
     networkId: NETWORKID,
@@ -49,10 +53,17 @@ export const getDataFromPactServer = async (code) => {
     keyPairs: [],
     pactCode: code
   };
+  const {keyPairs, nonce, pactCode, envData, networkId} = localCmd
+  const gasLimit = 3000;
+  const meta = Pact.lang.mkMeta('', chainId, 0, gasLimit, 0, 0, 0);
+  const cmd = Pact.api.prepareExecCmd(keyPairs, nonce, pactCode, envData, meta, networkId);
 
-  console.log(localCmd);
-  const result = await Pact.fetch.local(localCmd, network).then(res => res.result.data);
-  console.log(result);
-  return result || {};
+  console.log(meta);
+  console.log(cmd);
+  
+  const result = await fetch(`${network}/api/v1/local`, mkReq(cmd)).then(res => res.json());
+  const data = result.result.data;
+  console.log(data);
+  return data || {};
 
 };

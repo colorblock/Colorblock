@@ -3,12 +3,15 @@ import { useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { hideSpinner } from '../store/actions/actionCreators';
 import { matrixToArray } from '../utils/outputParse';
-import { sendToPactServer, getDataFromPactServer } from '../utils/wallet';
 import Preview from './Preview';
 import { useFormik } from 'formik';
 import renderCanvasGIF from '../utils/canvasGIF';
+import { 
+  sendToPactServer, 
+  getDataFromPactServer,
+  contractModules
+} from '../utils/wallet';
 
-const MARKET_ACCOUNT = 'colorblock-market';
 
 const ItemPage = props => {
   const urlParams = useParams();
@@ -29,9 +32,9 @@ const ItemPage = props => {
 
   const updateItem = async () => {
     const id = urlParams.id;
-    const codeBasic = `(colorblock.item-details "${id}")`;
+    const codeBasic = `(free.${contractModules.colorblock}.item-details "${id}")`;
     const result = await getDataFromPactServer(codeBasic);
-    const codeMarket = `(cbmarket.item-sale-status "${id}")`;
+    const codeMarket = `(free.${contractModules.cbmarket}.item-sale-status "${id}")`;
     const marketData = await getDataFromPactServer(codeMarket);
     console.log(marketData);
     const newItemInfo = {
@@ -39,7 +42,7 @@ const ItemPage = props => {
       title: result.title,
       tags: result.tags,
       description: result.description,
-      owner: result.owner === MARKET_ACCOUNT ? marketData.seller : result.owner,
+      owner: result.owner === contractModules.marketAccount ? marketData.seller : result.owner,
       isOnSale: marketData['on-sale'],
       price: marketData.price
     };
@@ -69,15 +72,23 @@ const ItemPage = props => {
 
   const releaseItem = async (id, price) => {
     const cmd = {
-      code: `(cbmarket.release "${account}" "${id}" ${price})`,
+      code: `(free.${contractModules.cbmarket}.release "${account}" "${id}" ${price})`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
         cap: {
-          name: 'colorblock.OWN-ACCOUNT',
+          name: `free.${contractModules.colorblock}.OWN-ACCOUNT`,
           args: [account]
         }
-      }],
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: 'coin.GAS',
+          args: []
+        }
+      }
+      ],
       sender: account,
       signingPubKey: account
     };
@@ -95,15 +106,23 @@ const ItemPage = props => {
 
   const modifyPrice = async (id, price) => {
     const cmd = {
-      code: `(cbmarket.modify "${account}" "${id}" ${price})`,
+      code: `(free.${contractModules.cbmarket}.modify "${account}" "${id}" ${price})`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
         cap: {
-          name: 'colorblock.OWN-ACCOUNT',
+          name: `free.${contractModules.colorblock}.OWN-ACCOUNT`,
           args: [account]
         }
-      }],
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: 'coin.GAS',
+          args: []
+        }
+      }
+      ],
       sender: account,
       signingPubKey: account
     };
@@ -121,15 +140,23 @@ const ItemPage = props => {
 
   const recallItem = async (id) => {
     const cmd = {
-      code: `(cbmarket.recall "${account}" "${id}")`,
+      code: `(free.${contractModules.cbmarket}.recall "${account}" "${id}")`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
         cap: {
-          name: 'colorblock.OWN-ACCOUNT',
+          name: `free.${contractModules.colorblock}.OWN-ACCOUNT`,
           args: [account]
         }
-      }],
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: 'coin.GAS',
+          args: []
+        }
+      }
+      ],
       sender: account,
       signingPubKey: account
     };
@@ -147,7 +174,7 @@ const ItemPage = props => {
 
   const purchaseItem = async (id) => {
     const cmd = {
-      code: `(cbmarket.purchase-with-new-user "${account}" "${id}" (read-keyset "accountKeyset"))`,
+      code: `(free.${contractModules.cbmarket}.purchase-with-new-user "${account}" "${id}" (read-keyset "accountKeyset"))`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
@@ -155,7 +182,15 @@ const ItemPage = props => {
           name: 'coin.DEBIT',
           args: [account]
         }
-      }],
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: 'coin.GAS',
+          args: []
+        }
+      }
+      ],
       data: {
         accountKeyset: { 
           keys: [account],
@@ -167,9 +202,9 @@ const ItemPage = props => {
     };
     const sendResult = await sendToPactServer(cmd);
     console.log(sendResult);
-    const codeBasic = `(colorblock.item-details "${id}")`;
+    const codeBasic = `(free.${contractModules.colorblock}.item-details "${id}")`;
     const result = await getDataFromPactServer(codeBasic);
-    const code = `(cbmarket.item-sale-status "${id}")`;
+    const code = `(free.${contractModules.cbmarket}.item-sale-status "${id}")`;
     const data = await getDataFromPactServer(code);
     console.log(data);
     const newItemInfo = {

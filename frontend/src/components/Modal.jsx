@@ -18,7 +18,11 @@ import KeyBindingsLegend from './KeyBindingsLegend';
 import { Button, Wrapper, Menu, MenuItem } from 'react-aria-menubutton';
 import { arrayToMatrix } from '../utils/outputParse';
 import { saveDataToStorage } from '../utils/storage';
-import { sendToPactServer, getDataFromPactServer } from '../utils/wallet';
+import { 
+  sendToPactServer, 
+  getDataFromPactServer,
+  contractModules
+} from '../utils/wallet';
 
 class Modal extends React.Component {
   static generateRadioOptions(props) {
@@ -173,19 +177,24 @@ class Modal extends React.Component {
       intervals  = [duration];
     }
     const type = 1;
-    const code = `(colorblock.create-item "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}")`;
-    console.log('on Submit3', code);
     const cmd = {
-      //code: `(colorblock.create-item "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}")`,
-      code: `(colorblock.create-item-with-new-user "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}" (read-keyset "accountKeyset"))`,
+      code: `(free.${contractModules.colorblock}.create-item-with-new-user "${title}" (read-msg "tags") "${description}" (read-msg "frames") (read-msg "intervals") "${account}" (read-keyset "accountKeyset"))`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
         cap: {
-          name: 'colorblock.OWN-ACCOUNT',
+          name: `free.${contractModules.colorblock}.OWN-ACCOUNT`,
           args: [account]
         }
-      }],
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: 'coin.GAS',
+          args: []
+        }
+      }
+      ],
       sender: account,
       signingPubKey: account,
       data: {
@@ -206,9 +215,7 @@ class Modal extends React.Component {
   async fetchAllProjects() {
     console.log('in fetch all projects');
     const { account } = this.props;
-    const code = `(colorblock.items-of "${account}")`;
-    //const code = `(colorblock.all-items)`;
-    //const code = `(colorblock.details "${account}")`;
+    const code = `(free.${contractModules.colorblock}.items-of "${account}")`;
     const result = getDataFromPactServer(code);
   }
 

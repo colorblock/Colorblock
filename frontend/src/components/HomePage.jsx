@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { hideSpinner } from '../store/actions/actionCreators';
 import Gallery from "react-photo-gallery";
 import renderCanvasGIF from '../utils/canvasGIF';
-import { getDataFromPactServer } from '../utils/wallet';
+import { getDataFromPactServer, contractModules } from '../utils/wallet';
 import { matrixToArray } from '../utils/outputParse';
 import { addItem } from '../store/actions/actionCreators';
 
@@ -14,7 +14,7 @@ const HomePage = props => {
 
     const fetchItems = async () => {
 
-      const codeMarket = `(colorblock.all-items)`;
+      const codeMarket = `(free.${contractModules.colorblock}.all-items)`;
       const fetchedItems = await getDataFromPactServer(codeMarket);
       fetchedItems.map(item => {
         const data = matrixToArray(item.frames, item.intervals);
