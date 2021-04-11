@@ -23,6 +23,8 @@
           \   onwer: the account of current owner, changeable "
     @model [
       (invariant (!= "" title))
+      (invariant (!= "" description))
+      (invariant (!= [] tags))
       (invariant (!= [] frames))
       (invariant (!= [] intervals))
       (invariant (!= "" creator))
@@ -168,7 +170,10 @@
     "The length for every RGB cell in matrix"
   )
 
-  (defconst MAX_INTERVAL 10.0
+  (defconst MIN_INTERVAL 0.1
+    "The min interval limitation"
+  )
+  (defconst MAX_INTERVAL 1.0
     "The max interval limitation"
   )
 
@@ -311,13 +316,16 @@
       frame-count:integer
     )
     @doc " Check whether intervals conforms to following rules: \
-        \1.each interval not larger than MAX_INTERVAL \
+        \1.each interval should between MIN_INTERVAL than MAX_INTERVAL \
         \2.interval count equals frame-count "
     (enforce
-      (>= MAX_INTERVAL (at 0 (reverse (sort intervals))))
+      (and
+        (<= MIN_INTERVAL (at 0 (sort intervals)))
+        (>= MAX_INTERVAL (at 0 (reverse (sort intervals))))
+      )
       (format
-        "Interval could not larger than {}"
-        [MAX_INTERVAL]
+        "Interval should between {} and {}"
+        [MIN_INTERVAL, MAX_INTERVAL]
       )
     )
     (enforce

@@ -740,7 +740,7 @@
       ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
       ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
     ]
-  ] [1.0 2.0] "admin"
+  ] [1.0 0.5] "admin"
   )
 )
 
@@ -764,7 +764,7 @@
       ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] 
       ["cccccc" "bbbbbb" "cccccc" "dddddd"] 
     ]
-  ] [1.0 2.0] "jack" (read-keyset "jack-keyset")
+  ] [1.0 0.5] "jack" (read-keyset "jack-keyset")
   )
 )
 
@@ -925,10 +925,4 @@
   (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA")
 )
 
-
-(expect
-  "Get all records"
-  "[*]"
-  (typeof (colorblock.item-records "yWTcImee0S9-n0HwFsnGIXP8XvZ8EnkcluUVs9nEkvA"))
-)
 

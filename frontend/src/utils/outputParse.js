@@ -80,12 +80,14 @@ export const arrayToMatrix = (frameList, columns, rows) => {
 
 export const matrixToArray = (frames, intervals) => {
   // convert matrix list to array list
-  const duration = Math.max(...intervals);
+  const duration = intervals.reduce((a, b) => a + b, 0);
   const columns = frames[0][0].length;
   const rows = frames[0].length;
   const frameList = frames.map((matrix, index) => {
     const grid = matrix.map(row => row.map(str => `#${str}`)).flat();
-    const interval = Math.floor(100 * intervals[index] / duration);
+    const addUpInterval = intervals.slice(0, index + 1).reduce((a, b) => a + b, 0);
+    const interval = Math.floor(100 * addUpInterval / duration);
+    console.log(intervals, duration, interval);
     const key = shortid.generate();
     const frame = {
       grid,

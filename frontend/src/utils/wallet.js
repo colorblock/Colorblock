@@ -53,6 +53,6 @@ export const getDataFromPactServer = async (code) => {
   console.log(localCmd);
   const result = await Pact.fetch.local(localCmd, network).then(res => res.result.data);
   console.log(result);
-  return result;
+  return result || {};
 
 };

@@ -107,7 +107,7 @@ class Modal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      previewType: 'single',
+      previewType: 'animation',
       loadType: 'storage',
       walletType: 'zelcore',
       accounts: [],
@@ -157,7 +157,16 @@ class Modal extends React.Component {
     const { account, frames, columns, rows, duration, activeFrameIndex } = this.props;
     const frameList = frames.toJS();
     let newFrames = arrayToMatrix(frameList, columns, rows);
-    let intervals = frameList.map(frame => Math.round(frame.interval * duration) / 100);
+    let intervals = frameList.map((frame, index) => {
+      const curInterval = frame.interval;
+      let lastInterval;
+      if (index == 0) {
+        lastInterval = 0;
+      } else {
+        lastInterval = frameList[index - 1].interval;
+      }
+      return Math.round((curInterval - lastInterval) * duration) / 100;
+    });
     if (previewType === 'single') {
       newFrames = newFrames.slice(activeFrameIndex, activeFrameIndex + 1);
       intervals  = [duration];
@@ -196,8 +205,7 @@ class Modal extends React.Component {
   async fetchAllProjects() {
     console.log('in fetch all projects');
     const { account } = this.props;
-    //const code = `(colorblock.items-of "${account}")`;
-    const code = `(colorblock.items-of "admin")`;
+    const code = `(colorblock.items-of "${account}")`;
     //const code = `(colorblock.all-items)`;
     //const code = `(colorblock.details "${account}")`;
     const result = getDataFromPactServer(code);
@@ -279,7 +287,6 @@ class Modal extends React.Component {
                 frames={props.frames}
                 onSubmit={ this.onSubmit }
               />
-              <button onClick={ this.fetchAllProjects }>For Test Local CMD</button>
             </div>
           </>
         );
