@@ -58,6 +58,7 @@ const HomePage = props => {
       const ratio = item.rows / item.columns;
       const width = 4;
       return {
+        id: item.id,
         src: item.imageUrl,
         width,
         height: width * ratio
@@ -65,10 +66,15 @@ const HomePage = props => {
     });
     return photos;
   };
+  const onClick = e => {
+    const id = e.target.id;
+    const newLink = `/item/${id}`;
+    window.location.href = newLink;
+  };
 
   return (
     <>
-      { items.size > 0 && <Gallery photos={ generatePhotos() } direction={"column"} /> }
+      { items.size > 0 && <Gallery photos={ generatePhotos() } direction={"column"} onClick={onClick}/> }
     </>
   );
 };

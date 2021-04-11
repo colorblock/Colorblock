@@ -57,7 +57,7 @@ const App = props => {
     >
       <header> 
         <div className="left col-2-3">
-          <h1>COLORBLOCK</h1>
+          <h1><a href='/'>COLORBLOCK</a></h1>
         </div>
         <div className="right col-1-3">
           <div className="wallet-entry">
