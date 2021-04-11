@@ -9,7 +9,13 @@ import { initStorage, getDataFromStorage } from './storage';
 const initialSetup = (dispatch, storage) => {
   dispatch(actionCreators.hideSpinner());
 
-  const dataStored = getDataFromStorage(storage);
+  let dataStored = getDataFromStorage(storage);
+  if (!dataStored.stored) {
+    // If no data initialize storage
+    initStorage(storage);
+  }
+
+  dataStored = getDataFromStorage(storage);
   if (dataStored.stored) {
     // Load current project from the storage
     const currentProjectIndex = dataStored.current;
@@ -32,9 +38,6 @@ const initialSetup = (dispatch, storage) => {
         )
       );
     }
-  } else {
-    // If no data initialize storage
-    initStorage(storage);
   }
 };
 
