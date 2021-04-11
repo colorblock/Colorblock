@@ -13,7 +13,6 @@ const Animation = props => {
     left: '-5px',
     top: '-5px'
   };
-  console.log(style);
   const animString = `@keyframes ${keyframeName} {${keyframeRules}}`;
   return (
     <div>

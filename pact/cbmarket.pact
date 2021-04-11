@@ -233,6 +233,10 @@
     (select shelves (constantly true))
   )
 
+  (defun item-sale-status:{shelf-schema} (id:string)
+    (+ {'id: id} (read shelves id))
+  )
+
 
   ; -------------------------------------------------------
   ; Utility Functions
