@@ -6,13 +6,14 @@ import { matrixToArray } from '../utils/outputParse';
 import { sendToPactServer, getDataFromPactServer } from '../utils/wallet';
 import Preview from './Preview';
 import { useFormik } from 'formik';
+import renderCanvasGIF from '../utils/canvasGIF';
 
 const MARKET_ACCOUNT = 'colorblock-market';
 
 const ItemPage = props => {
   const urlParams = useParams();
-  const [showFrames, setShowFrames] = useState(null);
   const [itemInfo, setItemInfo] = useState({});
+  const [imageUrl, setImageUrl] = useState(null);
   const [formType, setFormType] = useState(null);
   const { account } = props;
 
@@ -31,19 +32,39 @@ const ItemPage = props => {
     const codeBasic = `(colorblock.item-details "${id}")`;
     const result = await getDataFromPactServer(codeBasic);
     const codeMarket = `(cbmarket.item-sale-status "${id}")`;
-    const data = await getDataFromPactServer(codeMarket);
-    const itemInfo = {
+    const marketData = await getDataFromPactServer(codeMarket);
+    console.log(marketData);
+    const newItemInfo = {
       id,
       title: result.title,
       tags: result.tags,
       description: result.description,
-      owner: result.owner === MARKET_ACCOUNT ? data.seller : result.owner,
-      isOnSale: data['on-sale'],
-      price: data.price
+      owner: result.owner === MARKET_ACCOUNT ? marketData.seller : result.owner,
+      isOnSale: marketData['on-sale'],
+      price: marketData.price
     };
-    setItemInfo(itemInfo);
-    const frames = matrixToArray(result.frames, result.intervals);
-    setShowFrames(frames);
+    setItemInfo(newItemInfo);
+
+    const data = matrixToArray(result.frames, result.intervals);
+    const frames = data.get('list');
+    const columns = data.get('columns');
+    const rows = data.get('rows');
+    const duration = data.get('duration');
+    const cellSize = 20;
+    renderCanvasGIF({
+      type: 'gif',
+      frames,
+      activeFrame: null,
+      columns,
+      rows,
+      cellSize,
+      duration
+      }, 
+      false, 
+      (blob) => {
+        setImageUrl(blob);
+      }
+    );
   };
 
   const releaseItem = async (id, price) => {
@@ -147,29 +168,19 @@ const ItemPage = props => {
 
   return (
     <div className="item-page">
-      { showFrames && (
+      { itemInfo.owner && imageUrl && (
       <>
       <div
         className="left col-2-4"
       >
         <div className="preview-box__container">
-          <div
+          <img src={ imageUrl } 
             style={{
-              display: 'float',
-              margin: '0 auto'
+              display: 'block',
+              margin: '0 auto',
+              width: '60%'
             }}
-          >
-          <Preview
-            frames={ showFrames.get('list') }
-            columns={ showFrames.get('columns') }
-            rows={ showFrames.get('rows') }
-            cellSize={20}
-            duration={ showFrames.get('duration') }
-            activeFrameIndex={ 0 }
-            animate={ true }
-            animationName="item-page-animation"
           />
-          </div>
         </div>
         <div className='item-info'>
           <p>Title: { itemInfo.title }</p>
@@ -178,7 +189,7 @@ const ItemPage = props => {
           <p>Owned by: { `**${itemInfo.owner.slice(-4)}` }</p>
         </div>
       </div>
-      <div className="right col-2-4">
+      <div className="right col-2-4 action-board">
         { account === itemInfo.owner ? 
           ( 
             <div className="item-info">
@@ -195,9 +206,13 @@ const ItemPage = props => {
                     id='modifyPrice'
                     name='price'
                     type='number'
+                    style={{
+                      width: '60%'
+                    }}
                     onChange={formik.handleChange}
                     value={formik.values.price}
                   />
+                  <br />
                   <label>Modify now</label>
                   <button type="submit">Modify</button>
                 </form>
@@ -207,6 +222,7 @@ const ItemPage = props => {
                   formik.handleSubmit(values);
                 }}>
                   <label>Or you can recall from market</label>
+                  <br />
                   <button type="submit">Recall</button>
                 </form>
                 </>

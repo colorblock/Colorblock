@@ -7,4 +7,9 @@
     text-align: center;
     color: white;
   }
+
+  .action-board {
+    padding: 100px 100px 0 0;
+    line-height: 2.5;
+  }
 }
