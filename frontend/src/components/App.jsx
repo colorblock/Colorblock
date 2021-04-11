@@ -33,14 +33,10 @@ const App = props => {
   useEffect(() => {
     const init = () => {
       const dataStored = getDataFromStorage(localStorage);
-      console.log(dataStored);
       if (dataStored.account) {
-        console.log('now set to store:', dataStored.account);
         const { setAccount } = props;
         setAccount(dataStored.account);
-        console.log('finished');
       }
-      //localStorage()
     };
     init();
   }, []);

@@ -13,7 +13,8 @@ function setInitialState(state) {
     loading: false,
     notifications: List(),
     duration: 1,
-    account: ''
+    account: '',
+    items: List()
   };
 
   return state.merge(initialState);
@@ -63,6 +64,10 @@ function setAccount(state, account) {
   return state.set('account', account);
 }
 
+function addItem(state, item) {
+  return state.updateIn(['items'], arr => arr.push(item));
+}
+
 const pipeReducers = reducers => (initialState, action) =>
   reducers.reduce((state, reducer) => reducer(state, action), initialState);
 
@@ -88,6 +93,8 @@ function partialReducer(state, action) {
       return updateGridBoundaries(state, action);
     case types.SET_ACCOUNT:
       return setAccount(state, action.account);
+    case types.ADD_ITEM:
+      return addItem(state, action.item);
     default:
   }
   return state;

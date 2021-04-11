@@ -60,7 +60,7 @@ const saveCanvasToDisk = (blob, fileExtension) => {
   saveAs(blob, `${randomString()}.${fileExtension}`);
 };
 
-function renderFrames(settings) {
+function renderFrames(settings, save=true, updateData) {
   const {
     type,
     frames,
@@ -80,8 +80,21 @@ function renderFrames(settings) {
 
   const canvas = document.createElement('canvas');
   const gif = new GIFEncoder(canvasWidth, canvasHeight);
+  const result = {
+    data: null
+  };
   gif.pipe(blobStream()).on('finish', function() {
-    saveCanvasToDisk(this.toBlob(), 'gif');
+    if (save) {
+      saveCanvasToDisk(this.toBlob(), 'gif');
+    } else {
+      var reader = new FileReader();
+      reader.addEventListener("loadend", function() {
+        result.data = reader.result;
+        gif.blobData = reader.result;
+        updateData(reader.result);
+      });
+      reader.readAsDataURL(this.toBlob());
+    }
   });
 
   gif.setRepeat(0); // loop indefinitely
@@ -143,6 +156,7 @@ function renderFrames(settings) {
       gif.finish();
     }
   }
+
 }
 
 export default renderFrames;

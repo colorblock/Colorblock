@@ -196,6 +196,13 @@ export function setAccount(account) {
   };
 }
 
+export function addItem(item) {
+  return {
+    type: types.ADD_ITEM,
+    item
+  };
+}
+
 export function undo() {
   return ActionCreators.undo();
 }

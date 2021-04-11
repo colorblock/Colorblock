@@ -88,11 +88,11 @@ export const matrixToArray = (frames, intervals) => {
     const addUpInterval = intervals.slice(0, index + 1).reduce((a, b) => a + b, 0);
     const interval = Math.floor(100 * addUpInterval / duration);
     const key = shortid.generate();
-    const frame = {
+    const frame = Map({
       grid,
       interval,
       key
-    }
+    });
     return frame;
   });
   return Map({
