@@ -17,6 +17,7 @@ import DownloadDrawing from './DownloadDrawing';
 import KeyBindingsLegend from './KeyBindingsLegend';
 import { Button, Wrapper, Menu, MenuItem } from 'react-aria-menubutton';
 import { arrayToMatrix } from '../utils/outputParse';
+import { saveDataToStorage } from '../utils/storage';
 import { sendToPactServer, getDataFromPactServer } from '../utils/wallet';
 
 class Modal extends React.Component {
@@ -394,6 +395,8 @@ class Modal extends React.Component {
                 type='button'
                 onClick={ () => {
                   props.actions.setAccount(this.state.selectedAccount);
+                  saveDataToStorage(localStorage, {account: this.state.selectedAccount});
+                  console.log(localStorage);
                   this.closeModal();
                 }}
               >

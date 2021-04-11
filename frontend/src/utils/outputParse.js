@@ -87,7 +87,6 @@ export const matrixToArray = (frames, intervals) => {
     const grid = matrix.map(row => row.map(str => `#${str}`)).flat();
     const addUpInterval = intervals.slice(0, index + 1).reduce((a, b) => a + b, 0);
     const interval = Math.floor(100 * addUpInterval / duration);
-    console.log(intervals, duration, interval);
     const key = shortid.generate();
     const frame = {
       grid,

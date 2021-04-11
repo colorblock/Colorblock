@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { 
   BrowserRouter as Router, 
@@ -12,6 +12,8 @@ import ItemPage from './ItemPage';
 import UserPage from './UserPage';
 import SimpleNotificationContainer from './SimpleNotification';
 import Spinner from './Spinner';
+import { getDataFromStorage } from '../utils/storage';
+import { setAccount } from '../store/actions/actionCreators';
 
 const App = props => {
 
@@ -27,6 +29,21 @@ const App = props => {
   const closeModal = () => {
     setModalOpen(false);
   };
+
+  useEffect(() => {
+    const init = () => {
+      const dataStored = getDataFromStorage(localStorage);
+      console.log(dataStored);
+      if (dataStored.account) {
+        console.log('now set to store:', dataStored.account);
+        const { setAccount } = props;
+        setAccount(dataStored.account);
+        console.log('finished');
+      }
+      //localStorage()
+    };
+    init();
+  }, []);
 
   return (
     <Router>
@@ -101,8 +118,7 @@ const mapStateToProps = state => ({
   loading: state.present.get('loading')
 });
 const mapDispatchToProps = dispatch => ({
-  hideSpinner: () => dispatch(hideSpinner()),
-  setDrawing: props => dispatch(setDrawing(props))
+  setAccount: (account) => dispatch(setAccount(account))
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

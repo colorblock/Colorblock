@@ -1,6 +1,6 @@
 import { exampleCat } from '../assets/exampleCat';
 
-const STORAGE_KEY = 'pixelart-react-v3-0-0';
+const STORAGE_KEY = 'colorblock-v1-0-0';
 
 /*
  *  Storage data structure
@@ -11,12 +11,13 @@ const STORAGE_KEY = 'pixelart-react-v3-0-0';
  *     { frames: [],paletteGridData, cellSize, columns, rows, animate},
  *     ...
  *   ]
- *   current: position
+ *   current: position,
+ *   account
  *  }
  *
  */
 
-function saveDataToStorage(storage, data) {
+export function saveDataToStorage(storage, data) {
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
     return true;
