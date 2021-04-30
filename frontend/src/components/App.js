@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import HomePage from './HomePage';
 
 const App = () => {
 
   return (
-    <div>Hello World</div>
+    <HomePage />
   );
 };
 

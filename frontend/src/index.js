@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDom from 'react-dom';
 import configureStore from './store/configureStore';
 import Root from './components/Root';
+import './index.css';
 
 const store = configureStore;
 
