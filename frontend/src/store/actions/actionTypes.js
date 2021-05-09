@@ -1,1 +1,3 @@
 export const NEW_PROJECT = 'NEW_PROJECT';
+export const LOAD_PROJECT = 'LOAD_PROJECT';
+export const SET_ACTIVE_FRAME_ID = 'SET_ACTIVE_FRAME_ID';
