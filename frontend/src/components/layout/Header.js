@@ -26,7 +26,7 @@ export const Header = () => {
             <button
               className='rounded border border-black bg-black text-white py-0.5 w-20 ml-2'
             >
-              Create
+              <a href='/create'>Create</a>
             </button>
           </li>
           <li>

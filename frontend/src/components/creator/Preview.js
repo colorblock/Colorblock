@@ -24,8 +24,8 @@ export const Preview = ({ task }) => {
   }, [task]);
 
   return (
-    <div>
-      <img src={url} className='w-full' alt='Preview' />
+    <div className='w-full h-full'>
+      { url && <img src={url} className='w-full h-full' alt='Preview' /> }
     </div>
   );
 };

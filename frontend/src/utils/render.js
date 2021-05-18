@@ -30,17 +30,21 @@ export const convertFramesToBase64 = (frames, singleFrameId=null) => {
   const ctx = canvas.getContext('2d');
 
   const gif = new GIFEncoder(width, height);
-  gif.setDelay(2000);
   gif.start();
 
+  let lastInterval = 0;
   frames.frameIds.forEach((frameId) => {
+    const frame = frames.frameList[frameId];
     if (singleFrameId === null || singleFrameId === frameId) {
-      const cells = frames.frameList[frameId].cells;
+      const cells = frame.cells;
       const paintedCtx = fillCanvasWithFrame(ctx, {
         cells,
         cols,
         cellSize,
       });
+      const delay = Math.floor((frame.interval - lastInterval) * frames.duration * 10);
+      lastInterval = frame.interval;
+      gif.setDelay(delay);
       gif.addFrame(paintedCtx);
     }
   });
@@ -51,5 +55,4 @@ export const convertFramesToBase64 = (frames, singleFrameId=null) => {
   const imageType = singleFrameId ? 'png' : 'gif';
   const url = `data:image/${imageType};base64,` + buffer.toString('base64');
   return url;
-
 };
