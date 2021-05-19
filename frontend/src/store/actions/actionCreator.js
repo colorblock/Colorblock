@@ -1,5 +1,6 @@
 import * as types from './actionTypes';
 
+// creator
 export const newProject = () => {
   return {
     type: types.NEW_PROJECT
@@ -133,5 +134,26 @@ export const changeToolType = (toolType) => {
   return {
     type: types.CHANGE_TOOL_TYPE,
     toolType
+  };
+};
+
+// wallet
+export const switchWalletModal = () => {
+  return {
+    type: types.SWITCH_WALLET_MODAL
+  };
+};
+
+export const setPublicKeyList = (keyList) => {
+  return {
+    type: types.SET_PUBLIC_KEY_LIST,
+    keyList
+  };
+};
+
+export const setAccountAddress = (address) => {
+  return {
+    type: types.SET_ACCOUNT_ADDRESS,
+    address
   };
 };

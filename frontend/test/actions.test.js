@@ -165,3 +165,21 @@ describe('creator actions', () => {
     expect(actions.changeToolType(toolType)).toEqual(expectedAction);
   });
 });
+
+describe('wallet actions', () => {
+  it('should create an action to switch wallet modal', () => {
+    const expectedAction = {
+      type: types.SWITCH_WALLET_MODAL
+    };
+    expect(actions.switchWalletModal()).toEqual(expectedAction);
+  });
+
+  it('should create an action to set public key list', () => {
+    const keyList = ['a', 'b'];
+    const expectedAction = {
+      type: types.SET_PUBLIC_KEY_LIST,
+      keyList
+    };
+    expect(actions.setPublicKeyList(keyList)).toEqual(expectedAction);
+  });
+});

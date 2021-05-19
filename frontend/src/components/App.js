@@ -5,20 +5,25 @@ import HomePage from './home/HomePage';
 import CreatorPage from './creator/CreatorPage';
 import exampleFrames from '../assets/exampleFrames';
 import { loadProject } from '../store/actions/actionCreator';
+import Header from './layout/Header';
+import Wallet from './context/Wallet';
 
 const App = (props) => {
 
+  const { loadProject } = props;
+
   useEffect(() => {
     const init = async () => {
-      const { loadProject } = props; 
       loadProject(exampleFrames);
     };
 
     init();
-  }, []);
+  }, [loadProject]);
 
   return (
     <Router>
+      <Header />
+      <Wallet />
       <Route path='/' exact>
         <HomePage />
       </Route>

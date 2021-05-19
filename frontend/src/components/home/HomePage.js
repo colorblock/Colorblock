@@ -1,10 +1,8 @@
 import React from 'react';
-import Header from '../layout/Header';
 
-const HomePage = props => {
+const HomePage = (props) => {
   return (
     <div>
-      <Header />
       <div>
         <div>
           <img className='w-2/4 m-auto' src='/img/main-page-bg.png' alt='Main' />

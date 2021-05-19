@@ -1,6 +1,11 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { switchWalletModal } from '../../store/actions/actionCreator';
 
-export const Header = () => {
+const Header = (props) => {
+  const { wallet, switchWalletModal } = props;
+
   return (
     <div className='flex mx-6 mb-2 py-2 border-b justify-between text-xs'>
       <div className='font-bold text-base px-2 flex-none h-full'>
@@ -32,8 +37,12 @@ export const Header = () => {
           <li>
             <button
               className='rounded border border-black py-0.5 w-20 ml-2'
+              onClick={ () => switchWalletModal() }
             >
-              Connect
+              { wallet.address ?
+                `${wallet.address.slice(0, 3)}**${wallet.address.slice(-4)}` :
+                'Connect'
+              }
             </button>
           </li>
         </ul>
@@ -42,4 +51,17 @@ export const Header = () => {
   );
 };
 
-export default Header;
+Header.propTypes = {
+  wallet: PropTypes.object.isRequired
+};
+
+const mapStateToProps = state => ({
+  wallet: state.wallet
+});
+
+const mapDispatchToProps = dispatch => ({
+  switchWalletModal: () => dispatch(switchWalletModal()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Header);
+

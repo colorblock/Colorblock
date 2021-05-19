@@ -1,3 +1,4 @@
+// creator
 export const NEW_PROJECT = 'NEW_PROJECT';
 export const LOAD_PROJECT = 'LOAD_PROJECT';
 export const SET_ACTIVE_FRAME_ID = 'SET_ACTIVE_FRAME_ID';
@@ -18,3 +19,8 @@ export const DRAW_WITH_BRUSH = 'DRAW_WITH_BRUSH';
 export const DRAW_WITH_BUCKET = 'DRAW_WITH_BUCKET';
 export const DRAW_WITH_ERASER = 'DRAW_WITH_ERASER';
 export const CHANGE_TOOL_TYPE = 'CHANGE_TOOL_TYPE';
+
+// wallet
+export const SWITCH_WALLET_MODAL = 'SWITCH_WALLET_MODAL';
+export const SET_PUBLIC_KEY_LIST = 'SET_PUBLIC_KEY_LIST';
+export const SET_ACCOUNT_ADDRESS = 'SET_ACCOUNT_ADDRESS';

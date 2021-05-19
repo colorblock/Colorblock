@@ -32,4 +32,13 @@
   div[data-role='painting tools'] div.selected {
     @apply bg-gray-500
   }
+  div[data-role='image type selection'] label {
+    @apply border border-black
+  }
+  div[data-role='image type selection'] label.selected {
+    @apply bg-black text-white
+  }
+  div[data-role='item submit'] * {
+    @apply block mx-auto
+  }
 }

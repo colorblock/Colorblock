@@ -286,3 +286,46 @@ describe('creator - palette reducer', () => {
     savedpalette = _.cloneDeep(palette);
   });
 });
+
+
+
+describe('wallet reducer', () => {
+  let savedState = {
+    wallet: undefined
+  };
+  let savedWallet;
+
+  it('should handle wallet init', () => {
+    const state = reducer(savedState, {});
+    const wallet = state.wallet;
+    expect(wallet.isModalOpen).toEqual(false);
+    savedState = state;
+    savedWallet = _.cloneDeep(wallet);
+  });
+
+  it('should handle action switch wallet modal', () => {
+    const state = reducer(savedState, actions.switchWalletModal());
+    const wallet = state.wallet;
+    expect(wallet.isModalOpen).toEqual(true);
+    savedState = state;
+    savedWallet = _.cloneDeep(wallet);
+  });
+  
+  it('should handle action set public key list', () => {
+    const keyList = ['a', 'b'];
+    const state = reducer(savedState, actions.setPublicKeyList(keyList));
+    const wallet = state.wallet;
+    expect(wallet.keyList).toEqual(keyList);
+    savedState = state;
+    savedWallet = _.cloneDeep(wallet);
+  });
+  
+  it('should handle action set public key list', () => {
+    const address = 'a';
+    const state = reducer(savedState, actions.setAccountAddress(address));
+    const wallet = state.wallet;
+    expect(wallet.address).toEqual(address);
+    savedState = state;
+    savedWallet = _.cloneDeep(wallet);
+  });
+});
