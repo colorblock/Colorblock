@@ -13,11 +13,14 @@
   (defschema item-schema 
     @doc  " Schema for non-fungible-token \
           \ Column definitions: \
-          \   id @key: hash by item matrix \
+          \   id @key: hash by item cells \
           \   title: the title of item, fixed \
           \   tags: the tags of item, fixed \
           \   description: the tags of item, fixed \
-          \   frames: the list of data frame, each frame is rgb matrix, unique, fixed \
+          \   cells: the string composed by colors in hex form, of unique, fixed \
+          \   rows: the number of rows in each frame, fixed \
+          \   cols: the number of cols in each frame, fixed \
+          \   frames: the number of frames, fixed \
           \   intervals: the intervals to control gif presentaion, in seconds, fixed \
           \   creator: the account of item creator, fixed \
           \   onwer: the account of current owner, changeable "
@@ -25,7 +28,10 @@
       (invariant (!= "" title))
       (invariant (!= "" description))
       (invariant (!= [] tags))
-      (invariant (!= [] frames))
+      (invariant (!= "" cells))
+      (invariant (!= 0 rows))
+      (invariant (!= 0 cols))
+      (invariant (!= 0 frames))
       (invariant (!= [] intervals))
       (invariant (!= "" creator))
       (invariant (!= "" owner))
@@ -34,7 +40,10 @@
     title:string
     tags:[string]
     description:string
-    frames:[[[string]]]
+    cells:string
+    rows:integer
+    cols:integer
+    frames:integer
     intervals:[decimal]
     creator:string 
     owner:string
@@ -47,17 +56,13 @@
           \ Column definitions: \
           \   account @key: same account as kda account \
           \   guard: same guard as kda account, fixed \
-          \   username: the username to identify users, unique, changeable \
-          \   avatar: blank, or id of one specific item owned by user, changeable \
-          \   profile: profile of user, changeable"
+          \   username: the username to identify users, unique, changeable"
     @model [
       (invariant (!= "" username))
     ]
 
     guard:guard
     username:string
-    avatar:string
-    profile:string
   )
 
   (deftable accounts:{account-schema})
@@ -150,27 +155,29 @@
 
   ; -------------------------------------------------------
   ; Constant
-  (defconst MIN_MATRIX_WIDTH 4
-    "The min width for rgb matrix"
+  (defconst MIN_FRAME_ROWS 4
+    "The min rows for each frames"
   )
-  (defconst MIN_MATRIX_HEIGHT 4
-    "The min height for rgb matrix"
+  (defconst MIN_FRAME_COLS 4
+    "The min cols for each frames"
   )
-  (defconst MAX_MATRIX_WIDTH 256
-    "The max width for rgb matrix"
+  (defconst MAX_FRAME_ROWS 256
+    "The max rows for each frames"
   )
-  (defconst MAX_MATRIX_HEIGHT 256
-    "The max height for rgb matrix"
+  (defconst MAX_FRAME_COLS 256
+    "The max cols for each frames"
   )
-  (defconst MAX_FRAMES_SIZE 65536
-    "The max size for frames"
+  (defconst MIN_FRAMES 1
+    "The min count of frames"
+  )
+  (defconst MAX_FRAMES 16
+    "The max count of frames"
+  )
+  (defconst CELL_LENGTH 6
+    "The length for each cell"
   )
 
-  (defconst RGB_CELL_LENGTH 6
-    "The length for every RGB cell in matrix"
-  )
-
-  (defconst MIN_INTERVAL 0.1
+  (defconst MIN_INTERVAL 0.01
     "The min interval limitation"
   )
   (defconst MAX_INTERVAL 1.0
@@ -190,13 +197,6 @@
     "The max length of item description"
   )
 
-  (defconst MAX_USERNAME_LENGTH 64
-    "The max length of account username"
-  )
-  (defconst MAX_PROFILE_LENGTH 256
-    "The max length of account profile"
-  )
-  
   (defconst NULL_OWNER "NULL_OWNER")
 
 
@@ -207,117 +207,79 @@
     (enforce (!= "" account) "Empty identifier")
   )
 
-  (defun valid-frames (frames:[[[string]]])
-    @doc "check whether frames are valid \
-        \ max size can not exceed MAX_FRAMES_SIZE"
-    (enforce
-      (>= MAX_FRAMES_SIZE (fold (+) 0 (map (valid-matrix) frames)))
-      (format
-        "Frames total size could not exceed {}"
-        [MAX_FRAMES_SIZE]
-      )
-    )
-  )
+  (defun valid-cells (cells:string rows:integer cols:integer frames:integer)
+    @doc "check whether cells conforms to following rules: \
+        \1. the length of cells = rows * cols * frames * cell-length \
+        \2. rows between MIN_FRAME_ROWS and MAX_FRAME_ROWS \
+        \3. cols between MIN_FRAME_COLS and MAX_FRAME_COLS \
+        \4. frames between MIN_FRAMES and MAX_FRAMES \
+        \5. cells in HEX format "
 
-  (defun valid-matrix:integer (matrix:[[string]])
-    @doc "check whether matrix conforms to following rules: \
-        \1. matrix is a list with length ranging from min-const to max-const \
-        \2. each element of matrix is also a list \
-        \3. each element of sub-list is string with fix-const length \
-        \4. each element of sub-list is string in specific charset \
-        \5. all sub-lists have same element lengths \
-        \6. these same lengths range from min-const to max-const \
-        \\
-        \ return matrix size = width * height "
-    
     ; Validate Rule-1
+    (enforce
+      (= (length cells) (fold (*) 1 [rows cols frames CELL_LENGTH]))
+      "the length of cells is not correct"
+    )
+
+    ; Validate Rule-2
     (enforce 
       (and
-        (<= MIN_MATRIX_HEIGHT (length matrix))
-        (>= MAX_MATRIX_HEIGHT (length matrix))
+        (<= MIN_FRAME_ROWS rows)
+        (>= MAX_FRAME_ROWS rows)
       )
-      (format 
-        "matrix height expected in range of {} ~ {}, but got {}"
-        [ MIN_MATRIX_HEIGHT
-          MAX_MATRIX_HEIGHT
-          (length matrix)
+      (format
+        "the number of rows in each frame expected in range of {} ~ {}"
+        [
+          MIN_FRAME_ROWS
+          MIN_FRAME_ROWS
+        ]
+      )
+    )
+
+    ; Validate Rule-3
+    (enforce 
+      (and
+        (<= MIN_FRAME_COLS cols)
+        (>= MAX_FRAME_COLS cols)
+      )
+      (format
+        "the number of cols in each frame expected in range of {} ~ {}"
+        [
+          MIN_FRAME_COLS
+          MIN_FRAME_COLS
+        ]
+      )
+    )
+
+    ; Validate Rule-4
+    (enforce 
+      (and
+        (<= MIN_FRAMES frames)
+        (>= MAX_FRAMES frames)
+      )
+      (format
+        "the number of frames expected in range of {} ~ {}"
+        [
+          MIN_FRAMES
+          MIN_FRAMES
         ]
       )
     )
 
     ; Validate Rule-5
     (enforce 
-      (let* 
-        (
-          (length-list (map (length) matrix)) ; get length of every row
-          (sorted (sort length-list))
-          (reversed (reverse sorted))
-        )
-        (= (take 1 sorted) (take 1 reversed))
-      )
-      "matrix rows' lengths expected same, but got different lengths"
-    )
-
-    ; Validate other rules in each sub-list
-    (map (valid-matrix-row) matrix)
-
-    ; Return matrix size
-    (let 
-      (
-        (height (length matrix))
-        (width (length (at 0 matrix)))
-      )
-      (* width height)
-    )
-  )
-
-  (defun valid-matrix-row (sub-list:[string])
-    @doc "verify pattern of matrix row"
-
-    ; Validate Rule-2&6
-    (enforce 
-      (and
-        (<= MIN_MATRIX_WIDTH (length sub-list))
-        (>= MAX_MATRIX_WIDTH (length sub-list))
-      )
-      (format 
-        "matrix width expected in range of {} ~ {}, but got {}"
-        [ MIN_MATRIX_WIDTH
-          MAX_MATRIX_WIDTH
-          (length sub-list)
-        ]
-      )
-    )
-
-    ; Validate Rule-3
-    (enforce
-      (let
-        ((sorted (sort (map (length) sub-list))))
-        (and
-          (= RGB_CELL_LENGTH (at 0 sorted))
-          (= RGB_CELL_LENGTH (at 0 (reverse sorted)))
-        )
-      )
-      (format
-        "matrix cell content expected as string with {} words, got other length"
-        [ RGB_CELL_LENGTH ]
-      )
-    )
-
-    ; Validate Rule-4
-    (enforce 
-      (!= [] (map (str-to-int 16) sub-list))
+      (!= "" (str-to-int 16 cells))
       "Using illegal letters in content, please use HEX charset"
     )
   )
 
   (defun valid-intervals
     ( intervals:[decimal]
-      frame-count:integer
+      frames:integer
     )
     @doc " Check whether intervals conforms to following rules: \
         \1.each interval should between MIN_INTERVAL than MAX_INTERVAL \
-        \2.interval count equals frame-count "
+        \2.interval count equals frames "
     (enforce
       (and
         (<= MIN_INTERVAL (at 0 (sort intervals)))
@@ -329,8 +291,8 @@
       )
     )
     (enforce
-      (= frame-count (length intervals))
-      "Interval count must equal to frame count"
+      (= frames (length intervals))
+      "Interval count must equal to the number of frames"
     )
   )
 
@@ -347,7 +309,10 @@
     ( title:string 
       tags:[string]
       description:string
-      frames:[[[string]]]
+      cells:string
+      rows:integer
+      cols:integer
+      frames:integer
       intervals:[decimal]
       creator:string 
     )
@@ -399,16 +364,16 @@
       "Creator can not be empty"
     )
 
-    ; Validate frames, make sure it conforms to standards
-    (valid-frames frames)
+    ; Validate cells make sure it conforms to standards
+    (valid-cells cells rows cols frames)
 
     ; Validate intervals
-    (valid-intervals intervals (length frames))
+    (valid-intervals intervals frames)
 
     ; Insert into DB
     (let
-      ; Create hash with matrix
-      ((id (hash frames)))
+      ; Create hash with cells 
+      ((id (hash cells)))
       
       ; Acquire capability
       (with-capability (OWN-ACCOUNT creator)
@@ -418,6 +383,9 @@
             "title" : title,
             "tags" : tags,
             "description" : description,
+            "cells" : cells, 
+            "rows" : rows, 
+            "cols" : cols,
             "frames" : frames,
             "intervals" : intervals,
             "creator" : creator,
@@ -432,7 +400,10 @@
     ( title:string 
       tags:[string]
       description:string
-      frames:[[[string]]]
+      cells:string
+      rows:integer
+      cols:integer
+      frames:integer
       intervals:[decimal]
       creator:string 
       guard:guard
@@ -440,7 +411,7 @@
     @doc "Create new user first and then create item"
 
     (create-account-maybe creator guard)
-    (create-item title tags description frames intervals creator)
+    (create-item title tags description cells rows cols frames intervals creator)
   )
 
   (defun item-details:object{item-schema} (id:string)
@@ -488,9 +459,7 @@
       (= NULL_OWNER account)
       (insert accounts account {  ; not checking coin if account is NULL_OWNER
         "guard" : guard,
-        "username" : account,
-        "avatar" : "",
-        "profile" : ""
+        "username" : account
       })
       (with-capability (ACCOUNT account guard)
         ; enforce guard consistent with KDA here,
@@ -504,92 +473,8 @@
           )
           (insert accounts account {
             "guard" : guard,
-            "username" : account,
-            "avatar" : "",
-            "profile" : ""
+            "username" : account
           })
-        )
-      )
-    )
-  )
-
-  (defun update-account:string
-    (
-      account:string
-      username:string
-      avatar:string
-      profile:string
-    )
-    @doc "Update infos of account."
-
-    (with-read accounts account
-      { "username" := cur-username,
-        "avatar" := cur-avatar,
-        "profile" := cur-profile,
-        "guard" := guard
-      }
-
-      (enforce
-        (>= MAX_USERNAME_LENGTH (length username))
-        (format
-          "Illegal username: length larger than {}"
-          [ MAX_USERNAME_LENGTH ]
-        )
-      )
-      (let ((name-count (length (select accounts (where 'username (= username))))))
-        (enforce
-          (or
-            (= "" username)
-            (or
-              (= 0 name-count)
-              (= username cur-username)  ; in case of same username
-            )
-          )
-          (format
-            "username already exists: {}" 
-            [ username ]
-          )
-        )
-      )
-      (enforce
-        (>= MAX_PROFILE_LENGTH (length profile))
-        (format
-          "Illegal profile: length larger than {}"
-          [ MAX_PROFILE_LENGTH ]
-        )
-      )
-      (let 
-        ((
-          own-avatar
-          (or
-            (= "" avatar)
-            (= account (owner-of avatar))
-          )
-        ))
-        (enforce
-          own-avatar
-          (format
-            "Illegal avatar: account is not the owner of item @{}"
-            [ avatar ]
-          )
-        )
-      )
-      (let 
-        (
-          (new-username (if (!= "" username) username cur-username))
-          (new-avatar (if (!= "" avatar) avatar cur-avatar))
-          (new-profile (if (!= "" profile) profile cur-profile))
-        )
-        ; verify guard for account security
-        (with-capability (OWN-ACCOUNT account)
-          (with-capability (ACCOUNT account guard)
-            (update accounts account
-              { "username" : new-username,
-                "avatar" : new-avatar,
-                "profile" : new-profile
-              }
-            )
-          )
         )
       )
     )

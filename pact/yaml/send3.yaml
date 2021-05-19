@@ -1,4 +1,4 @@
-code: (colorblock.create-item "my-title" ["my-tag"] "my-desc" [[["aaaaaa" "bbbbbb" "cccccc" "dddddd"] ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] ["aaaaaa" "bbbbbb" "cccccc" "dddddd"]] [["aaaaaa" "bbbbbb" "cccccc" "dddddd"] ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] ["aaaaaa" "bbbbbb" "cccccc" "dddddd"] ["aaaaaa" "bbbbbb" "cccccc" "dddddd"]]] [1.0 0.5]  "bob")
+code: (colorblock.create-item "my-title" ["my-tag"] "my-desc" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 4 4 2 [0.5 0.5] "bob")
 data: 
   bob-keyset: ["7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c"]
 keyPairs:
