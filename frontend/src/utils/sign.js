@@ -1,7 +1,8 @@
 import Pact from 'pact-lang-api';
 const NETWORKID = 'mainnet01';
 const chainId = '0';
-const network = `https://api.chainweb.com/chainweb/0.0/${NETWORKID}/chain/${chainId}/pact`;
+// const network = `https://api.chainweb.com/chainweb/0.0/${NETWORKID}/chain/${chainId}/pact`;
+const network = 'http://api.colorblockart.com';
 const walletUrl = 'http://127.0.0.1:9467/v1';
 
 
@@ -25,14 +26,20 @@ export const getWalletAccounts = async () => {
   return accounts;
 }
 
-
+/*
 export const contractModules = {
   colorblock: 'colorblock-test-v1',
   cbmarket: 'cbmarket-test-v1',
   marketAccount: 'colorblock-test-v1-market'
 };
+*/
+export const contractModules = {
+  colorblock: 'colorblock',
+  cbmarket: 'cbmarket1',
+  marketAccount: 'colorblock-market'
+};
 
-export const sendToPactServer = async (inputCmd) => {
+export const getSignedCmd = async (inputCmd) => {
   // set cmd correctly
   const fixedCmd = {
     gasPrice: 0.00001,
@@ -44,8 +51,7 @@ export const sendToPactServer = async (inputCmd) => {
   const signingCmd = {...fixedCmd, ...inputCmd};
 
   // get sign from wallet
-  console.log(signingCmd);
-  const signingResult = await fetch('http://127.0.0.1:9467/v1/sign', mkReq(signingCmd)).then(res => res.json());
+  const signingResult = await fetch(`${walletUrl}/sign`, mkReq(signingCmd)).then(res => res.json());
   console.log(signingResult);
 
   // send signed cmd
@@ -54,10 +60,7 @@ export const sendToPactServer = async (inputCmd) => {
       signingResult.body
     ]
   };
-  console.log(signedCmd);
-  const result = await fetch(`${network}/api/v1/send`, mkReq(signedCmd)).then(res => res.json());
-  console.log(result);
-  return result;
+  return mkReq(signedCmd);
 };
 
 export const getDataFromPactServer = async (code) => {
