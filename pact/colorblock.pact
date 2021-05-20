@@ -272,11 +272,19 @@
   )
 
   (defun valid-hex (cells:string i:integer v:integer)
-    (enforce 
-      (!= "-1" (str-to-int 16 (take 512 (drop (* 512 i) cells))))
-      "Using illegal letters in content, please use HEX charset"
+    (let 
+      (
+        (partial-str (take 512 (drop (* 512 i) cells)))
+      )
+      (enforce 
+        (or
+          (= "" partial-str)
+          (!= "-1" (str-to-int 16 partial-str))
+        )
+        "Using illegal letters in content, please use HEX charset"
+      )
+      (+ i 1)
     )
-    (+ i 1)
   )
 
   (defun valid-intervals
