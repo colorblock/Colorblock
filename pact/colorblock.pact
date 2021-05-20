@@ -267,10 +267,16 @@
     )
 
     ; Validate Rule-5
+    ; split to multiple length-512 substrs as there's input length limitation
+    (fold (valid-hex cells) 0 (make-list (+ 1 (/ (length cells) 512)) 1))
+  )
+
+  (defun valid-hex (cells:string i:integer v:integer)
     (enforce 
-      (!= "" (str-to-int 16 cells))
+      (!= "-1" (str-to-int 16 (take 512 (drop (* 512 i) cells))))
       "Using illegal letters in content, please use HEX charset"
     )
+    (+ i 1)
   )
 
   (defun valid-intervals

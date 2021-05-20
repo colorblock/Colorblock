@@ -247,6 +247,12 @@
   (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 1 [0.5 0.5] "admin")
 )
+(expect-failure
+  "Creating will fail as there's non-hex character"
+  "not a digit"
+  (colorblock.create-item "title" ["tag"] "description" "Taaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+    4 4 1 [1.0] "admin")
+)
 
 (commit-tx)
 (begin-tx)
