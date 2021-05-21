@@ -11,6 +11,7 @@ import * as actions from '../../store/actions/actionCreator';
 import { ActionCreators } from 'redux-undo';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
 import { contractModules, getSignedCmd } from '../../utils/sign';
+import { serverUrl } from '../../config';
 
 const CreatePage = (props) => {
   const { palette, frames, dpt, wallet } = props;  // dpt means dispatch
@@ -112,6 +113,14 @@ const CreatePage = (props) => {
     }
   };
 
+  const clickUpload = () => {
+    if (wallet.address) {
+      setIsModalOpen(true);
+    } else {
+      alert('please connect to wallet first');
+    }
+  };
+
   const onSubmitItem = async () => {
     const singleFrameId = isPreviewStatic ? frames.activeId : null;
     const { title, description } = submitItem;
@@ -160,8 +169,7 @@ const CreatePage = (props) => {
     };
     const signedCmd = await getSignedCmd(cmd);
     console.log(signedCmd);
-    const network = 'http://api.colorblockart.com';
-    const result = await fetch(`${network}/api/v1/send`, signedCmd).then(res => res.json());
+    const result = await fetch(`${serverUrl}/item`, signedCmd).then(res => res.json());
     console.log(result);
     return result;
   };
@@ -323,7 +331,7 @@ const CreatePage = (props) => {
               }
             </div>
             <div className='mt-2'>
-              <button className='w-full bg-gray-400 border-b-4 border-gray-100 py-2 rounded' onClick={ () => setIsModalOpen(true) }>UPLOAD</button>
+              <button className='w-full bg-gray-400 border-b-4 border-gray-100 py-2 rounded' onClick={ () => clickUpload() }>UPLOAD</button>
             </div>
             <div className='mt-2'>
               <button className='w-full bg-red-800 text-white border-b-4 border-red-400 py-1 rounded'><FontAwesomeIcon icon={fa.faDownload} /></button>

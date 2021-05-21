@@ -1,9 +1,10 @@
 import Pact from 'pact-lang-api';
+import { walletUrl } from '../config';
+
 const NETWORKID = 'mainnet01';
 const chainId = '0';
 // const network = `https://api.chainweb.com/chainweb/0.0/${NETWORKID}/chain/${chainId}/pact`;
 const network = 'http://api.colorblockart.com';
-const walletUrl = 'http://127.0.0.1:9467/v1';
 
 
 export const mkReq = (cmd) => {
@@ -48,19 +49,20 @@ export const getSignedCmd = async (inputCmd) => {
     ttl: 600,
     networkId: NETWORKID,
   };
-  const signingCmd = {...fixedCmd, ...inputCmd};
+  const signingCmd = mkReq({...fixedCmd, ...inputCmd});
 
   // get sign from wallet
-  const signingResult = await fetch(`${walletUrl}/sign`, mkReq(signingCmd)).then(res => res.json());
-  console.log(signingResult);
+  console.log('signingCmd', signingCmd);
+  const signingResult = await fetch(`${walletUrl}/sign`, signingCmd).then(res => res.json());
+  console.log('signingResult', signingResult);
 
   // send signed cmd
-  const signedCmd = {
+  const signedCmd = mkReq({
     cmds: [
       signingResult.body
     ]
-  };
-  return mkReq(signedCmd);
+  });
+  return signedCmd;
 };
 
 export const getDataFromPactServer = async (code) => {
