@@ -51,7 +51,7 @@
 )
 (expect 
   "Create item for testing changing avatar"
-  "Write succeeded"
+  {"id":"GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"}
   (colorblock.create-item "my-title" ["my-tag"] "my-desc" 
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
     5 4 1 [1.0] "admin")
@@ -338,7 +338,7 @@
 ]}])
 (expect
   "Creating will success"
-  "Write succeeded"
+  {"id": "QlQFys2eKpzc1HNFReT0xp0IGRfEGyP6yqh3sd7JlIY"}
   (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 2 [0.5 0.5] "alice")
 )
