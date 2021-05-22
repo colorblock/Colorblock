@@ -51,8 +51,8 @@
 )
 (expect 
   "Create item for testing changing avatar"
-  {"id":"id"}
-  (colorblock.create-item "id" "my-title" ["my-tag"] "my-desc" 
+  {"id":"id1"}
+  (colorblock.create-item "id1" "my-title" ["my-tag"] "my-desc" 
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
     5 4 1 [1.0] "admin")
 )
@@ -74,32 +74,32 @@
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Managed capability not installed"
-  (cbmarket.release "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 10.0)
+  (cbmarket.release "admin" "id1" 10.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "admin" "colorblock-market" "FFFFFQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Managed capability not installed"
-  (cbmarket.release "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 10.0)
+  (cbmarket.release "admin" "id1" 10.0)
 )
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "colorblock-market" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "admin" "colorblock-market" "id1"),
   (colorblock.OWN-ACCOUNT "bob")
 ]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Managed capability not installed"
-  (cbmarket.release "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 10.0)
+  (cbmarket.release "admin" "id1" 10.0)
 )
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "colorblock-market" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "admin" "colorblock-market" "id1"),
   (colorblock.OWN-ACCOUNT "admin")
 ]}])
 
 (expect-failure
   "Release will fail as seller is not matched"
   "Seller is not owner"
-  (cbmarket.release "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 10.0)
+  (cbmarket.release "bob" "id1" 10.0)
 )
 (expect-failure
   "Release will fail as item doesn't exist"
@@ -109,7 +109,7 @@
 (expect-failure
   "Release will fail as price equals zero"
   "Price must larger than zero"
-  (cbmarket.release "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 0.0)
+  (cbmarket.release "admin" "id1" 0.0)
 )
 
 (env-sigs [{"key": "admin", "caps": [
@@ -123,7 +123,7 @@
 (expect
   "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
   "Write succeeded"
-  (cbmarket.release "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 10.0)
+  (cbmarket.release "admin" "id1" 10.0)
 )
 (expect
   "There's 1 item on-sale"
@@ -148,7 +148,7 @@
 (expect
   "Item owner expected to be market account"
   "colorblock-market"
-  (colorblock.owner-of "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.owner-of "id1")
 )
 (expect
   "admin expected to have no item anymore"
@@ -173,10 +173,10 @@
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure"
-  (cbmarket.modify "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 12.0)
+  (cbmarket.modify "admin" "id1" 12.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]}])
-(cbmarket.modify "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 12.0)
+(cbmarket.modify "admin" "id1" 12.0)
 
 (commit-tx)
 
@@ -191,18 +191,18 @@
 (expect-failure
   "Release will fail as account is not seller"
   "Account is not seller"
-  (cbmarket.modify "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 12.0)
+  (cbmarket.modify "bob" "id1" 12.0)
 )
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure"
-  (cbmarket.modify "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 12.0)
+  (cbmarket.modify "admin" "id1" 12.0)
 )
 (env-sigs [{"key": "admin", "caps": []}])
 (expect
   "Recall succeeds"
   "Write succeeded"
-  (cbmarket.recall "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (cbmarket.recall "admin" "id1")
 )
 (expect
   "Item expected to have correct price"
@@ -222,7 +222,7 @@
 (expect
   "Item owner expected to be market account"
   "admin"
-  (colorblock.owner-of "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.owner-of "id1")
 )
 (expect
   "admin expected to have 1 item now"
@@ -249,7 +249,7 @@
 (expect-failure
   "Purchase will fail as item is not on sale"
   "Item is not on sale"
-  (cbmarket.purchase "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (cbmarket.purchase "bob" "id1")
 )
 
 (env-sigs [{"key": "admin", "caps": [
@@ -258,13 +258,13 @@
 (expect
   "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
   "Write succeeded"
-  (cbmarket.release "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg" 10.0)
+  (cbmarket.release "admin" "id1" 10.0)
 )
 
 (expect
   "Item expected to have correct status"
   10.0
-  (at 'price (cbmarket.item-sale-status "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"))
+  (at 'price (cbmarket.item-sale-status "id1"))
 )
 
 
@@ -279,7 +279,7 @@
 (expect
   "Purchase succeeds with correct keyset and capability"
   "Write succeeded"
-  (cbmarket.purchase "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (cbmarket.purchase "bob" "id1")
 )
 (expect
   "Item expected to have correct price"
@@ -299,7 +299,7 @@
 (expect
   "Item owner expected to be market account"
   "bob"
-  (colorblock.owner-of "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.owner-of "id1")
 )
 (expect
   "admin expected to have 0 item now"
@@ -338,8 +338,8 @@
 ]}])
 (expect
   "Creating will success"
-  {"id": "id"}
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  {"id": "id2"}
+  (colorblock.create-item "id2" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 2 [0.5 0.5] "alice")
 )
 (commit-tx)
@@ -353,7 +353,7 @@
 (expect
   "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
   "Write succeeded"
-  (cbmarket.release "alice" "QlQFys2eKpzc1HNFReT0xp0IGRfEGyP6yqh3sd7JlIY" 5.0)
+  (cbmarket.release "alice" "id2" 5.0)
 )
 
 ; add-balance
@@ -364,5 +364,5 @@
 (expect
   "Purchase succeeds with correct keyset and capability"
   "Write succeeded"
-  (cbmarket.purchase-with-new-user "lucy" "QlQFys2eKpzc1HNFReT0xp0IGRfEGyP6yqh3sd7JlIY" (read-keyset "lucy-keyset"))
+  (cbmarket.purchase-with-new-user "lucy" "id2" (read-keyset "lucy-keyset"))
 )

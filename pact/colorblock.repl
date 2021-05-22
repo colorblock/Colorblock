@@ -110,8 +110,8 @@
 (env-sigs [{"key": "bob", "caps": [(colorblock.OWN-ACCOUNT "bob")]}])
 (expect 
   "Create item for testing creating item"
-  {"id": "Va46yA2PXztgv1_7PaGcaCDTyDh7ahB3yw1WAsrEeug"}
-  (colorblock.create-item "my-title" ["my-tag"] "my-desc" 
+  {"id": "id"}
+  (colorblock.create-item "id" "my-title" ["my-tag"] "my-desc" 
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
     4 4 1 [1.0] "bob")
 )
@@ -173,23 +173,23 @@
 (expect-failure 
   "Creating will fail as title is blank" 
   "Title can not be empty"
-  (colorblock.create-item "" ["tag"] "" "a" 1 1 1 [1.0] "admin")
+  (colorblock.create-item "id" "" ["tag"] "" "a" 1 1 1 [1.0] "admin")
 )
 (expect-failure 
   "Creating will fail as tag length limit exceeded" 
   "Illegal tags: length larger than"
-  (colorblock.create-item "title" ["asdasdasdasdasdsadasddddddddddddddddddddddd"] "description" "a" 1 1 1 [] "admin")
+  (colorblock.create-item "id" "title" ["asdasdasdasdasdsadasddddddddddddddddddddddd"] "description" "a" 1 1 1 [] "admin")
 )
 (expect-failure 
   "Creating will fail as tag count limit exceeded" 
   "Illegal tags: more than"
-  (colorblock.create-item "title" ["sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd"] 
+  (colorblock.create-item "id" "title" ["sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd"] 
    "description" "a" 1 1 1 [] "admin")
 )
 (expect-failure 
   "Creating will fail as description length limit exceeded" 
   "Illegal description: length larger than"
-  (colorblock.create-item 
+  (colorblock.create-item "id"
     "title" 
     ["sds" "sds" "sdsad" "sd"] 
     "description-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 
@@ -200,57 +200,57 @@
 (expect-failure 
   "Creating will fail as cells length is wrong" 
   "the length of cells is not correct"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaa" 1 2 1 [] "admin")
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaa" 1 2 1 [] "admin")
 )
 (expect-failure
   "Creating will fail as cells length is wrong" 
   "the length of cells is not correct"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaa" 1 1 3 [] "admin")
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaa" 1 1 3 [] "admin")
 )
 (expect-failure
   "Creating will fail as rows length is wrong" 
   "the number of rows in each frame expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaa" 1 4 1 [] "admin")
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaa" 1 4 1 [] "admin")
 )
 (expect-failure
   "Creating will fail as rows length is wrong" 
   "the number of rows in each frame expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   257 1 1 [] "admin")
 )
 (expect-failure
   "Creating will fail as cols length is wrong" 
   "the number of cols in each frame expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaa" 4 1 1 [] "admin")
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaa" 4 1 1 [] "admin")
 )
 (expect-failure
   "Creating will fail as cols length is wrong" 
   "the number of cols in each frame expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     4 257 1 [] "admin")
 )
 (expect-failure
   "Creating will fail as frames length is wrong" 
   "the number of frames expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" "" 
+  (colorblock.create-item "id" "title" ["tag"] "description" "" 
     4 4 0 [] "admin")
 )
 (expect-failure
   "Creating will fail as frames length is wrong" 
   "the number of frames expected in range of"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 17 [] "admin")
 )
 (expect-failure
   "Creating will fail as intervals count not equal to frame"
   "Interval count must equal to the number of frames"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 1 [0.5 0.5] "admin")
 )
 (expect-failure
   "Creating will fail as there's non-hex character"
   "not a digit"
-  (colorblock.create-item "title" ["tag"] "description" "Taaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  (colorblock.create-item "id" "title" ["tag"] "description" "Taaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 1 [1.0] "admin")
 )
 
@@ -261,13 +261,13 @@
 (expect-failure
   "Creating will fail as Key doesn't match"
   "Managed capability not installed"
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  (colorblock.create-item "id" "title" ["tag"] "description" "baaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 1 [1.0] "bob")
 )
 (expect
   "Creating will success"
-  {"id":"GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"}
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  {"id":"id2"}
+  (colorblock.create-item "id2" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     5 4 1 [1.0] "admin")
 )
 
@@ -277,8 +277,8 @@
 
 (expect
   "Creating will success"
-  {"id":"QlQFys2eKpzc1HNFReT0xp0IGRfEGyP6yqh3sd7JlIY"}
-  (colorblock.create-item "title" ["tag"] "description"
+  {"id":"id3"}
+  (colorblock.create-item "id3" "title" ["tag"] "description"
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 2 [0.5 0.5] "admin"
   )
@@ -342,86 +342,86 @@
 (expect-failure
   "Tanfering will fail as arguments in caps must be consistent with function"
   "Managed capability not installed"
-  (colorblock.transfer "admin" "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer "admin" "bob" "id")
 )
 
 (commit-tx)
 (begin-tx)
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "admin" "bob" "id3"),
   (colorblock.OWN-ACCOUNT "admin")]}
 ])
 
 (expect
   "Tanfering will success"
   "Write succeeded"
-  (colorblock.transfer "admin" "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer "admin" "bob" "id3")
 )
 
 (commit-tx)
 (begin-tx)
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "admin" "bob" "id"),
   (colorblock.OWN-ACCOUNT "admin")]}
 ])
 
 (expect-failure
   "Tanfering will fail as sender must be owner of item"
   "Sender is not owner"
-  (colorblock.transfer "admin" "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer "admin" "bob" "id")
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "bob" "alice" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "bob" "alice" "id")]}])
 (expect-failure
   "Tanfering will fail as signer doesn't match with sender in caps"
   "Managed capability not installed"
-  (colorblock.transfer "bob" "alice" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer "bob" "alice" "id")
 )
 (env-sigs [{"key": "bob", "caps": [
-  (colorblock.TRANSFER "bob" "alice" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "bob" "alice" "id"),
   (colorblock.OWN-ACCOUNT "bob")
 ]}])
 (expect-failure
   "Tanfering will fail as receiver doesn't exist"
   "row not found"
-  (colorblock.transfer "bob" "alice" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer "bob" "alice" "id")
 )
-(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "bob" "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")]}])
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "bob" "admin" "id")]}])
 (expect
   "Owner is belong to old account"
   "bob"
-  (colorblock.owner-of "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.owner-of "id")
 )
 
 (env-sigs [{"key": "bob", "caps": [
-  (colorblock.TRANSFER "bob" "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "bob" "admin" "id"),
   (colorblock.OWN-ACCOUNT "bob")
 ]}])
 
 (expect
   "Tanfering will fail as sender must be owner of item"
   "Write succeeded"
-  (colorblock.transfer "bob" "admin" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer "bob" "admin" "id")
 )
 (expect
   "Owner is swithed to new account"
   "admin"
-  (colorblock.owner-of "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.owner-of "id")
 )
 
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "alice" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+  (colorblock.TRANSFER "admin" "alice" "id"),
   (colorblock.OWN-ACCOUNT "admin")
 ]}])
 
 (expect
   "Tanfer successfuly when add creating phase"
   "Write succeeded"
-  (colorblock.transfer-create "admin" "alice" (read-keyset "alice-keyset") "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer-create "admin" "alice" (read-keyset "alice-keyset") "id")
 )
 (expect
   "Owner is swithed to new account"
   "alice"
-  (colorblock.owner-of "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.owner-of "id")
 )
 (expect
   "Account is created after transfer-create"
@@ -430,7 +430,7 @@
 )
 (env-sigs [
   {"key": "alice", "caps": [
-    (colorblock.TRANSFER "alice" "bob" "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"),
+    (colorblock.TRANSFER "alice" "bob" "id"),
     (colorblock.OWN-ACCOUNT "alice")
   ]},
   {"key": "bob", "caps": []}
@@ -438,7 +438,7 @@
 (expect-failure
   "Tanfering will fail as receiver already exists"
   "row found for key bob"
-  (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg")
+  (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "id")
 )
 
 

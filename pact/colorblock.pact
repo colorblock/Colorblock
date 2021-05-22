@@ -398,7 +398,7 @@
     ; Insert into DB
     (let
       ; Create hash with cells
-      (hash-id (hash cells))
+      ((hash-id (hash cells)))
 
       ; Make sure there's no existance
       (map (valid-same-hash hash-id) (all-items))
