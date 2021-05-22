@@ -405,6 +405,10 @@
             "creator" : creator,
             "owner" : creator
           })
+          ; Return id
+          {
+            "id": id
+          }
         )
       )
     )

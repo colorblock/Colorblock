@@ -110,7 +110,7 @@
 (env-sigs [{"key": "bob", "caps": [(colorblock.OWN-ACCOUNT "bob")]}])
 (expect 
   "Create item for testing creating item"
-  "Write succeeded"
+  {"id": "Va46yA2PXztgv1_7PaGcaCDTyDh7ahB3yw1WAsrEeug"}
   (colorblock.create-item "my-title" ["my-tag"] "my-desc" 
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
     4 4 1 [1.0] "bob")
@@ -266,7 +266,7 @@
 )
 (expect
   "Creating will success"
-  "Write succeeded"
+  {"id":"GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"}
   (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     5 4 1 [1.0] "admin")
 )
@@ -277,7 +277,7 @@
 
 (expect
   "Creating will success"
-  "Write succeeded"
+  {"id":"QlQFys2eKpzc1HNFReT0xp0IGRfEGyP6yqh3sd7JlIY"}
   (colorblock.create-item "title" ["tag"] "description"
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 2 [0.5 0.5] "admin"
