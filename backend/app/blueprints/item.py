@@ -1,6 +1,10 @@
+from re import I
 from flask import Blueprint, request, current_app as app
 import requests
+import json
 import time
+
+from app.utils.render import generate_image_from_item
 
 item_blueprint = Blueprint('item', __name__)
 
@@ -11,10 +15,13 @@ def get_item():
 
 @item_blueprint.route('/', methods=['POST'])
 def submit_item():
-    data = request.json
+    post_data = request.json
+    cmd = json.loads(post_data['cmds'][0]['cmd'])
+    item_data = cmd['payload']['exec']['data']
+
     url = '{}/api/v1/send'.format(app.config['PACT_URL'])
     try:
-        res = requests.post(url, json=data)
+        res = requests.post(url, json=post_data)
         request_key_data = res.json()
         request_key = request_key_data['requestKeys'][0]
 
@@ -23,8 +30,12 @@ def submit_item():
         url = '{}/api/v1/poll'.format(app.config['PACT_URL'])
         res = requests.post(url, json=request_key_data)
         result = res.json()[request_key]['result']
-        
+    
         app.logger.debug(result)
+
+        item_data['id'] = result['data']['id']
+        generate_image_from_item(item_data)
+        
         if result['status'] == 'success':
             return 'success'
         else:

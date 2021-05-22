@@ -83,19 +83,21 @@ export const convertFramesToString = (frames, singleFrameId=null) => {
 };
 
 export const convertFramesToIntervals = (frames, singleFrameId=null) => {
-  const intervalList = [];
-  frames.frameIds.forEach((frameId, index) => {
-    const frame = frames.frameList[frameId];
-    if (singleFrameId == null || singleFrameId === frameId) {
+  if (singleFrameId == null) {
+    const intervalList = [];
+    frames.frameIds.forEach((frameId, index) => {
+      const frame = frames.frameList[frameId];
       intervalList.push(frame.interval);
-    }
-  });
-  const intervals = [];
-  intervalList.forEach((interval, index) => {
-    const lastInterval = index === 0 ? 0 : intervalList[index - 1];
-    const intervalDiff = interval - lastInterval;
-    const duration = frames.duration * intervalDiff / 100;
-    intervals.push(duration);
-  });
-  return intervals;
+    });
+    const intervals = [];
+    intervalList.forEach((interval, index) => {
+      const lastInterval = index === 0 ? 0 : intervalList[index - 1];
+      const intervalDiff = interval - lastInterval;
+      const duration = frames.duration * intervalDiff / 100;
+      intervals.push(duration);
+    });
+    return intervals;
+  } else {
+    return [1.0];
+  }
 };
