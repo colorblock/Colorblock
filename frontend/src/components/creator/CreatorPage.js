@@ -9,13 +9,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 import * as actions from '../../store/actions/actionCreator';
 import { ActionCreators } from 'redux-undo';
+import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
+import { contractModules, getSignedCmd } from '../../utils/sign';
+import { serverUrl } from '../../config';
 
 const CreatePage = (props) => {
-  const { palette, frames, dpt } = props;  // dpt means dispatch
+  const { palette, frames, dpt, wallet } = props;  // dpt means dispatch
 
   const [isPreviewStatic, setIsPreviewStatic] = useState(true);  // whether preview box is showing static frame or not. true: static, false: animation
   const [isPreviewLarge, setIsPreviewLarge] = useState(true);    // control the size of preview box
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitItem, setSubmitItem] = useState({});
   const [pickr, setPickr] = useState(null);
 
   const ratio = frames.height / frames.width;
@@ -107,6 +111,67 @@ const CreatePage = (props) => {
         return;
       default:
     }
+  };
+
+  const clickUpload = () => {
+    if (wallet.address) {
+      setIsModalOpen(true);
+    } else {
+      alert('please connect to wallet first');
+    }
+  };
+
+  const onSubmitItem = async () => {
+    const singleFrameId = isPreviewStatic ? frames.activeId : null;
+    const { title, description } = submitItem;
+    const tags = submitItem.tags.split(',').map(v => v.trim());
+    const cells = convertFramesToString(frames, singleFrameId);
+    const rows = frames.height;
+    const cols = frames.width;
+    const frameCnt = isPreviewStatic ? 1 : frames.frameIds.length;
+    const intervals = convertFramesToIntervals(frames, singleFrameId);
+    const account = wallet.address;
+    const cmd = {
+      code: `(${contractModules.colorblock}.create-item-with-new-user (read-msg "title") (read-msg "tags") (read-msg "description") (read-msg "cells") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account") (read-keyset "accountKeyset"))`,
+      caps: [{
+        role: 'Identity Verification',
+        description: 'Identity Verification',
+        cap: {
+          name: `${contractModules.colorblock}.OWN-ACCOUNT`,
+          args: [account]
+        }
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: 'coin.GAS',
+          args: []
+        }
+      }
+      ],
+      sender: account,
+      signingPubKey: account,
+      data: {
+        title,
+        tags,
+        description,
+        cells,
+        rows,
+        cols,
+        frames: frameCnt,
+        intervals,
+        account,
+        accountKeyset: { 
+          keys: [account],
+          pred: 'keys-all'
+        }
+      }
+    };
+    const signedCmd = await getSignedCmd(cmd);
+    console.log(signedCmd);
+    const result = await fetch(`${serverUrl}/item`, signedCmd).then(res => res.json());
+    console.log(result);
+    return result;
   };
 
   // load pickr after DOM loaded
@@ -206,7 +271,12 @@ const CreatePage = (props) => {
         <div data-role='creator tools and grids' className='flex'>
           <div data-role='creator primary tools on the left side' className='w-48'>
             <div>
-              <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'>NEW</button>
+              <button 
+                className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'
+                onClick={ () => dpt.newProject() }
+              >
+                NEW
+              </button>
             </div>
             <div className='flex justify-between mt-1'>
               <div className='w-1/2 pr-1'>
@@ -261,7 +331,7 @@ const CreatePage = (props) => {
               }
             </div>
             <div className='mt-2'>
-              <button className='w-full bg-gray-400 border-b-4 border-gray-100 py-2 rounded'>UPLOAD</button>
+              <button className='w-full bg-gray-400 border-b-4 border-gray-100 py-2 rounded' onClick={ () => clickUpload() }>UPLOAD</button>
             </div>
             <div className='mt-2'>
               <button className='w-full bg-red-800 text-white border-b-4 border-red-400 py-1 rounded'><FontAwesomeIcon icon={fa.faDownload} /></button>
@@ -382,10 +452,6 @@ const CreatePage = (props) => {
               </div>
             </div>
             <div className='mt-5 border-2 border-gray-400'>
-              <label className='block text-center w-full bg-gray-800 text-white'>Pixel Size</label>
-              <input value='10' className='block text-center w-full bg-gray-600 text-white' onChange={()=>{}} />
-            </div>
-            <div className='mt-5 border-2 border-gray-400'>
               <label className='block text-center w-full bg-gray-800 text-white'>Duration</label>
               <input type='number' step='0.01' value={frames.duration} onChange={ (e) => dpt.setDuration(e.target.value) } className='block text-center w-full bg-gray-600 text-white' />
             </div>
@@ -435,14 +501,26 @@ const CreatePage = (props) => {
                 }
                 </div>
               </div>
-              <div data-role='item submit' className='w-1/3'>
+              <div data-role='item submit' className='w-1/3' onSubmit={ (e) => submitItem(e) }>
                 <label className='my-1 w-full'>Title</label>
-                <input type='text' className='border border-black w-full' />
+                <input 
+                  type='text' 
+                  className='border border-black w-full' 
+                  onChange={ (e) => setSubmitItem({...submitItem, title: e.target.value}) } 
+                />
                 <label className='my-1 w-full'>Description</label>
-                <input type='text' className='border border-black w-full' />
-                <label className='my-1 w-full'>Tags</label>
-                <input type='text' className='border border-black w-full' />
-                <button className='mt-8 bg-red-500 text-white w-2/3 py-1 px-3'>
+                <input 
+                  type='text' 
+                  className='border border-black w-full' 
+                  onChange={ (e) => setSubmitItem({...submitItem, description: e.target.value}) } 
+                />
+                <label className='my-1 w-full'>Tags - separated by comma</label>
+                <input 
+                  type='text' 
+                  className='border border-black w-full' 
+                  onChange={ (e) => setSubmitItem({...submitItem, tags: e.target.value}) } 
+                />
+                <button className='mt-8 bg-red-500 text-white w-2/3 py-1 px-3' onClick={ () => onSubmitItem() }>
                   Get signed from wallet
                 </button>
               </div>
@@ -458,12 +536,14 @@ const CreatePage = (props) => {
 CreatePage.propTypes = {
   palette: PropTypes.object.isRequired,
   frames: PropTypes.object.isRequired,
-  dpt: PropTypes.object.isRequired
+  dpt: PropTypes.object.isRequired,
+  wallet: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
   frames: state.creator.present.frames,
-  palette: state.creator.present.palette
+  palette: state.creator.present.palette,
+  wallet: state.wallet
 });
 
 const mapDispatchToProps = dispatch => ({

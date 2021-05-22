@@ -182,4 +182,13 @@ describe('wallet actions', () => {
     };
     expect(actions.setPublicKeyList(keyList)).toEqual(expectedAction);
   });
+  
+  it('should create an action to set account address', () => {
+    const address = 'a';
+    const expectedAction = {
+      type: types.SET_ACCOUNT_ADDRESS,
+      address
+    };
+    expect(actions.setAccountAddress(address)).toEqual(expectedAction);
+  });
 });
