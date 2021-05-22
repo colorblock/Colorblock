@@ -10,7 +10,7 @@ import * as fa from '@fortawesome/free-solid-svg-icons';
 import * as actions from '../../store/actions/actionCreator';
 import { ActionCreators } from 'redux-undo';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
-import { contractModules, getSignedCmd } from '../../utils/sign';
+import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl } from '../../config';
 
 const CreatePage = (props) => {
@@ -126,6 +126,12 @@ const CreatePage = (props) => {
     const { title, description } = submitItem;
     const tags = submitItem.tags.split(',').map(v => v.trim());
     const cells = convertFramesToString(frames, singleFrameId);
+    
+    // get hash id
+    const hashCmd = mkReq({'to_hash': cells})
+    const id = await fetch(`${serverUrl}/tool/hash`, hashCmd).then(res => res.text());
+    console.log(id);
+
     const rows = frames.height;
     const cols = frames.width;
     const frameCnt = isPreviewStatic ? 1 : frames.frameIds.length;
@@ -152,6 +158,7 @@ const CreatePage = (props) => {
       sender: account,
       signingPubKey: account,
       data: {
+        id,
         title,
         tags,
         description,

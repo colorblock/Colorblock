@@ -51,8 +51,8 @@
 )
 (expect 
   "Create item for testing changing avatar"
-  {"id":"GKRDMtA_5XDuxjQUnoGPOdh4EwOGLUw3EClnj39PAkg"}
-  (colorblock.create-item "my-title" ["my-tag"] "my-desc" 
+  {"id":"id"}
+  (colorblock.create-item "id" "my-title" ["my-tag"] "my-desc" 
     "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
     5 4 1 [1.0] "admin")
 )
@@ -338,8 +338,8 @@
 ]}])
 (expect
   "Creating will success"
-  {"id": "QlQFys2eKpzc1HNFReT0xp0IGRfEGyP6yqh3sd7JlIY"}
-  (colorblock.create-item "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+  {"id": "id"}
+  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
     4 4 2 [0.5 0.5] "alice")
 )
 (commit-tx)

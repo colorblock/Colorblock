@@ -28,5 +28,7 @@ def create_app():
     app.register_blueprint(user_blueprint, url_prefix='/user')
     from app.blueprints.item import item_blueprint
     app.register_blueprint(item_blueprint, url_prefix='/item')
+    from app.blueprints.tool import tool_blueprint
+    app.register_blueprint(tool_blueprint, url_prefix='/tool')
 
     return app

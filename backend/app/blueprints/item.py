@@ -5,6 +5,7 @@ import json
 import time
 
 from app.utils.render import generate_image_from_item
+from app.utils.crypto import check_hash
 
 item_blueprint = Blueprint('item', __name__)
 
@@ -18,6 +19,15 @@ def submit_item():
     post_data = request.json
     cmd = json.loads(post_data['cmds'][0]['cmd'])
     item_data = cmd['payload']['exec']['data']
+    
+    # check hash
+    if not check_hash(item_data['cells'], item_data['id']):
+        return 'hash error'
+    else:
+        app.logger.debug('hash pass')
+
+    # create image
+    generate_image_from_item(item_data)
 
     url = '{}/api/v1/send'.format(app.config['PACT_URL'])
     try:
@@ -32,9 +42,6 @@ def submit_item():
         result = res.json()[request_key]['result']
     
         app.logger.debug(result)
-
-        item_data['id'] = result['data']['id']
-        generate_image_from_item(item_data)
         
         if result['status'] == 'success':
             return 'success'

@@ -13,7 +13,7 @@
   (defschema item-schema 
     @doc  " Schema for non-fungible-token \
           \ Column definitions: \
-          \   id @key: hash by item cells \
+          \   id @key: the unique id of item \
           \   title: the title of item, fixed \
           \   tags: the tags of item, fixed \
           \   description: the tags of item, fixed \
@@ -23,7 +23,8 @@
           \   frames: the number of frames, fixed \
           \   intervals: the intervals to control gif presentaion, in seconds, fixed \
           \   creator: the account of item creator, fixed \
-          \   onwer: the account of current owner, changeable "
+          \   onwer: the account of current owner, changeable \
+          \   hash-id: hash by item cells, used to check duplication, unique, fixed "
     @model [
       (invariant (!= "" title))
       (invariant (!= "" description))
@@ -35,6 +36,7 @@
       (invariant (!= [] intervals))
       (invariant (!= "" creator))
       (invariant (!= "" owner))
+      (invariant (!= "" hash-id))
     ]
 
     title:string
@@ -47,6 +49,7 @@
     intervals:[decimal]
     creator:string 
     owner:string
+    hash-id:string
   )
 
   (deftable items:{item-schema})
@@ -207,6 +210,13 @@
     (enforce (!= "" account) "Empty identifier")
   )
 
+  (defun valid-same-hash (a:string b:object)
+    (enforce
+      (!= a (at 'hash-id b))
+      "The item is already existed"
+    )
+  )
+
   (defun valid-cells (cells:string rows:integer cols:integer frames:integer)
     @doc "check whether cells conforms to following rules: \
         \1. the length of cells = rows * cols * frames * cell-length \
@@ -320,7 +330,8 @@
   ; Item Functions
 
   (defun create-item
-    ( title:string 
+    ( id:string
+      title:string 
       tags:[string]
       description:string
       cells:string
@@ -386,9 +397,12 @@
 
     ; Insert into DB
     (let
-      ; Create hash with cells 
-      ((id (hash cells)))
-      
+      ; Create hash with cells
+      (hash-id (hash cells))
+
+      ; Make sure there's no existance
+      (map (valid-same-hash hash-id) (all-items))
+
       ; Acquire capability
       (with-capability (OWN-ACCOUNT creator)
         (with-capability (ITEM id)
@@ -403,7 +417,8 @@
             "frames" : frames,
             "intervals" : intervals,
             "creator" : creator,
-            "owner" : creator
+            "owner" : creator,
+            "hash-id": hash-id
           })
           ; Return id
           {
@@ -415,7 +430,8 @@
   )
 
   (defun create-item-with-new-user
-    ( title:string 
+    ( id:string
+      title:string 
       tags:[string]
       description:string
       cells:string
