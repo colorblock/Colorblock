@@ -130,7 +130,6 @@ const CreatePage = (props) => {
     // get hash id
     const hashCmd = mkReq({'to_hash': cells})
     const id = await fetch(`${serverUrl}/tool/hash`, hashCmd).then(res => res.text());
-    console.log(id);
 
     const rows = frames.height;
     const cols = frames.width;
@@ -138,7 +137,7 @@ const CreatePage = (props) => {
     const intervals = convertFramesToIntervals(frames, singleFrameId);
     const account = wallet.address;
     const cmd = {
-      code: `(${contractModules.colorblock}.create-item-with-new-user (read-msg "title") (read-msg "tags") (read-msg "description") (read-msg "cells") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account") (read-keyset "accountKeyset"))`,
+      code: `(${contractModules.colorblock}.create-item-with-new-user (read-msg "id") (read-msg "title") (read-msg "tags") (read-msg "description") (read-msg "cells") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account") (read-keyset "accountKeyset"))`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',

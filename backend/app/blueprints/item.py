@@ -4,6 +4,9 @@ import requests
 import json
 import time
 
+from app import db
+from app.models.item import Item
+
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash
 
@@ -14,13 +17,21 @@ def get_item():
     app.logger.debug('123')
     return 'asd'
 
+@item_blueprint.route('/all', methods=['GET'])
+def get_all_items():
+    items = Item.query.all()
+    app.logger.debug(items)
+    return str(items)
+
 @item_blueprint.route('/', methods=['POST'])
 def submit_item():
     post_data = request.json
     cmd = json.loads(post_data['cmds'][0]['cmd'])
     item_data = cmd['payload']['exec']['data']
+
+    app.logger.debug(post_data)
     
-    # check hash
+    # validate hash
     if not check_hash(item_data['cells'], item_data['id']):
         return 'hash error'
     else:
@@ -44,9 +55,19 @@ def submit_item():
         app.logger.debug(result)
         
         if result['status'] == 'success':
+            item = Item(
+                id=item_data['id'], 
+                title=item_data['title'],
+                tags=','.join(item_data['tags']), 
+                description=item_data['description'],
+                creator=item_data['account'],
+                owner=item_data['account']
+            )
+            db.session.add(item)
+            db.session.commit()
             return 'success'
         else:
-            return ''
+            return 'failure'
     except Exception as e:
         app.logger.error(e)
         return 'network error'
