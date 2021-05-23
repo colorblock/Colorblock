@@ -445,7 +445,7 @@
     @doc "Create new user first and then create item"
 
     (create-account-maybe creator guard)
-    (create-item title tags description cells rows cols frames intervals creator)
+    (create-item id title tags description cells rows cols frames intervals creator)
   )
 
   (defun item-details:object{item-schema} (id:string)
