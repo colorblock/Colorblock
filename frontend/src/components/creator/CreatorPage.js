@@ -12,9 +12,10 @@ import { ActionCreators } from 'redux-undo';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
 import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl } from '../../config';
+import { saveStateToCookies } from '../../utils/storage';
 
 const CreatePage = (props) => {
-  const { palette, frames, dpt, wallet } = props;  // dpt means dispatch
+  const { frames, palette, dpt, wallet } = props;  // dpt means dispatch
 
   const [isPreviewStatic, setIsPreviewStatic] = useState(true);  // whether preview box is showing static frame or not. true: static, false: animation
   const [isPreviewLarge, setIsPreviewLarge] = useState(true);    // control the size of preview box
@@ -180,6 +181,16 @@ const CreatePage = (props) => {
     return result;
   };
 
+  const saveProject = () => {
+    const state = {
+      creator: {
+        frames,
+        palette
+      }
+    };
+    saveStateToCookies(state, 'creator');
+  };
+
   // load pickr after DOM loaded
   useEffect(() => {
     const newPickr = Pickr.create({
@@ -289,7 +300,12 @@ const CreatePage = (props) => {
                 <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'>LOAD</button>
               </div>
               <div className='w-1/2 pl-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'>SAVE</button>
+                <button 
+                  className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'
+                  onClick={ () => saveProject() } 
+                >
+                  SAVE
+                </button>
               </div>
             </div>
             <div className='flex justify-between mt-4'>

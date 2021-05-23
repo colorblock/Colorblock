@@ -7,6 +7,7 @@ import exampleFrames from '../assets/exampleFrames';
 import { loadProject } from '../store/actions/actionCreator';
 import Header from './layout/Header';
 import Wallet from './context/Wallet';
+import { hasStateInCookies } from '../utils/storage';
 
 const App = (props) => {
 
@@ -14,7 +15,10 @@ const App = (props) => {
 
   useEffect(() => {
     const init = async () => {
-      loadProject(exampleFrames);
+      // if there's no state in cookies, then load reserved project
+      if (!hasStateInCookies()) {
+        loadProject(exampleFrames);
+      }
     };
 
     init();
