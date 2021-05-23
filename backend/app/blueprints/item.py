@@ -34,8 +34,6 @@ def submit_item():
     # validate hash
     if not check_hash(item_data['cells'], item_data['id']):
         return 'hash error'
-    else:
-        app.logger.debug('hash pass')
 
     # create image
     generate_image_from_item(item_data)
@@ -51,12 +49,10 @@ def submit_item():
         url = '{}/api/v1/poll'.format(app.config['PACT_URL'])
         res = requests.post(url, json=request_key_data)
         result = res.json()[request_key]['result']
-    
-        app.logger.debug(result)
         
         if result['status'] == 'success':
             item = Item(
-                id=item_data['id'], 
+                id=item_data['id'],
                 title=item_data['title'],
                 tags=','.join(item_data['tags']), 
                 description=item_data['description'],

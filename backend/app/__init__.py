@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.url_map.strict_slashes = False

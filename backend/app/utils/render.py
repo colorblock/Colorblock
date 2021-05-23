@@ -41,5 +41,4 @@ def generate_image_from_item(item_data):
         first_img.save('static/img/{}.png'.format(id))
     else:
         intervals = [v * 1000 for v in intervals]
-        print(intervals)
         first_img.save('static/img/{}.gif'.format(id), save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
