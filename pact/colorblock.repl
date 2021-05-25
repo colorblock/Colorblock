@@ -1,23 +1,32 @@
-(env-data {
-  "ns": "free",
+;; -----------------------------
+;; Prepare
+;; -----------------------------
+
+(begin-tx)
+
+(define-namespace 'test (sig-keyset) (sig-keyset))
+(env-data { 
+  "ns": "test",
   "cb-admin-keyset": {"keys": ["admin"]},
+  "cb-admin-keyset-copy": {"keys": ["admin-copy"]},
   "alice-keyset": {"keys": ["alice"]},
   "bob-keyset": {"keys": ["bob"]},
   "lucy-keyset": {"keys": ["lucy"]},
   "jack-keyset": {"keys": ["jack"]},
   "upgrade": false
 })
+(load "poly-fungible-v1.pact")
 
-(begin-tx)
-;(define-namespace "free" (read-keyset 'cb-admin-keyset) (read-keyset 'cb-admin-keyset))
+(load "fungible-util.pact")
+
 (load "coin/fungible-v1.pact")
 (load "coin/coin.pact")
-(load "non-fungible-v1.pact")
 (load "colorblock.pact")
-(verify 'colorblock)
+
 (commit-tx)
 
 (begin-tx)
+(namespace 'test)
 
 ;; -----------------------------
 ;; Account
@@ -35,410 +44,302 @@
 ;
 ; create account in COLORBLOCK module
 ;
-(env-sigs [{"key": "admin", "caps": []}])
+
 (expect
   "Create successfully for the first time"
   "Write succeeded"
-  (colorblock.create-account-maybe "admin" (read-keyset "cb-admin-keyset"))
-)
-(expect 
-  "Failed for the second time"
-  "Account already exists" 
-  (colorblock.create-account-maybe "admin" (read-keyset "cb-admin-keyset"))
-)
-(expect-failure 
-  "Creating will fail when keyset diffs with the one of coin account" 
-  "Guard must match the same account of KDA"
-  (colorblock.create-account-maybe "alice" (read-keyset "bob-keyset"))
-)
-(env-sigs [{"key": "bob", "caps": []}])
-(expect-failure 
-  "Creating will fail when keyset diffs with the one of coin account" 
-  "Guard must match the same account of KDA"
-  (colorblock.create-account-maybe "alice" (read-keyset "bob-keyset"))
+  (colorblock.create-account-maybe "token-id" "admin" (read-keyset "cb-admin-keyset"))
 )
 (expect
-  "Create successfully for directly creating at first time"
-  "Write succeeded"
-  (colorblock.create-account "bob" (read-keyset "bob-keyset"))
+  "No failure but nothing happened for the second time"
+  "Account already exists"
+  (colorblock.create-account-maybe "token-id" "admin" (read-keyset "cb-admin-keyset"))
 )
-(expect-failure 
-  "account exists" 
-  "row found"
-  (colorblock.create-account "bob" (read-keyset "bob-keyset"))
-)
-(expect-failure 
-  "Creating will fail when coin account not exists" 
-  "row not found"
-  (colorblock.create-account-maybe "nonce" (read-keyset "bob-keyset"))
-)
-(env-sigs [{"key": "lucy", "caps": []}])
 (expect
-  "Create successfully for directly creating at first time"
+  "Create successfully for the another token"
   "Write succeeded"
-  (colorblock.create-account "lucy" (read-keyset "lucy-keyset"))
-)
-
-;
-; read account info
-;
-(expect 
-  "Get default username of account"
-  "bob"
-  (at 'username (colorblock.details "bob"))
-)
-(expect 
-  "Get default username of account"
-  "bob"
-  (at 'account (colorblock.details "bob"))
+  (colorblock.create-account-maybe "token-id-other" "admin" (read-keyset "cb-admin-keyset"))
 )
 (expect-failure
-  "Get error when fetching account that not exists"
-  "row not found"
-  (colorblock.details "alice")
+  "Create failed when keyset not matched"
+  "Guard must match the same account of KDA"
+  (colorblock.create-account-maybe "token-for-bob" "admin" (read-keyset "bob-keyset"))
 )
-(env-sigs [{"key": "nonce", "caps": []}])
-(expect 
-  "No requirement for sig"
-  "bob"
-  (at 'username (colorblock.details "bob"))
-)
-
-(commit-tx)
-(begin-tx)
-
-(env-sigs [{"key": "bob", "caps": [(colorblock.OWN-ACCOUNT "bob")]}])
-(expect 
-  "Create item for testing creating item"
-  {"id": "id"}
-  (colorblock.create-item "id" "my-title" ["my-tag"] "my-desc" 
-    "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
-    4 4 1 [1.0] "bob")
-)
-
-(commit-tx)
-(begin-tx)
-
-;
-; query about account
-;
-(expect
-  "get right balance of specific account"
-  1
-  (colorblock.balance-of "bob")
+(expect-failure
+  "Create failed when token:account exists"
+  "row found for key token-id:admin"
+  (colorblock.create-account "token-id" "admin" (read-keyset "cb-admin-keyset"))
 )
 (expect
-  "get right balance of specific account"
-  0
-  (colorblock.balance-of "admin")
+  "Create successfully for the another account"
+  "Write succeeded"
+  (colorblock.create-account-maybe "token-id" "bob" (read-keyset "bob-keyset"))
 )
-(let 
-  (
-    (
-    key (at 'id (at 0 (colorblock.items-of "bob")))
-    )
-  )
-  (expect
-    "get right owner of specific item"
-    "bob"
-    (colorblock.owner-of key)
+
+;
+; query default account
+;
+
+(expect
+  "Get default balance of token:account"
+  0.0
+  (colorblock.get-balance "token-id" "admin")
+)
+(expect-failure
+  "Get balance failed when token:account not exists"
+  "row not found: token-id:alice"
+  (colorblock.get-balance "token-id" "alice")
+)
+
+(expect
+  "Get default object of token:account"
+  true
+  (=
+    { "token": "token-id",
+      "account": "admin",
+      "balance": 0.0,
+      "guard": (read-keyset "cb-admin-keyset")
+    }
+    (colorblock.details "token-id" "admin")
   )
 )
 
 ;
 ; rotate account
 ;
-(env-sigs [
-  {"key": "lucy", "caps": []}
-  {"key": "admin", "caps": []},
-])
+
 (expect-failure
-  "Rotating will fail as there's no required capability"
-  "Managed capability not installed"
-  (colorblock.rotate "lucy" (read-keyset "cb-admin-keyset"))
+  "Rotate will fail as user have no sig"
+  "Keyset failure"
+  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
 )
 
+(env-sigs [{"key": "admin", "caps": []}])
+(expect
+  "Rotate will succeed with sig"
+  "Write succeeded"
+  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
+)
+(env-sigs [
+  {"key": "admin", "caps": []},
+  {"key": "admin-copy", "caps": []}
+])
+(coin.rotate "admin" (read-keyset 'cb-admin-keyset-copy))
+(expect-failure
+  "Rotate failed when keyset not matched"
+  "Guard must match the same account of KDA"
+  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
+)
+(expect
+  "Rotate will succeed with sig"
+  "Write succeeded"
+  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset-copy"))
+)
+(coin.rotate "admin" (read-keyset 'cb-admin-keyset))
+(colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
 
 
 ;; -----------------------------
 ;; Item
 ;; -----------------------------
 
-(env-sigs [{"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]}])
-
 ;
 ; create item
 ;
 
-(expect-failure 
-  "Creating will fail as title is blank" 
+(expect-failure
+  "Creating will fail as title is blank"
   "Title can not be empty"
-  (colorblock.create-item "id" "" ["tag"] "" "a" 1 1 1 [1.0] "admin")
+  (colorblock.create-item "item-id" "" "colors" 1 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
-(expect-failure 
-  "Creating will fail as tag length limit exceeded" 
-  "Illegal tags: length larger than"
-  (colorblock.create-item "id" "title" ["asdasdasdasdasdsadasddddddddddddddddddddddd"] "description" "a" 1 1 1 [] "admin")
-)
-(expect-failure 
-  "Creating will fail as tag count limit exceeded" 
-  "Illegal tags: more than"
-  (colorblock.create-item "id" "title" ["sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd" "sds" "sdsad" "sd"] 
-   "description" "a" 1 1 1 [] "admin")
-)
-(expect-failure 
-  "Creating will fail as description length limit exceeded" 
-  "Illegal description: length larger than"
-  (colorblock.create-item "id"
-    "title" 
-    ["sds" "sds" "sdsad" "sd"] 
-    "description-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 
-    "a" 1 1 1 [] 
-    "admin"
-  )
-)
-(expect-failure 
-  "Creating will fail as cells length is wrong" 
-  "the length of cells is not correct"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaa" 1 2 1 [] "admin")
-)
+
 (expect-failure
-  "Creating will fail as cells length is wrong" 
-  "the length of cells is not correct"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaa" 1 1 3 [] "admin")
-)
-(expect-failure
-  "Creating will fail as rows length is wrong" 
+  "Creating will fail as row length is smaller than limit"
   "the number of rows in each frame expected in range of"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaa" 1 4 1 [] "admin")
+  (colorblock.create-item "item-id" "title" "colors" 1 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
+
 (expect-failure
-  "Creating will fail as rows length is wrong" 
-  "the number of rows in each frame expected in range of"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  257 1 1 [] "admin")
+  "Creating will fail as color length is wrong"
+  "the length of colors is not correct"
+  (colorblock.create-item "item-id" "title" "colors" 2 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
+
 (expect-failure
-  "Creating will fail as cols length is wrong" 
+  "Creating will fail as cols length is smaller than limit"
   "the number of cols in each frame expected in range of"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaa" 4 1 1 [] "admin")
+  (colorblock.create-item "item-id" "title" "colorscolors" 2 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
+
 (expect-failure
-  "Creating will fail as cols length is wrong" 
-  "the number of cols in each frame expected in range of"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    4 257 1 [] "admin")
+  "Creating will fail as colors contains illegal character"
+  "not a digit"
+  (colorblock.create-item "item-id" "title" "colorscolorscolorscolors" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
+
 (expect-failure
-  "Creating will fail as frames length is wrong" 
+  "Creating will fail as frames count is illegal"
   "the number of frames expected in range of"
-  (colorblock.create-item "id" "title" ["tag"] "description" "" 
-    4 4 0 [] "admin")
+  (colorblock.create-item "item-id" "title" "" 2 2 0 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
+
 (expect-failure
-  "Creating will fail as frames length is wrong" 
+  "Creating will fail as frames count is illegal"
   "the number of frames expected in range of"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 17 [] "admin")
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
+    4 4 17 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
 (expect-failure
   "Creating will fail as intervals count not equal to frame"
   "Interval count must equal to the number of frames"
-  (colorblock.create-item "id" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 1 [0.5 0.5] "admin")
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
+    4 4 1 [0.5 0.5] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
 (expect-failure
-  "Creating will fail as there's non-hex character"
-  "not a digit"
-  (colorblock.create-item "id" "title" ["tag"] "description" "Taaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 1 [1.0] "admin")
+  "Creating will fail as intervals count not equal to frame"
+  "Interval should between"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
+    4 4 1 [0.001] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
-
-(commit-tx)
-(begin-tx)
-(env-sigs [{"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]}])
+(expect-failure
+  "Creating will fail as intervals count not equal to frame"
+  "Interval should between"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
+    4 4 1 [1.1] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+)
 
 (expect-failure
-  "Creating will fail as Key doesn't match"
-  "Managed capability not installed"
-  (colorblock.create-item "id" "title" ["tag"] "description" "baaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 1 [1.0] "bob")
+  "Creating will fail without capability"
+  "Managed capability not installed: (test.colorblock.MINT"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
+
+(expect-failure
+  "Creating will fail without capability"
+  "precision violation"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.2 (read-keyset "cb-admin-keyset"))
+)
+
+(env-sigs [{"key": "bob", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Keyset failure (keys-all): [admin]"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "bob")]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock.MINT"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+)
+
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.CREDIT "item-id" "admin"),
+  (colorblock.DEBIT "item-id" "admin")
+]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock.MINT"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id-other" "admin")]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock.MINT"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
 (expect
-  "Creating will success"
-  {"id":"id2"}
-  (colorblock.create-item "id2" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    5 4 1 [1.0] "admin")
+  "Creating will succeed with capability"
+  "Write succeeded"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
 
 (commit-tx)
+
 (begin-tx)
-(env-sigs [{"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]}])
+(namespace 'test)
 
-(expect
-  "Creating will success"
-  {"id":"id3"}
-  (colorblock.create-item "id3" "title" ["tag"] "description"
-    "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 2 [0.5 0.5] "admin"
-  )
-)
-
-
-(commit-tx)
-(begin-tx)
-
-;
-; query item
-;
-(expect
-  "get right num of items"
-  3
-  (length (colorblock.all-items))
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(expect-failure
+  "Creating will fail as item is duplicate"
+  "The item is already existed"
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 )
 
 
 ;; -----------------------------
-;; Transaction
+;; Transfer
 ;; -----------------------------
 
-(expect-failure
-  "Tanfering will fail as there's no required capability"
-  "Managed capability not installed"
-  (colorblock.transfer "admin" "bob" "123")
-)
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "" "bob" "123")]}])
-(expect-failure
-  "Tanfering will fail as sender is blank"
-  "Empty identifier"
-  (colorblock.transfer "" "bob" "123")
-)
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "admin" "" "123")]}])
-(expect-failure
-  "Tanfering will fail as receiver is blank"
-  "Empty identifier"
-  (colorblock.transfer "admin" "" "123")
-)
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "admin" "bob" "")]}])
-(expect-failure
-  "Tanfering will fail as item id is blank"
-  "Empty identifier"
-  (colorblock.transfer "admin" "bob" "")
-)
-
-(commit-tx)
-(begin-tx)
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "bob" "123"),
-  (colorblock.OWN-ACCOUNT "admin")]}
-])
 
 (expect-failure
-  "Tanfering will fail as there's no such item"
-  "row not found"
-  (colorblock.transfer "admin" "bob" "123")
+  "Transfer will fail as sender is same with receiver"
+  "sender cannot be the receiver of a transfer"
+  (colorblock.transfer "item-id" "admin" "admin" 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "admin" "bob" "123")]}])
+
 (expect-failure
-  "Tanfering will fail as arguments in caps must be consistent with function"
-  "Managed capability not installed"
-  (colorblock.transfer "admin" "bob" "id")
+  "Transfer will fail as receiver is illegal"
+  "minimum account length"
+  (colorblock.transfer "item-id" "admin" "a" 1.0)
 )
 
-(commit-tx)
-(begin-tx)
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "bob" "id3"),
-  (colorblock.OWN-ACCOUNT "admin")]}
-])
+(expect-failure
+  "Transfer will fail as receiver is illegal"
+  "Managed capability not installed: (test.colorblock.TRANSFER"
+  (colorblock.transfer "item-id" "admin" "bob" 1.0)
+)
 
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id-other" "admin" "bob" 1.0)]}])
+(expect-failure
+  "Transfer will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock.TRANSFER"
+  (colorblock.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id-other" "admin" "alice" 1.0)]}])
+(expect-failure
+  "Transfer will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock.TRANSFER"
+  (colorblock.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "admin" "bob" 1.0)]}])
+(expect-failure
+  "Transfer will fail with incorrect capability"
+  "Keyset failure (keys-all): [admin]"
+  (colorblock.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "bob" 1.0)]}])
+(expect-failure
+  "Transfer will fail as receiver is not created"
+  "row not found: item-id:bob"
+  (colorblock.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "bob" 1.0)]}])
 (expect
-  "Tanfering will success"
+  "Transfer-create will be successfully with correct capability"
   "Write succeeded"
-  (colorblock.transfer "admin" "bob" "id3")
+  (colorblock.transfer-create "item-id" "admin" "bob" (read-keyset "bob-keyset") 1.0)
 )
 
-(commit-tx)
-(begin-tx)
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "bob" "id"),
-  (colorblock.OWN-ACCOUNT "admin")]}
-])
-
+(env-sigs [{"key": "admin", "caps": [(colorblock.CREDIT "item-id" "admin")]}])
 (expect-failure
-  "Tanfering will fail as sender must be owner of item"
-  "Sender is not owner"
-  (colorblock.transfer "admin" "bob" "id")
+  "Cannot directly credit"
+  "require-capability: not granted"
+  (colorblock.credit "item-id" "admin" (read-keyset "cb-admin-keyset") 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "bob" "alice" "id")]}])
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.DEBIT "item-id" "admin")]}])
 (expect-failure
-  "Tanfering will fail as signer doesn't match with sender in caps"
-  "Managed capability not installed"
-  (colorblock.transfer "bob" "alice" "id")
+  "Cannot directly credit"
+  "require-capability: not granted"
+  (colorblock.debit "item-id" "admin" 1.0)
 )
-(env-sigs [{"key": "bob", "caps": [
-  (colorblock.TRANSFER "bob" "alice" "id"),
-  (colorblock.OWN-ACCOUNT "bob")
-]}])
-(expect-failure
-  "Tanfering will fail as receiver doesn't exist"
-  "row not found"
-  (colorblock.transfer "bob" "alice" "id")
-)
-(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "bob" "admin" "id")]}])
-(expect
-  "Owner is belong to old account"
-  "bob"
-  (colorblock.owner-of "id")
-)
-
-(env-sigs [{"key": "bob", "caps": [
-  (colorblock.TRANSFER "bob" "admin" "id"),
-  (colorblock.OWN-ACCOUNT "bob")
-]}])
-
-(expect
-  "Tanfering will fail as sender must be owner of item"
-  "Write succeeded"
-  (colorblock.transfer "bob" "admin" "id")
-)
-(expect
-  "Owner is swithed to new account"
-  "admin"
-  (colorblock.owner-of "id")
-)
-
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "alice" "id"),
-  (colorblock.OWN-ACCOUNT "admin")
-]}])
-
-(expect
-  "Tanfer successfuly when add creating phase"
-  "Write succeeded"
-  (colorblock.transfer-create "admin" "alice" (read-keyset "alice-keyset") "id")
-)
-(expect
-  "Owner is swithed to new account"
-  "alice"
-  (colorblock.owner-of "id")
-)
-(expect
-  "Account is created after transfer-create"
-  "alice"
-  (at 'username (colorblock.details "alice"))
-)
-(env-sigs [
-  {"key": "alice", "caps": [
-    (colorblock.TRANSFER "alice" "bob" "id"),
-    (colorblock.OWN-ACCOUNT "alice")
-  ]},
-  {"key": "bob", "caps": []}
-])
-(expect-failure
-  "Tanfering will fail as receiver already exists"
-  "row found for key bob"
-  (colorblock.transfer-create "alice" "bob" (read-keyset "bob-keyset") "id")
-)
-
 

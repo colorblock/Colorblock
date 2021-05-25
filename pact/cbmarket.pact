@@ -9,19 +9,25 @@
   ; -------------------------------------------------------
   ; Schemas and Tables
 
-  (defschema shelf-schema
-    @doc  " Record item status in market \
+  (defschema deal-schema
+    @doc  " Record every deal of token in market \
           \ Column definitions: \
-          \   item-id @key: id of item \
+          \   @key: the combined key token:account for index \
+          \   token: the token asset id \
           \   seller: current seller \
-          \   on-sale: selling status \
-          \   price: item price"
+          \   price: item price \
+          \   total: total amount \
+          \   remain: remain amount \
+          \   open: true - open, false - close "
+    token:string
     seller:string
-    on-sale:bool
     price:decimal
+    total:decimal
+    remain:decimal
+    open:bool
   )
 
-  (deftable shelves:{shelf-schema})
+  (deftable deals:{deal-schema})
 
   ; -------------------------------------------------------
   ; Capabilities
@@ -32,96 +38,75 @@
   )
 
   (defcap RELEASE:bool 
-    (
+    ( token:string
       seller:string 
-      item-id:string
       price:decimal
+      amount:decimal
     )
-    @doc "Notifies release of ITEM-ID owned by SELLER"
+    @doc "Notifies release of TOKEN owned by SELLER, partially or fully"
     @event
-    (enforce 
-      (< 0.0 price)
-      "Price must larger than zero"
-    )
-    (bind (item-details item-id)
-      { "owner" := owner }
-      (enforce
-        (= owner seller)
-        "Seller is not owner"
-      )
-      (with-default-read shelves item-id
-        { "on-sale" : false }
-        { "on-sale" := on-sale }
-        (enforce
-          (= false on-sale)
-          "Item is already on sale"
-        )
-      )
-    )
-  )
 
-  (defcap MODIFY:bool 
-    (
-      seller:string 
-      item-id:string
-      price:decimal
-    )
-    @doc "Notifies modification of ITEM-ID owned by SELLER"
-    @event
     (enforce 
       (< 0.0 price)
       "Price must larger than zero"
     )
-    (with-read shelves item-id
-      { "on-sale" := on-sale,
-        "seller" := cur-seller
-      }
-      (enforce
-        (= true on-sale)
-        "Item is not on sale"
+    (enforce-unit token amount)
+    (let 
+      ((balance (colorblock.get-balance token seller)))
+      (enforce 
+        ( > 
+          balance
+          0.0
+        )
+        "Seller has no balance of this token"
       )
+      (enforce 
+        ( <= 
+          balance
+          amount
+        )
+        "Amount can't be larger than balance"
+      )
+    )
+    (with-default-read deals (key token seller)
+      { "open" : false }
+      { "open" := open }
       (enforce
-        (= cur-seller seller)
-        "Account is not seller"
+        (= false open)
+        "Item is already on sale"
       )
     )
   )
 
   (defcap RECALL:bool 
-    (
+    ( token:string
       seller:string 
-      item-id:string
     )
-    @doc "Notifies recall of ITEM-ID owned by SELLER"
+    @doc "Notifies recall of TOKEN owned by SELLER"
     @event
-    (with-read shelves item-id
-      { "seller" := cur-seller,
-        "on-sale" := on-sale
-      }
+
+    (with-read deals (key token seller)
+      { "on-sale" := on-sale }
       (enforce
         (= true on-sale)
         "Item is not on sale"
-      )
-      (enforce
-        (= cur-seller seller)
-        "Account is not seller"
       )
     )
   )
 
   (defcap PURCHASE:bool 
-    (
+    ( token:string
       buyer:string 
-      item-id:string
+      seller:string
     )
-    @doc "Notifies purchase of ITEM-ID from BUYER"
+    @doc "Notifies purchase of TOKEN from SELLER to BUYER"
     @event
-    (with-read shelves item-id
-      { "seller" := cur-seller,
+    (with-read deals (key token seller)
+      { 
         "on-sale" := on-sale
       }
       (enforce
-        (!= cur-seller buyer)
+        (!= seller buyer)
         "Buyer cannot be seller"
       )
       (enforce
@@ -135,6 +120,9 @@
   ; -------------------------------------------------------
   ; Constants
 
+  (defconst DEFAULT_TOKEN "cb-token"
+    "The default token for official account init"
+  )
   (defconst COLORBLOCK_MARKET "colorblock-market"
     "The official account of colorblock market"
   )
@@ -147,70 +135,58 @@
   ; -------------------------------------------------------
   ; Marketing Functions
 
-  (defun release:string
-    ( account:string
-      item-id:string
-      price:decimal
-    )
-    @doc " Release item for sale."
-    (with-capability (RELEASE account item-id price)
-      (install-capability (colorblock.TRANSFER account COLORBLOCK_MARKET item-id))
-      (colorblock.transfer account COLORBLOCK_MARKET item-id)
-      (write shelves item-id {
-        "seller" : account,
-        "on-sale" : true,
-        "price" : price
-      })
-    )
+  (defun cb-market-guard ()
+    (create-module-guard 'cbmarket-guard)
   )
 
-  (defun modify:string
-    ( account:string
-      item-id:string
+  (defun release:string
+    ( token:string
+      account:string
       price:decimal
+      amount:decimal
     )
-    @doc " Modify item by price."
-    (with-capability (MODIFY account item-id price)
-      (install-capability (colorblock.OWN-ACCOUNT account))
-      (colorblock.validate-owner account)
-      (update shelves item-id {
-        "price" : price
+    @doc " Release item for sale."
+    (with-capability (RELEASE token account price amount)
+      (install-capability (colorblock.TRANSFER token account COLORBLOCK_MARKET amount))
+      (colorblock.transfer-create token account COLORBLOCK_MARKET (cb-market-guard) amount)
+      (write deals (key token account) {
+        "token" : token,
+        "seller" : account,
+        "price" : price,
+        "total" : amount,
+        "remain" : amount,
+        "open" : true
       })
     )
   )
 
   (defun recall:string
-    ( account:string
-      item-id:string
+    ( token:string
+      account:string
     )
     @doc " Recall item and stop selling."
-    (with-capability (RECALL account item-id)
-      (install-capability (colorblock.OWN-ACCOUNT COLORBLOCK_MARKET))
-      (install-capability (TRANSFER COLORBLOCK_MARKET account item-id))
-      (transfer COLORBLOCK_MARKET account item-id)
-      (update shelves item-id {
-        "on-sale": false
-      })
+    (with-capability (RECALL token account)
+     true
     )
   )
 
   (defun purchase-with-new-user:string 
     ( account:string
-      item-id:string
+      token:string
       guard:guard
     )
     @doc " Create account and purchase item"
     (colorblock.create-account-maybe account guard)
-    (purchase account item-id)
+    (purchase account token)
   )
 
   (defun purchase:string 
     ( account:string
-      item-id:string
+      token:string
     )
     @doc " Purchase item."
-    (with-capability (PURCHASE account item-id)
-      (with-read shelves item-id
+    (with-capability (PURCHASE account token)
+      (with-read deals token
         { "seller" := seller,
           "price" := price
         }
@@ -226,12 +202,12 @@
           )
           (install-capability (coin.TRANSFER account seller price))
           (install-capability (coin.TRANSFER account COLORBLOCK_MARKET fees))
-          (install-capability (colorblock.OWN-ACCOUNT COLORBLOCK_MARKET))
-          (install-capability (TRANSFER COLORBLOCK_MARKET account item-id))
+          (install-capability (colorblock.MINT token COLORBLOCK_MARKET))
+          (install-capability (TRANSFER COLORBLOCK_MARKET account token))
           (coin.transfer account seller price)
           (coin.transfer account COLORBLOCK_MARKET fees)
-          (transfer COLORBLOCK_MARKET account item-id)
-          (update shelves item-id {
+          (transfer COLORBLOCK_MARKET account token)
+          (update deals token {
             "on-sale": false
           })
         )
@@ -239,12 +215,8 @@
     )
   )
 
-  (defun on-sale-items:[object:{item-schema}] ()
-    (select shelves (constantly true))
-  )
-
-  (defun item-sale-status:{shelf-schema} (id:string)
-    (+ {'id: id} (read shelves id))
+  (defun item-sale-status:{deal-schema} (token:string account:string)
+    (read deals (key token account))
   )
 
 
@@ -253,10 +225,7 @@
 
   (defun init-market-account ()
     @doc " Create market account with module guard."
-    (let ((market-guard (create-module-guard 'cbmarket-admin-keyset)))
-      (coin.create-account COLORBLOCK_MARKET market-guard)
-      (create-account COLORBLOCK_MARKET market-guard)
-    )
+    (coin.create-account COLORBLOCK_MARKET (cb-market-guard))
   )
 
 )
@@ -265,7 +234,7 @@
 (if (read-msg "upgrade")
   ["upgrade"]
   [
-    (create-table shelves)
+    (create-table deals)
     (init-market-account)
   ]
 )

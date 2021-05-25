@@ -1,6 +1,12 @@
-;(load "colorblock.repl")
+;; -----------------------------
+;; Prepare
+;; -----------------------------
+
+(begin-tx)
+
+(define-namespace 'test (sig-keyset) (sig-keyset))
 (env-data {
-  "ns": "free",
+  "ns": "test",
   "cb-admin-keyset": {"keys": ["admin"]},
   "cbmarket-admin-keyset": {"keys": ["colorblock-market"]},
   "alice-keyset": {"keys": ["alice"]},
@@ -8,54 +14,35 @@
   "lucy-keyset": {"keys": ["lucy"]},
   "upgrade": false
 })
+(load "poly-fungible-v1.pact")
 
-(begin-tx)
-;(define-namespace "free" (read-keyset 'cb-admin-keyset) (read-keyset 'cb-admin-keyset))
+(load "fungible-util.pact")
+
 (load "coin/fungible-v1.pact")
 (load "coin/coin.pact")
-(load "non-fungible-v1.pact")
 (load "colorblock.pact")
+
 (load "cbmarket.pact")
-(verify 'cbmarket)
-(typecheck 'cbmarket)
+
 (commit-tx)
 
-;; -----------------------------
-;; Initialiation
-;; -----------------------------
-
 (begin-tx)
+(namespace 'test)
 
+;; -----------------------------
+;; Account
+;; -----------------------------
+
+;
+; create account in COIN module
+;
 (coin.create-account "admin" (read-keyset "cb-admin-keyset"))
 (coin.create-account "bob" (read-keyset "bob-keyset"))
 (coin.create-account "alice" (read-keyset "alice-keyset"))
 (coin.create-account "lucy" (read-keyset "lucy-keyset"))
-(env-sigs [
-  {"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]},
-  {"key": "bob", "caps": [(colorblock.OWN-ACCOUNT "bob")]}
-])
-(expect
-  "Create successfully for the first time"
-  "Write succeeded"
-  (colorblock.create-account-maybe "admin" (read-keyset "cb-admin-keyset"))
-)
-(expect
-  "Create successfully for the first time"
-  "Write succeeded"
-  (colorblock.create-account-maybe "bob" (read-keyset "bob-keyset"))
-)
-(expect
-  "Create successfully for the first time"
-  "Write succeeded"
-  (colorblock.create-account-maybe "alice" (read-keyset "alice-keyset"))
-)
-(expect 
-  "Create item for testing changing avatar"
-  {"id":"id1"}
-  (colorblock.create-item "id1" "my-title" ["my-tag"] "my-desc" 
-    "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
-    5 4 1 [1.0] "admin")
-)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
 
 (commit-tx)
 
@@ -65,6 +52,7 @@
 
 
 (begin-tx)
+(namespace 'test)
 
 ;
 ; release
@@ -73,296 +61,62 @@
 (env-sigs [{"key": "admin", "caps": []}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
-  "Managed capability not installed"
-  (cbmarket.release "admin" "id1" 10.0)
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "admin" "colorblock-market" "FFFFFQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
-  "Managed capability not installed"
-  (cbmarket.release "admin" "id1" 10.0)
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "colorblock-market" "id1"),
-  (colorblock.OWN-ACCOUNT "bob")
-]}])
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
-  "Managed capability not installed"
-  (cbmarket.release "admin" "id1" 10.0)
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "admin" "colorblock-market" "id1"),
-  (colorblock.OWN-ACCOUNT "admin")
-]}])
-
-(expect-failure
-  "Release will fail as seller is not matched"
-  "Seller is not owner"
-  (cbmarket.release "bob" "id1" 10.0)
-)
-(expect-failure
-  "Release will fail as item doesn't exist"
-  "row not found"
-  (cbmarket.release "admin" "FDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA" 10.0)
-)
-(expect-failure
-  "Release will fail as price equals zero"
-  "Price must larger than zero"
-  (cbmarket.release "admin" "id1" 0.0)
-)
-
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.OWN-ACCOUNT "admin")
-]}])
-(expect
-  "There's no item on-sale"
-  0
-  (length (cbmarket.on-sale-items))
-)
-(expect
-  "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
-  "Write succeeded"
-  (cbmarket.release "admin" "id1" 10.0)
-)
-(expect
-  "There's 1 item on-sale"
-  1
-  (length (cbmarket.on-sale-items))
-)
-(expect
-  "Item expected to have correct price"
-  10.0
-  (at 'price (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item expected to have correct seller"
-  "admin"
-  (at 'seller (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item expected to have correct on-sale status"
-  true
-  (at 'on-sale (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item owner expected to be market account"
-  "colorblock-market"
-  (colorblock.owner-of "id1")
-)
-(expect
-  "admin expected to have no item anymore"
-  0
-  (colorblock.balance-of "admin")
-)
-(expect
-  "market account expected to have 1 item now"
-  1
-  (colorblock.balance-of "colorblock-market")
-)
-
-(commit-tx)
-
-(begin-tx)
-
-;
-; modification
-;
-
-(env-sigs [{"key": "admin", "caps": []}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id-other" "admin" "colorblock-market" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
-  "Keyset failure"
-  (cbmarket.modify "admin" "id1" 12.0)
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.OWN-ACCOUNT "admin")]}])
-(cbmarket.modify "admin" "id1" 12.0)
-
-(commit-tx)
-
-
-(begin-tx)
-
-;
-; recall
-;
-
-(env-sigs [{"key": "bob", "caps": []}])
-(expect-failure
-  "Release will fail as account is not seller"
-  "Account is not seller"
-  (cbmarket.modify "bob" "id1" 12.0)
-)
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "cccccmarket" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
-  "Keyset failure"
-  (cbmarket.modify "admin" "id1" 12.0)
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": []}])
-(expect
-  "Recall succeeds"
-  "Write succeeded"
-  (cbmarket.recall "admin" "id1")
-)
-(expect
-  "Item expected to have correct price"
-  12.0
-  (at 'price (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item expected to have correct seller"
-  "admin"
-  (at 'seller (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item expected to have correct on-sale status"
-  false
-  (at 'on-sale (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item owner expected to be market account"
-  "admin"
-  (colorblock.owner-of "id1")
-)
-(expect
-  "admin expected to have 1 item now"
-  1
-  (colorblock.balance-of "admin")
-)
-(expect
-  "market account expected to have 0 item now"
-  0
-  (colorblock.balance-of "colorblock-market")
-)
-
-(commit-tx)
-
-
-
-(begin-tx)
-
-;
-; purchase
-;
-
-(env-sigs [{"key": "bob", "caps": []}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.2)]}])
 (expect-failure
-  "Purchase will fail as item is not on sale"
-  "Item is not on sale"
-  (cbmarket.purchase "bob" "id1")
+  "Release will fail as amount is not integer"
+  "precision violation"
+  (cbmarket.release "item-id" "admin" 10.0 1.2)
 )
-
-(env-sigs [{"key": "admin", "caps": [
-  (colorblock.OWN-ACCOUNT "admin")
-]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 2.0)]}])
+(expect-failure
+  "Release will fail as balance is not enough for amount"
+  "Insufficient funds"
+  (cbmarket.release "item-id" "admin" 10.0 2.0)
+)
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.0)]}])
 (expect
-  "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
+  "Release will succeed with correct capability"
   "Write succeeded"
-  (cbmarket.release "admin" "id1" 10.0)
+  (cbmarket.release "item-id" "admin" 10.0 1.0)
 )
 
 (expect
-  "Item expected to have correct status"
-  10.0
-  (at 'price (cbmarket.item-sale-status "id1"))
+  "Check release result"
+  {
+    "token": "item-id",
+    "seller": "admin",
+    "price": 10.0,
+    "total": 1.0,
+    "remain": 1.0,
+    "open": true
+  }
+  (cbmarket.item-sale-status "item-id" "admin")
 )
 
-
-; add-balance
-(test-capability (coin.CREDIT "bob"))
-(coin.credit "bob" (read-keyset "bob-keyset") 12.0)
-
-(commit-tx)
-(begin-tx)
-
-(env-sigs [{"key": "bob", "caps": [(coin.DEBIT "bob")]}])
-(expect
-  "Purchase succeeds with correct keyset and capability"
-  "Write succeeded"
-  (cbmarket.purchase "bob" "id1")
-)
-(expect
-  "Item expected to have correct price"
-  10.0
-  (at 'price (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item expected to have correct seller"
-  "admin"
-  (at 'seller (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item expected to have correct on-sale status"
-  false
-  (at 'on-sale (at 0 (cbmarket.on-sale-items)))
-)
-(expect
-  "Item owner expected to be market account"
-  "bob"
-  (colorblock.owner-of "id1")
-)
-(expect
-  "admin expected to have 0 item now"
-  0
-  (colorblock.balance-of "admin")
-)
-(expect
-  "bob expected to have 1 item now"
-  1
-  (colorblock.balance-of "bob")
-)
-(expect
-  "market account expected to have 0 item now"
-  0
-  (colorblock.balance-of "colorblock-market")
-)
-(expect
-  "admin account expected to have 10 coin now"
-  10.0
-  (coin.get-balance "admin")
-)
-(expect
-  "market account expected to have 0.1 coin now"
-  0.1
-  (coin.get-balance "colorblock-market")
-)
-(expect
-  "bob account expected to have 1.9 coin now"
-  1.9
-  (coin.get-balance "bob")
-)
-
-
-(env-sigs [{"key": "alice", "caps": [
-  (colorblock.OWN-ACCOUNT "alice")
-]}])
-(expect
-  "Creating will success"
-  {"id": "id2"}
-  (colorblock.create-item "id2" "title" ["tag"] "description" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 2 [0.5 0.5] "alice")
-)
-(commit-tx)
-
-;; -----------------------------
-;; interact with market
-;; -----------------------------
-
-
-(begin-tx)
-(expect
-  "Release succeeds with correct keyset, TRANSFER caps are not required correct, because it doesn't check keyset"
-  "Write succeeded"
-  (cbmarket.release "alice" "id2" 5.0)
-)
-
-; add-balance
-(test-capability (coin.CREDIT "lucy"))
-(coin.credit "lucy" (read-keyset "lucy-keyset") 12.0)
-
-(env-sigs [{"key": "lucy", "caps": [(coin.DEBIT "lucy")]}])
-(expect
-  "Purchase succeeds with correct keyset and capability"
-  "Write succeeded"
-  (cbmarket.purchase-with-new-user "lucy" "id2" (read-keyset "lucy-keyset"))
-)
