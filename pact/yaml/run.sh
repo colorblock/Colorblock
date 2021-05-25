@@ -1,8 +1,12 @@
+pact -a define-namespace.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
+echo
 pact -a deploy-fungible.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
 echo
 pact -a deploy-coin.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
 echo
-pact -a deploy-non-fungible.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
+pact -a deploy-poly-fungible.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
+echo
+pact -a deploy-fungible-util.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
 echo
 pact -a deploy-colorblock.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
 echo
@@ -37,7 +41,4 @@ pact -a send4.yaml | curl -H "Content-Type: application/json" -d @- http://local
 echo
 pact -a local4.yaml -l | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/local
 echo
-pact -a send7.yaml | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/send
-echo
-pact -a local4.yaml -l | curl -H "Content-Type: application/json" -d @- http://localhost:8080/api/v1/local
 

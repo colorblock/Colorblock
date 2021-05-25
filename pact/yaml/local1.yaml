@@ -1,1 +1,1 @@
-code: (coin.get-balance "admin")
+code: (namespace "free")(coin.get-balance "admin")

@@ -1,4 +1,7 @@
 (define-keyset 'cb-admin-keyset (read-keyset "cb-admin-keyset"))
+
+(namespace (read-msg 'ns))
+
 (module colorblock GOVERNANCE
   @doc "module for \
       \1. creating colorblock user \

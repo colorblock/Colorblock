@@ -43,6 +43,7 @@
 
 (env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
 (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+(colorblock.create-account "item-id" "bob" (read-keyset "bob-keyset"))
 
 (commit-tx)
 
@@ -119,4 +120,179 @@
   }
   (cbmarket.item-sale-status "item-id" "admin")
 )
+(expect
+  "Check release result"
+  0.0
+  (colorblock.get-balance "item-id" "admin")
+)
+(expect
+  "Check release result"
+  1.0
+  (colorblock.get-balance "item-id" "colorblock-market")
+)
 
+
+;
+; recall
+;
+
+(env-sigs [{"key": "admin", "caps": []}])
+(expect-failure
+  "Recall will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.recall "item-id" "admin")
+)
+
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.TRANSFER "item-id" "colorblock-market" "admin" 1.0)
+]}])
+(expect-failure
+  "Recall will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [admin]"
+  (cbmarket.recall "item-id" "admin")
+)
+
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock.MINT "item-id" "admin")
+]}])
+(expect
+  "Recall will succeed with correct capabilities"
+  "Write succeeded"
+  (cbmarket.recall "item-id" "admin")
+)
+
+(expect
+  "Check recall result"
+  {
+    "token": "item-id",
+    "seller": "admin",
+    "price": 10.0,
+    "total": 0.0,
+    "remain": 0.0,
+    "open": false
+  }
+  (cbmarket.item-sale-status "item-id" "admin")
+)
+
+(expect
+  "Check release result"
+  1.0
+  (colorblock.get-balance "item-id" "admin")
+)
+(expect
+  "Check release result"
+  0.0
+  (colorblock.get-balance "item-id" "colorblock-market")
+)
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+; Release again
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.0)]}])
+(cbmarket.release "item-id" "admin" 10.0 1.0)
+
+
+;
+; purchase
+;
+
+; add-balance
+(test-capability (coin.CREDIT "alice"))
+(coin.credit "alice" (read-keyset "alice-keyset") 12.0)
+
+(env-sigs [{"key": "admin", "caps": []}])
+(expect-failure
+  "Purchase will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [bob]"
+  (cbmarket.purchase "item-id" "bob" "admin" 1.0)
+)
+
+(env-sigs [{"key": "bob", "caps": []}])
+(expect-failure
+  "Purchase will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [bob]"
+  (cbmarket.purchase "item-id" "bob" "admin" 1.0)
+)
+
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "colorblock-market" "bob" 1.0)]}])
+(expect-failure
+  "Purchase will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [bob]"
+  (cbmarket.purchase "item-id" "bob" "admin" 1.0)
+)
+
+(env-sigs [{"key": "alice", "caps": [
+  (coin.TRANSFER "alice" "colorblock-market" 0.1)
+  (coin.TRANSFER "alice" "admin" 10.0)
+  (colorblock.TRANSFER "item-id" "colorblock-market" "alice" 1.0)
+]}])
+(expect-failure
+  "Purchase will fail as there has no record in ledger"
+  "row not found: item-id:alice"
+  (cbmarket.purchase "item-id" "alice" "admin" 1.0)
+)
+
+(env-sigs [{"key": "alice", "caps": [
+  (colorblock.MINT "item-id" "alice")
+  (coin.TRANSFER "alice" "colorblock-market" 0.1)
+  (coin.TRANSFER "alice" "admin" 10.0)
+  (colorblock.TRANSFER "item-id" "colorblock-market" "alice" 1.0)
+]}])
+(expect-failure
+  "Purchase will fail as precision is illegal"
+  "precision violation"
+  (cbmarket.purchase-new-account "item-id" "alice" "admin" 1.2 (read-keyset "alice-keyset"))
+)
+(expect-failure
+  "Purchase will fail as purchase amount is illegal"
+  "Purchase amount cannot be larger than remain amount"
+  (cbmarket.purchase-new-account "item-id" "alice" "admin" 2.0 (read-keyset "alice-keyset"))
+)
+
+(expect
+  "Purchase-new-account will succeed with correct capabilities"
+  "Write succeeded"
+  (cbmarket.purchase-new-account "item-id" "alice" "admin" 1.0 (read-keyset "alice-keyset"))
+)
+
+(expect
+  "Check recall result"
+  {
+    "token": "item-id",
+    "seller": "admin",
+    "price": 10.0,
+    "total": 1.0,
+    "remain": 0.0,
+    "open": false
+  }
+  (cbmarket.item-sale-status "item-id" "admin")
+)
+
+(expect
+  "Check release result"
+  0.0
+  (colorblock.get-balance "item-id" "admin")
+)
+(expect
+  "Check release result"
+  0.0
+  (colorblock.get-balance "item-id" "colorblock-market")
+)
+(expect
+  "Check release result"
+  10.0
+  (coin.get-balance "admin")
+)
+(expect
+  "Check release result"
+  0.1
+  (coin.get-balance "colorblock-market")
+)
+(expect
+  "Check release result"
+  1.9
+  (coin.get-balance "alice")
+)

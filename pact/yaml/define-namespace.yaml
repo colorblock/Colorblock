@@ -1,7 +1,6 @@
-codeFile: "../cbmarket.pact"
+code: (define-namespace "free" (read-keyset "cb-admin-keyset") (read-keyset "cb-admin-keyset"))
 data: 
-  ns: "free"
-  cbmarket-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
+  cb-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
   upgrade: false
 keyPairs:
   - public: ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d

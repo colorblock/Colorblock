@@ -1,4 +1,4 @@
-code: (coin.create-account "admin" (read-keyset "cb-admin-keyset"))(colorblock.create-account-maybe "admin" (read-keyset "cb-admin-keyset"))
+code: (coin.create-account "admin" (read-keyset "cb-admin-keyset"))(colorblock.create-account-maybe "item-id" "admin" (read-keyset "cb-admin-keyset"))
 data: 
   cb-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
 keyPairs:

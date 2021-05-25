@@ -1,4 +1,7 @@
 (define-keyset 'cbmarket-admin-keyset (read-keyset "cbmarket-admin-keyset"))
+
+(namespace (read-msg 'ns))
+
 (module cbmarket GOVERNANCE
   @doc "module for \
       \1. helping users release items into market for sale \
@@ -65,7 +68,7 @@
           balance
           amount
         )
-        "Amount can't be larger than balance"
+        "Amount cannot be larger than balance"
       )
     )
     (with-default-read deals (key token seller)
@@ -86,10 +89,10 @@
     @event
 
     (with-read deals (key token seller)
-      { "on-sale" := on-sale }
+      { "open" := open }
       (enforce
-        (= true on-sale)
-        "Item is not on sale"
+        (= true open)
+        "Deal status is closed"
       )
     )
   )
@@ -98,20 +101,27 @@
     ( token:string
       buyer:string 
       seller:string
+      amount:decimal
     )
     @doc "Notifies purchase of TOKEN from SELLER to BUYER"
     @event
+
+    (enforce-unit token amount)
     (with-read deals (key token seller)
-      { 
-        "on-sale" := on-sale
+      { "remain" := remain,
+        "open" := open 
       }
+      (enforce
+        (<= amount remain)
+        "Purchase amount cannot be larger than remain amount"
+      )
       (enforce
         (!= seller buyer)
         "Buyer cannot be seller"
       )
       (enforce
-        (= true on-sale)
-        "Item is not on sale"
+        (= true open)
+        "Deal status is closed"
       )
     )
   )
@@ -120,9 +130,6 @@
   ; -------------------------------------------------------
   ; Constants
 
-  (defconst DEFAULT_TOKEN "cb-token"
-    "The default token for official account init"
-  )
   (defconst COLORBLOCK_MARKET "colorblock-market"
     "The official account of colorblock market"
   )
@@ -147,6 +154,7 @@
     )
     @doc " Release item for sale."
     (with-capability (RELEASE token account price amount)
+      ; Transfer token to platform
       (install-capability (colorblock.TRANSFER token account COLORBLOCK_MARKET amount))
       (colorblock.transfer-create token account COLORBLOCK_MARKET (cb-market-guard) amount)
       (write deals (key token account) {
@@ -166,50 +174,93 @@
     )
     @doc " Recall item and stop selling."
     (with-capability (RECALL token account)
-     true
+      (let* 
+        (
+          (deal (read deals (key token account)))
+          (remain-amount (at 'remain deal))
+        )
+        ; Check ownership
+        (install-capability (colorblock.MINT token account))
+        (validate-ownership token account)
+
+        ; Transfer token back
+        (if
+          (>
+            remain-amount
+            0.0
+          )
+          [
+            (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET account remain-amount))
+            (colorblock.transfer token COLORBLOCK_MARKET account remain-amount)
+          ]
+          "no need to transfer token"
+        )
+        (update deals (key token account) {
+          "total": 0.0,
+          "remain": 0.0,
+          "open": false
+        })
+      )
     )
   )
 
-  (defun purchase-with-new-user:string 
-    ( account:string
-      token:string
+  (defun purchase-new-account:string
+    ( token:string
+      buyer:string
+      seller:string
+      amount:decimal
       guard:guard
     )
     @doc " Create account and purchase item"
-    (colorblock.create-account-maybe account guard)
-    (purchase account token)
+    (colorblock.create-account-maybe token buyer guard)
+    (purchase token buyer seller amount)
   )
 
   (defun purchase:string 
-    ( account:string
-      token:string
+    ( token:string
+      buyer:string
+      seller:string
+      amount:decimal
     )
     @doc " Purchase item."
-    (with-capability (PURCHASE account token)
-      (with-read deals token
-        { "seller" := seller,
-          "price" := price
+
+    ; validate receiver first
+    (install-capability (colorblock.MINT token buyer))
+    (validate-ownership token buyer)
+
+    (with-capability (PURCHASE token buyer seller amount)
+      (with-read deals (key token seller)
+        { "price" := price,
+          "total" := total-amount
         }
         (let* 
           (
-            (fees (* FEES_RATE price))
-            (total-price (+ fees price))
-            (balance (coin.get-balance account))
+            (sale-price (* price amount))
+            (fees (* FEES_RATE sale-price))
+            (total-price (+ fees sale-price))
+            (balance (coin.get-balance buyer))
+            (remain-amount (- total-amount amount))
           )
           (enforce 
             (<= total-price balance)
             "Insufficient balance"
           )
-          (install-capability (coin.TRANSFER account seller price))
-          (install-capability (coin.TRANSFER account COLORBLOCK_MARKET fees))
-          (install-capability (colorblock.MINT token COLORBLOCK_MARKET))
-          (install-capability (TRANSFER COLORBLOCK_MARKET account token))
-          (coin.transfer account seller price)
-          (coin.transfer account COLORBLOCK_MARKET fees)
-          (transfer COLORBLOCK_MARKET account token)
-          (update deals token {
-            "on-sale": false
+          (install-capability (coin.TRANSFER buyer seller price))
+          (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET fees))
+          (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET buyer amount))
+          (coin.transfer buyer seller price)
+          (coin.transfer buyer COLORBLOCK_MARKET fees)
+          (colorblock.transfer token COLORBLOCK_MARKET buyer amount)
+          (update deals (key token seller) {
+            "remain": remain-amount
           })
+          (if
+            (= 0.0 remain-amount)
+            (update deals (key token seller) {
+              "open": false
+            })
+            "no need to close deal"
+          )
         )
       )
     )
