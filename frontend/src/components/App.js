@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route } from 'react-router-dom';
 import { connect } from 'react-redux';
 import HomePage from './home/HomePage';
 import CreatorPage from './creator/CreatorPage';
+import ItemPage from './item/ItemPage';
 import exampleFrames from '../assets/exampleFrames';
 import { loadProject } from '../store/actions/actionCreator';
 import Header from './layout/Header';
@@ -34,8 +35,10 @@ const App = (props) => {
       <Route path='/create'>
         <CreatorPage />
       </Route>
+      <Route path='/item/:itemId'>
+        <ItemPage />
+      </Route>
     </Router>
-    
   );
 };
 

@@ -1,7 +1,18 @@
-from app import db
+from dataclasses import dataclass
 from sqlalchemy.sql import func
+from app import db
 
+@dataclass
 class Item(db.Model):
+    id: str
+    title: str
+    tags: str
+    description: str
+    creator: str
+    owner: str
+    created_at: str
+    updated_at: str
+
     id = db.Column(db.String(), primary_key=True)
     title = db.Column(db.String())
     tags = db.Column(db.String())

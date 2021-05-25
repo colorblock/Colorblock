@@ -1,5 +1,4 @@
-from re import I
-from flask import Blueprint, request, current_app as app
+from flask import Blueprint, request, current_app as app, jsonify
 import requests
 import json
 import time
@@ -12,10 +11,10 @@ from app.utils.crypto import check_hash
 
 item_blueprint = Blueprint('item', __name__)
 
-@item_blueprint.route('/', methods=['GET'])
-def get_item():
-    app.logger.debug('123')
-    return 'asd'
+@item_blueprint.route('/<item_id>', methods=['GET'])
+def get_item(item_id):
+    item = db.session.query(Item).filter(Item.id == item_id).one()
+    return jsonify(item)
 
 @item_blueprint.route('/all', methods=['GET'])
 def get_all_items():

@@ -1,6 +1,8 @@
-from app import db
+from dataclasses import dataclass
 from sqlalchemy.sql import func
+from app import db
 
+@dataclass
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     address = db.Column(db.String())
