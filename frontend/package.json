@@ -26,6 +26,7 @@
     "web-vitals": "^1.1.1"
   },
   "scripts": {
+    "local": "NODE_ENV=local craco start",
     "start": "craco start",
     "build": "cracos build",
     "test": "jest",
