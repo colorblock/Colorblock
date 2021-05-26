@@ -1,0 +1,7 @@
+<svg id="Component_26_1" data-name="Component 26 – 1" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+  <g id="Ellipse_4" data-name="Ellipse 4" fill="#fefdfe" stroke="#b1b5b9" stroke-width="1">
+    <circle cx="15" cy="15" r="15" stroke="none"/>
+    <circle cx="15" cy="15" r="14.5" fill="none"/>
+  </g>
+  <path id="Icon_material-person" data-name="Icon material-person" d="M13.249,13.249A3.625,3.625,0,1,0,9.625,9.625,3.624,3.624,0,0,0,13.249,13.249Zm0,1.812C10.83,15.062,6,16.276,6,18.686V20.5H20.5V18.686C20.5,16.276,15.669,15.062,13.249,15.062Z" transform="translate(1.751 0.956)" fill="#b1b5b9"/>
+</svg>

@@ -259,12 +259,12 @@ const CreatePage = (props) => {
                     </div>
                     <div>
                       <button className='block w-5 h-5 text-white m-0 bg-gray-400' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
-                        <div className='flex grid justify-items-center'>
+                        <div className='flex justify-items-center'>
                           <FontAwesomeIcon icon={fa.faTrashAlt} size='xs' />
                         </div>
                       </button>
                       <button className='block w-5 h-5 text-white mt-2 bg-gray-400' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
-                        <div className='flex grid justify-items-center'>
+                        <div className='flex justify-items-center'>
                           <FontAwesomeIcon icon={fa.faCopy} size='xs' />
                         </div>
                       </button>

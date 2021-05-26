@@ -1,42 +1,45 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import * as fa from '@fortawesome/free-solid-svg-icons';
 import { switchWalletModal } from '../../store/actions/actionCreator';
-
 const Header = (props) => {
   const { wallet, switchWalletModal } = props;
 
   return (
-    <div className='flex mx-6 mb-2 py-2 border-b justify-between text-xs'>
-      <div className='font-bold text-base px-2 flex-none h-full'>
-        COLORBLOCK
+    <div data-role='header page' className='w-full h-12 bg-white'>
+      <div data-role='non-fixed part taking space'>
       </div>
-      <div className='pl-10 flex'>
-        <input
-          className='border w-96 h-full px-3 text-xs placeholder-gray-500 placeholder-opacity-25'
-          placeholder='Search collectibles, and stuff...'
-        />
-        <ul className='flex w-52 justify-between py-1 ml-4'>
-          <li>Explore</li>
-          <li>Collections</li>
-          <li>Categories</li>
-        </ul>
-      </div>
-      <div>
-        <ul className='flex justify-between'>
-          <li>
-            <img className='w-6 h-6' src='/img/moon.png' alt='Moon' />
-          </li>
-          <li>
+      <div data-role='fixed header' className='w-full h-12 fixed top-0 bg-white'>
+        <div data-role='fixed header container' className='h-full flex justify-between mx-10 border-b border-gray-200 text-xs'>
+          <div data-role='left flex part' className='h-full flex'>
+            <div data-role='logo' className='mx-5 h-full py-2'>
+              <img src='/img/colorblock_logo.svg' className='h-full' alt='logo' />
+            </div>
+            <div data-role='search bar' className='w-120 my-2 flex bg-gray-50 border rounded-lg border-white hover-pink'>
+              <div className='mx-2 py-0.5 flex items-center text-gray-300'>
+                <FontAwesomeIcon icon={fa.faSearch} size='sm' />
+              </div>
+              <input
+                className='w-full px-0.5 bg-gray-50 placeholder-gray-400 placeholder-opacity-75'
+                placeholder='Search collections, collectibles, and artists'
+              />
+            </div>
+            <div data-role='nav bar' className='ml-5 my-2'>
+              <ul className='h-full flex items-center space-x-5'>
+                <li>Market</li>
+                <li>Collections</li>
+                <li>Create</li>
+                <li>Token</li>
+              </ul>
+            </div>
+          </div>
+          <div data-role='right flex part' className='flex items-center space-x-5'>
+            <span>My Profile</span>
+            <img src='/img/profile_picture.svg' className='h-full py-3 mx-2' alt='profile' />
             <button
-              className='rounded border border-black bg-black text-white py-0.5 w-20 ml-2'
-            >
-              <a href='/create'>Create</a>
-            </button>
-          </li>
-          <li>
-            <button
-              className='rounded border border-black py-0.5 w-20 ml-2'
+              className='py-2 px-4 bg-pink border rounded-lg border-white text-white'
               onClick={ () => switchWalletModal() }
             >
               { wallet.address ?
@@ -44,9 +47,10 @@ const Header = (props) => {
                 'Connect'
               }
             </button>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
+      
     </div>
   );
 };

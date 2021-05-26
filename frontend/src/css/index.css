@@ -3,6 +3,18 @@
 @tailwind utilities;
 
 @layer components {
+  .w-120 { 
+    width: 30rem; 
+  }
+  .bg-pink {
+    background-color: rgb(254, 94, 174);
+  }
+  .hover-pink:hover {
+    @apply ring-1 ring-pink-500
+  }
+  .hover-gray:hover {
+    @apply ring-1 ring-gray-500
+  }
   .square {
     padding-top: 100%;
   }
