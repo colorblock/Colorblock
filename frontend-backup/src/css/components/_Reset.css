@@ -1,7 +1,0 @@
-.reset {
-  width: 100%;
-  margin: 0.5em auto;
-  display: table;
-
-  @include button(gray);
-}

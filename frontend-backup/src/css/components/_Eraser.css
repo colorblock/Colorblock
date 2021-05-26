@@ -1,7 +1,0 @@
-.eraser {
-  @include icon($icon-eraser);
-
-  &:hover {
-    cursor: pointer;
-  }
-}

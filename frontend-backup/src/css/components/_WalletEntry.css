@@ -1,9 +1,0 @@
-.wallet-entry {
-  button {
-    @include button(gray);
-
-    display: inline-block;
-    float: right;
-    margin-left: 20px;
-  }
-}
