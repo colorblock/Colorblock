@@ -2,38 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
+@layer base {
   .w-120 { 
     width: 30rem; 
   }
+  .text-xxs {
+    font-size: 10px;
+    -webkit-transform-origin: top left;
+    -webkit-transform: scale(0.83);
+  }
+  .text-xxs-r {
+    font-size: 10px;
+    -webkit-transform-origin: top right;
+    -webkit-transform: scale(0.83);
+  }
+  @font-face {
+    font-family: Work Sans;
+    font-weight: 400;
+    src: url(../assets/fonts/WorkSans-Regular.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: Work Sans;
+    font-weight: 500;
+    src: url(../assets/fonts/WorkSans-Medium.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: Work Sans;
+    font-weight: 600;
+    src: url(../assets/fonts/WorkSans-SemiBold.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: Work Sans;
+    font-weight: 700;
+    src: url(../assets/fonts/WorkSans-Bold.ttf) format("truetype");
+  }
+  .font-work {
+    @apply font-sans;
+    font-family: "Work Sans";
+  }
+}
+
+@layer components {
+  
   .bg-pink {
     background-color: rgb(254, 94, 174);
   }
-  .hover-pink:hover {
-    @apply ring-1 ring-pink-500
-  }
-  .hover-gray:hover {
-    @apply ring-1 ring-gray-500
-  }
+
   .square {
     padding-top: 100%;
   }
-  /* Chrome, Safari, Edge, Opera */
+
+  /* Hover */
+  .hover-pink:hover {
+    @apply ring-1 ring-pink-500;
+  }
+  .hover-gray:hover {
+    @apply ring-1 ring-gray-500;
+  }
+
+  /* Focus */
+  button:focus, input:focus {
+    outline: none;
+  }
+
+  /* Input spin */
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-
-  /* Firefox */
   input[type=number] {
     -moz-appearance: textfield;
   }
 
-  button:focus, input:focus {
-    outline: none;
-  }
-
+  /* For custom components */
   .pcr-button {
     display: none;
   }
@@ -42,15 +84,15 @@
   }
 
   div[data-role='painting tools'] div.selected {
-    @apply bg-gray-500
+    @apply bg-gray-500;
   }
   div[data-role='image type selection'] label {
-    @apply border border-black
+    @apply border border-black;
   }
   div[data-role='image type selection'] label.selected {
-    @apply bg-black text-white
+    @apply bg-black text-white;
   }
   div[data-role='item submit'] * {
-    @apply block mx-auto
+    @apply block mx-auto;
   }
 }

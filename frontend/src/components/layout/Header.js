@@ -8,25 +8,25 @@ const Header = (props) => {
   const { wallet, switchWalletModal } = props;
 
   return (
-    <div data-role='header page' className='w-full h-12 bg-white'>
-      <div data-role='non-fixed part taking space'>
+    <div data-role='header page' className='w-full bg-white text-sm'>
+      <div data-role='non-fixed part taking space' className='h-16'>
       </div>
-      <div data-role='fixed header' className='w-full h-12 fixed top-0 bg-white'>
-        <div data-role='fixed header container' className='h-full flex justify-between mx-10 border-b border-gray-200 text-xs'>
+      <div data-role='fixed header' className='w-full h-16 fixed top-0 bg-white'>
+        <div data-role='fixed header container' className='h-full flex justify-between mx-12 border-b border-gray-200'>
           <div data-role='left flex part' className='h-full flex'>
-            <div data-role='logo' className='mx-5 h-full py-2'>
+            <div data-role='logo' className='mx-5 h-full py-3'>
               <img src='/img/colorblock_logo.svg' className='h-full' alt='logo' />
             </div>
-            <div data-role='search bar' className='w-120 my-2 flex bg-gray-50 border rounded-lg border-white hover-pink'>
-              <div className='mx-2 py-0.5 flex items-center text-gray-300'>
-                <FontAwesomeIcon icon={fa.faSearch} size='sm' />
+            <div data-role='search bar' className='w-120 my-3 flex items-center bg-gray-50 border rounded-lg border-white hover-pink'>
+              <div className='mx-2 text-gray-300'>
+                <FontAwesomeIcon icon={fa.faSearch} />
               </div>
               <input
                 className='w-full px-0.5 bg-gray-50 placeholder-gray-400 placeholder-opacity-75'
                 placeholder='Search collections, collectibles, and artists'
               />
             </div>
-            <div data-role='nav bar' className='ml-5 my-2'>
+            <div data-role='nav bar' className='ml-5'>
               <ul className='h-full flex items-center space-x-5'>
                 <li>Market</li>
                 <li>Collections</li>
@@ -36,7 +36,7 @@ const Header = (props) => {
             </div>
           </div>
           <div data-role='right flex part' className='flex items-center space-x-5'>
-            <span>My Profile</span>
+            <span className='whitespace-nowrap'>My Profile</span>
             <img src='/img/profile_picture.svg' className='h-full py-3 mx-2' alt='profile' />
             <button
               className='py-2 px-4 bg-pink border rounded-lg border-white text-white'

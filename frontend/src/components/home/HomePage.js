@@ -3,8 +3,8 @@ import { serverUrl } from '../../config';
 
 const HomePage = (props) => {
   return (
-    <div data-role='home page' className='w-full px-10 text-xs'>
-      <div data-role='home container' className='w-full bg-gray-50'>
+    <div data-role='home page' className='w-full px-12 text-sm font-work'>
+      <div data-role='home container' className='relative w-full bg-gray-50'>
         <div 
           data-role='top banner' 
           className='pt-20 h-60 mb-20'
@@ -15,9 +15,12 @@ const HomePage = (props) => {
             backgroundRepeat: "no-repeat, no-repeat"
           }}
         >
+          <span data-role='block height' className='absolute top-3 right-6 text-xs text-gray-400'>
+            164487
+          </span>
           <div data-role='top banner title' className='text-center'>
-            <p className='tracking-wider'>On-chain Pixel NFTs on <span className='text-pink-500'>Kadena</span></p>
-            <p className='my-8 leading-5'>Explore, Mint or Create your own pixel non fungible tokesn<br />with ColorBlock</p>
+            <p className='tracking-wider text-lg font-medium'>On-chain Pixel NFTs on <span className='text-pink-500'>Kadena</span></p>
+            <p className='my-6 leading-6'>Explore, Mint or Create your own pixel non fungible tokesn<br />with ColorBlock</p>
             <div className='flex justify-center space-x-6'>
               <button className='px-7 py-2 text-white bg-pink border rounded-lg shadow'>Create</button>
               <button className='px-7 py-2 bg-white border border-gray-300 rounded-lg shadow'>Explore</button>
@@ -26,24 +29,24 @@ const HomePage = (props) => {
         </div>
         <div data-role='featured collections' className='w-5/6 mx-auto my-10'>
           <div data-role='info' className='flex justify-between my-5 tracking-wider'>
-            <div>
+            <div className='text-base'>
               Featured Collections
-              <span className='ml-5 text-pink-500'>Get Featured</span>
+              <span className='ml-5 text-pink-500 text-sm'>Get Featured</span>
             </div>
             <div className='text-gray-400'>
               View More
             </div>
           </div>
-          <ul data-role='blocks' className='flex justify-between space-x-4'>
+          <ul data-role='blocks' className='flex justify-between space-x-4 text-xs'>
             {
               Array(4).fill(0).map(() => (
-                <li data-role='block container' className='w-1/4 h-44 px-4 py-4 border rounded border-gray-300 hover-gray'>
+                <li data-role='block container' className='w-1/4 h-44 px-4 py-4 border rounded-xl border-gray-300 hover-gray'>
                   <div data-role='thumbnail' className='h-28 py-4 flex justify-center'>
                     <img className='h-full' src={`${serverUrl}/static/img/c246a25c421f7eb1.png`} alt='Fruit 2' />
                   </div>
                   <div data-role='brief' className='h-8 flex items-end'>
                     <div>
-                      <p className='font-bold'>Collection 1</p>
+                      <p className='font-semibold'>Collection 1</p>
                       <p>120 collectibles</p>
                     </div>
                   </div>
@@ -54,31 +57,31 @@ const HomePage = (props) => {
         </div>
         <div data-role='trending' className='w-5/6 mx-auto my-10'>
           <div data-role='info' className='flex justify-between my-5 tracking-wider'>
-            <div>
+            <div className='text-base'>
               Trending
             </div>
             <div className='text-gray-400'>
               View More
             </div>
           </div>
-          <ul data-role='blocks' className='flex justify-between space-x-4'>
+          <ul data-role='blocks' className='flex justify-between space-x-4 text-xs'>
             {
               Array(5).fill(0).map(() => (
-                <li data-role='block container' className='w-1/5 h-52 px-4 py-4 border rounded border-gray-300 hover-gray'>
+                <li data-role='block container' className='w-1/5 h-56 px-4 py-4 border rounded-xl border-gray-300 hover-gray'>
                   <div data-role='title and collection' className='h-8'>
                     <p>Example Cat</p>
                     <p className='text-gray-400'>ColorBlock Genesis</p>
                   </div>
-                  <div data-role='thumbnail' className='h-28 py-4 flex justify-center'>
+                  <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
                     <img className='h-full' src={`${serverUrl}/static/img/c246a25c421f7eb1.png`} alt='Fruit 2' />
                   </div>
                   <div data-role='owner and price' className='h-8 flex items-end justify-between'>
                     <div>
-                      <p>Owner</p>
+                      <p className='text-xxs text-gray-500'>Owner</p>
                       <p>ebf4...dcdb</p>
                     </div>
                     <div className='text-right'>
-                      <p>Price</p>
+                      <p className='text-xxs-r text-gray-500'>Price</p>
                       <p className='text-pink-500'>1000.0 KDA</p>
                     </div>
                   </div>
@@ -89,31 +92,31 @@ const HomePage = (props) => {
         </div>
         <div data-role='recently minted' className='w-5/6 mx-auto my-10'>
           <div data-role='info' className='flex justify-between my-5 tracking-wider'>
-            <div>
+            <div className='text-base'>
               Recently Minted
             </div>
             <div className='text-gray-400'>
               View More
             </div>
           </div>
-          <ul data-role='blocks' className='flex justify-between space-x-4'>
+          <ul data-role='blocks' className='flex justify-between space-x-4 text-xs'>
             {
               Array(5).fill(0).map(() => (
-                <li data-role='block container' className='w-1/5 h-52 px-4 py-4 border rounded border-gray-300 hover-gray'>
+                <li data-role='block container' className='w-1/5 h-56 px-4 py-4 border rounded-xl border-gray-300 hover-gray'>
                   <div data-role='title and collection' className='h-8'>
                     <p>Example Cat</p>
                     <p className='text-gray-400'>ColorBlock Genesis</p>
                   </div>
-                  <div data-role='thumbnail' className='h-28 py-4 flex justify-center'>
+                  <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
                     <img className='h-full' src={`${serverUrl}/static/img/c246a25c421f7eb1.png`} alt='Fruit 2' />
                   </div>
                   <div data-role='owner and price' className='h-8 flex items-end justify-between'>
                     <div>
-                      <p>Owner</p>
+                      <p className='text-xxs text-gray-500'>Owner</p>
                       <p>ebf4...dcdb</p>
                     </div>
                     <div className='text-right'>
-                      <p>Price</p>
+                      <p className='text-xxs-r text-gray-500'>Price</p>
                       <p className='text-pink-500'>1000.0 KDA</p>
                     </div>
                   </div>
@@ -123,19 +126,19 @@ const HomePage = (props) => {
           </ul>
         </div>
         <div data-role='view more' className='w-5/6 mx-auto my-16'>
-          <button className='w-full py-3 font-bold shadow hover-gray'>View More</button>
+          <button className='w-full py-3 shadow hover-gray'>View More</button>
         </div>
         <div data-role='project highlight' className='w-5/6 mx-auto mt-32 flex justify-center text-center'>
           <div className='w-1/3 px-10 leading-6'>
-            <p className='font-bold text-pink-500 mb-6'>On-Chain</p>
+            <p className='font-bold text-pink-500 mb-6 text-lg'>On-Chain</p>
             <p>All artwork associated with NFTs are located on chain. All NFTs are deployed on to Kadena's braided multi-chain proof of work network. A feature unique to ColorBlock.</p>
           </div>
           <div className='w-1/3 px-10 leading-6'>
-            <p className='font-bold text-pink-500 mb-6'>Low Fees</p>
+            <p className='font-bold text-pink-500 mb-6 text-lg'>Low Fees</p>
             <p>Kadena's scalable multi chain network allows users to mint NFTs with very low fees.</p>
           </div>
           <div className='w-1/3 px-10 leading-6'>
-            <p className='font-bold text-pink-500 mb-6'>Secure</p>
+            <p className='font-bold text-pink-500 mb-6 text-lg'>Secure</p>
             <p>All NFTs are deployed on chain to Kadena's braided multi-chain proof of work network. All artwork associated with NFTs are located on chain. A feature unique to ColorBlock.</p>
           </div>
         </div>
@@ -152,12 +155,12 @@ const HomePage = (props) => {
           </ul>
         </div>
         <div data-role='footer' className='w-5/6 mx-auto pt-10 pb-20 flex justify-between items-end'>
-          <div className='w-1/3 text-gray-500'>
+          <div className='w-1/3 text-gray-500 text-xs'>
             Colorblock | All Rights Reserved
           </div>
           <div className='w-1/3 text-gray-500 text-center flex flex-col justify-center items-center'>
-            <img src='/img/colorblock_gray_logo.svg' className='w-8 h-8' alt='logo-gray' />
-            <p>002 nfts minted</p>
+            <img src='/img/colorblock_gray_logo.svg' className='w-12 h-12' alt='logo-gray' />
+            <p className='text-xs'>002 nfts minted</p>
           </div>
           <div className='w-1/3 flex justify-end space-x-3'>
             <img src='/img/twitter.svg' className='w-4 h-4' alt='twitter' />
