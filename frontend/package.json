@@ -27,6 +27,7 @@
   },
   "scripts": {
     "local": "NODE_ENV=local craco start",
+    "local-win": "set NODE_ENV=local && craco start",
     "start": "craco start",
     "build": "cracos build",
     "test": "jest",
