@@ -67,11 +67,11 @@
   }
 
   /* Focus */
-  button:focus, input:focus {
+  button:focus, input:focus, select:focus {
     outline: none;
   }
 
-  /* Input spin */
+  /* Input remove default */
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -79,6 +79,15 @@
   }
   input[type=number] {
     -moz-appearance: textfield;
+  }
+
+  /* Select remove default */
+  select {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+  }
+  select::-ms-expand {
+    display: none;
   }
 
   /* For custom components */

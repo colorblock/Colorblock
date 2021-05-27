@@ -32,7 +32,7 @@ export const Wallet = (props) => {
   };
 
   return wallet.isModalOpen ? (
-    <div data-role='wallet modal' className='fixed top-0 w-full min-h-full z-100 bg-white bg-opacity-90'>
+    <div data-role='wallet modal' className='fixed top-0 left-0 w-full min-h-full bg-white bg-opacity-90 z-50 text-work'>
       <div className='relative mt-20 w-5/6 mx-auto border border-red-500 bg-white'>
         <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => switchWalletModal() }>
           <FontAwesomeIcon icon={fa.faTimes} />
