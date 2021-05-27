@@ -26,8 +26,8 @@ const Header = (props) => {
                 placeholder='Search collections, collectibles, and artists'
               />
             </div>
-            <div data-role='nav bar' className='ml-5'>
-              <ul className='h-full flex items-center space-x-5'>
+            <div data-role='nav bar' className='ml-7'>
+              <ul className='h-full flex items-center space-x-7'>
                 <li>Market</li>
                 <li>Collections</li>
                 <li>Create</li>
@@ -35,11 +35,11 @@ const Header = (props) => {
               </ul>
             </div>
           </div>
-          <div data-role='right flex part' className='flex items-center space-x-5'>
+          <div data-role='right flex part' className='flex items-center space-x-8'>
             <span className='whitespace-nowrap'>My Profile</span>
-            <img src='/img/profile_picture.svg' className='h-full py-3 mx-2' alt='profile' />
+            <img src='/img/profile_picture.svg' className='h-full py-5 mx-2' alt='profile' />
             <button
-              className='py-2 px-4 bg-pink border rounded-lg border-white text-white'
+              className='py-2 px-4 bg-cb-pink border rounded-lg border-white text-white'
               onClick={ () => switchWalletModal() }
             >
               { wallet.address ?

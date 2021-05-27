@@ -44,8 +44,14 @@
 
 @layer components {
   
-  .bg-pink {
+  .bg-cb-pink {
     background-color: rgb(254, 94, 174);
+  }
+  .text-cb-pink {
+    color: rgb(254, 94, 174);
+  }
+  .bg-cb-gray {
+    background-color: rgb(252, 253, 254);
   }
 
   .square {
