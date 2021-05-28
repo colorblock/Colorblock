@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import Preview from './Preview';
+import { bindActionCreators } from 'redux';
+import { ActionCreators } from 'redux-undo';
 import Pickr from '@simonwep/pickr';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+
+import Preview from '../common/Preview';
 import * as actions from '../../store/actions/actionCreator';
-import { ActionCreators } from 'redux-undo';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
 import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl } from '../../config';

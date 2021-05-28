@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { useParams } from 'react-router-dom';
+
 import { serverUrl } from '../../config';
 
 export const ItemPage = (props) => {
@@ -27,10 +27,6 @@ export const ItemPage = (props) => {
       </div>
     </div>
   );
-};
-
-ItemPage.propTypes = {
-  props: PropTypes
 };
 
 const mapStateToProps = (state) => ({

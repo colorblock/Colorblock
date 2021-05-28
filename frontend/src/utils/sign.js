@@ -66,7 +66,6 @@ export const getSignedCmd = async (inputCmd) => {
 };
 
 export const getDataFromPactServer = async (code) => {
-  const id = 'eDuiUQlMMC7M3QfUbyKWPUfUH0w45n02ecEAqKlfTeA';
   const localCmd = {
     keyPairs: [],
     pactCode: code

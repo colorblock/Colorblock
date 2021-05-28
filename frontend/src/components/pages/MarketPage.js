@@ -3,9 +3,24 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
-import { serverUrl } from '../../config';
+
+import Shelf from '../common/Shelf';
 
 export const MarketPage = (props) => {
+  
+  const items = Array(30).fill({
+    id: 'c246a25c421f7eb1',
+    title: 'Example Block',
+    collection: 'ColorBlock Genesis',
+    owner: 'ebf4xxxxdcdb',
+    price: 1000.0
+  });
+  const itemShelfConfig = {
+    type: 'item',
+    flow: 'grid',
+    cols: 5
+  };
+
   return (
     <div data-role='market container' className='bg-cb-gray text-sm'>
       <div data-role='item filter and sort' className='w-5/6 mx-auto my-10 flex justify-between'>
@@ -25,31 +40,7 @@ export const MarketPage = (props) => {
         </div>
       </div>
       <div data-role='item list' className='w-5/6 mx-auto'>
-        <ul data-role='blocks' className='grid grid-cols-5 gap-x-4 gap-y-10 justify-between text-xs'>
-          {
-            Array(30).fill(0).map(() => (
-              <li data-role='block container' className='h-56 px-4 py-4 border rounded-xl border-gray-300 hover-gray'>
-                <div data-role='title and collection' className='h-8'>
-                  <p>Example Cat</p>
-                  <p className='text-gray-400'>ColorBlock Genesis</p>
-                </div>
-                <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
-                  <img className='h-full' src={`${serverUrl}/static/img/c246a25c421f7eb1.png`} alt='Fruit 2' />
-                </div>
-                <div data-role='owner and price' className='h-8 flex items-end justify-between'>
-                  <div>
-                    <p className='text-xxs text-gray-500'>Owner</p>
-                    <p>ebf4...dcdb</p>
-                  </div>
-                  <div className='text-right'>
-                    <p className='text-xxs-r text-gray-500'>Price</p>
-                    <p className='text-cb-pink'>1000.0 KDA</p>
-                  </div>
-                </div>
-              </li>
-            ))
-          }
-        </ul>
+        <Shelf entryList={items} config={itemShelfConfig} />
       </div>
     </div>
   );

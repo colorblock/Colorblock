@@ -1,15 +1,17 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 import { connect } from 'react-redux';
+
 import exampleFrames from '../assets/exampleFrames';
 import { loadProject } from '../store/actions/actionCreator';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
-import HomePage from './home/HomePage';
-import CreatorPage from './creator/CreatorPage';
-import MarketPage from './market/MarketPage';
-import ItemPage from './item/ItemPage';
-import Wallet from './context/Wallet';
+import HomePage from './pages/HomePage';
+import CreatorPage from './pages/CreatorPage';
+import MarketPage from './pages/MarketPage';
+import ItemPage from './pages/ItemPage';
+import UserPage from './pages/UserPage';
+import Wallet from './common/Wallet';
 import { hasStateInCookies } from '../utils/storage';
 
 const App = (props) => {
@@ -43,6 +45,9 @@ const App = (props) => {
         </Route>
         <Route path='/item/:itemId'>
           <ItemPage />
+        </Route>
+        <Route path='/user/:userId'>
+          <UserPage />
         </Route>
         <Footer />
       </Router>
