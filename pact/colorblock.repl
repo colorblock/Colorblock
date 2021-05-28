@@ -41,6 +41,27 @@
 (coin.create-account "lucy" (read-keyset "lucy-keyset"))
 (coin.create-account "jack" (read-keyset "jack-keyset"))
 
+(env-sigs [{"key": "bob", "caps": [()]}])
+(expect-failure
+  "Validation will fail as capability is not activated"
+  "Keyset failure"
+  (colorblock.validate-guard "admin")
+)
+
+(env-sigs [{"key": "admin", "caps": [()]}])
+(expect
+  "Validation will fail as capability is not activated"
+  true
+  (colorblock.validate-guard "admin")
+)
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [{"key": "bob", "caps": [()]}])
+
 ;
 ; create account in COLORBLOCK module
 ;

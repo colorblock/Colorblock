@@ -78,6 +78,10 @@
     (compose-capability (CREDIT token account))
   )
 
+  (defcap VALID-GUARD (guard:guard)
+    (enforce-guard guard)
+  )
+
   (defcap TRANSFER:bool 
     (
       token:string
@@ -299,6 +303,14 @@
       true
     )
   )
+
+  (defun validate-guard:bool (account:string)
+    (let 
+      ((guard-kda (at 'guard (coin.details account))))
+      (enforce-guard guard-kda) 
+    )
+  )
+
 
 
   ; -------------------------------------------------------
