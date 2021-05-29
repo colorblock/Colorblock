@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { shortAddress } from '../../utils/polish';
+import { withCors } from '../../utils/sign';
 import Shelf from '../common/Shelf';
 import { serverUrl } from '../../config';
 
@@ -18,8 +19,19 @@ const UserPage = (props) => {
 
   useEffect(() => {
     const fetchUser = async (userId) => {
-      const url = `${serverUrl}/user/${userId}`;
-      const userData = await fetch(url).then(res => res.json());
+      let userData;
+      if (userId) {
+        const url = `${serverUrl}/user/${userId}`;
+        userData = await fetch(url).then(res => res.json());
+      } else {
+        const url = `${serverUrl}/user`;
+        userData = await fetch(url, withCors).then(res => res.json());
+        if (userData.status === 'error') {
+          alert(userData.message);
+          window.history.back();
+          return;
+        }
+      }
       userData.avatar = userData.avatar || '/img/colorblock_logo.svg';
       userData.uname = userData.uname || shortAddress(userData.address);
       setUser(userData);

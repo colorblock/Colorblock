@@ -9,7 +9,7 @@ export const Footer = (props) => {
         <ul className='space-y-3 text-gray-500'>
           <li className='hover:text-black'><a href='/market'>Explore</a></li>
           <li className='hover:text-black'><a href='/create'>Create</a></li>
-          <li className='hover:text-black'>My Account</li>
+          <li className='hover:text-black'><a href='/user'>My Account</a></li>
         </ul>
         <ul className='space-y-3 text-gray-500 text-right'>
           <li className='hover:text-black'>FAQ</li>

@@ -16,7 +16,7 @@ const Shelf = (props) => {
             config.type === 'item' ? (
               <li 
                 data-role='block container' 
-                className={`${width} h-56 flex-none px-4 py-4 border rounded-xl border-gray-300 hover-gray`}
+                className={`${width} h-56 flex-none px-4 py-4 cursor-pointer border rounded-xl border-gray-300 hover-gray`}
                 onClick={ () => document.location.href = `/item/${entry.id}` }
               >
                 <div data-role='title and collection' className='h-8'>
@@ -24,7 +24,7 @@ const Shelf = (props) => {
                   <p className='text-gray-400'>{entry.collection}</p>
                 </div>
                 <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
-                  <img className='h-full' src={`${serverUrl}/static/img/${entry.id}.${entry.type == 0 ? 'png' : 'gif'}`} alt={entry.title} />
+                  <img className='h-full' src={`${serverUrl}/static/img/${entry.id}.${entry.type === 0 ? 'png' : 'gif'}`} alt={entry.title} />
                 </div>
                 <div data-role='creator and price' className='h-8 flex items-end justify-between'>
                   <div>

@@ -30,7 +30,7 @@ const App = (props) => {
         <Route path='/item/:itemId'>
           <ItemPage />
         </Route>
-        <Route path='/user/:userId'>
+        <Route path={['/user', '/user/:userId']}>
           <UserPage />
         </Route>
         <Footer />
