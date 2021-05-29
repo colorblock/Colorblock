@@ -4,25 +4,16 @@ import json
 from app.utils.response import get_error_response, get_success_response
 from app.utils.pact import local_req
 
-security_blueprint = Blueprint('security', __name__)
+auth_blueprint = Blueprint('auth', __name__)
 
-def require_login(function):
-    def wrapper(*args, **kwargs):
-        if session.get('logged_in'):
-            return function(*args, **kwargs)
-        else:
-            return get_error_response('not logged')
-    
-    return wrapper
-
-@security_blueprint.route('/login_status', methods=['GET'])
+@auth_blueprint.route('/login_status', methods=['GET'])
 def login_status():
     if session.get('logged_in'):
         return get_success_response(session['account'])
     else:
         return get_error_response('not logged')
 
-@security_blueprint.route('/login', methods=['POST'])
+@auth_blueprint.route('/login', methods=['POST'])
 def login():
     post_data = request.json
     account = post_data['account']

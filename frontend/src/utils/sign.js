@@ -63,17 +63,23 @@ export const getSignedCmd = async (inputCmd, postData={}) => {
 
   // get sign from wallet
   console.log('signingCmd', signingCmd);
-  const signingResult = await fetch(`${walletUrl}/sign`, signingCmd).then(res => res.json());
+  const signingResult = await fetch(`${walletUrl}/sign`, signingCmd)
+    .then(res => res.json())
+    .catch(() => alert('please open Zelcore server'));
   console.log('signingResult', signingResult);
 
   // send signed cmd
-  const signedCmd = mkReq({
-    ...postData,
-    cmds: [
-      signingResult.body
-    ]
-  });
-  return signedCmd;
+  if (signingResult) {
+    const signedCmd = mkReq({
+      ...postData,
+      cmds: [
+        signingResult.body
+      ]
+    });
+    return signedCmd;
+  } else {
+    return null;
+  }
 };
 
 export const getDataFromPactServer = async (code) => {

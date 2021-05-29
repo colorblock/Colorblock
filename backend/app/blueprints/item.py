@@ -7,7 +7,8 @@ from app.models.item import Item
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash
 from app.utils.pact import send_req
-from app.utils.response import get_error_response
+from app.utils.response import get_error_response, get_success_response
+from app.utils.security import login_required, validate_account
 
 item_blueprint = Blueprint('item', __name__)
 
@@ -23,6 +24,7 @@ def get_all_items():
     return str(items)
 
 @item_blueprint.route('/', methods=['POST'])
+@login_required
 def submit_item():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))
@@ -34,10 +36,15 @@ def submit_item():
     item_data['supply'] = int(item_data['supply'])
     app.logger.debug('item_data: {}'.format(item_data))
 
+    # validate account
+    user_valid_result = validate_account(item_data['account'])
+    if user_valid_result['status'] != 'success':
+        return user_valid_result
+
     # validate item
     item_valid_result = validate_item(item_data)
-    if item_valid_result != 'success':
-        return get_error_response(item_valid_result)
+    if item_valid_result['status'] != 'success':
+        return item_valid_result
 
     # create image
     try:
@@ -68,16 +75,16 @@ def submit_item():
 def validate_item(item):
     # validate supply
     if item['supply'] < app.config['ITEM_MIN_SUPPLY'] or item['supply'] > app.config['ITEM_MAX_SUPPLY']:
-        return 'supply is not correct'
+        return get_error_response('supply is not correct')
     
     # validate hash
     if not check_hash(item['cells'], item['id']):
-        return 'hash error'
+        return get_error_response('hash error')
 
     # check duplication
     db_item = db.session.query(Item).filter(Item.id == item['id']).first()
     app.logger.debug('item in db: {}'.format(db_item))
     if db_item:
-        return 'item has already been minted'
+        return get_error_response('item has already been minted')
 
-    return 'success'
+    return get_success_response('success')

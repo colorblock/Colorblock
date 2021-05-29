@@ -45,6 +45,9 @@ export const Wallet = (props) => {
       account
     });
     console.log(signedCmd);
+    if (!signedCmd) {
+      return;
+    }
     const result = await fetch(`${serverUrl}/login`, signedCmd).then(res => res.json());
     console.log(result);
 

@@ -190,6 +190,9 @@ const CreatePage = (props) => {
     };
     const signedCmd = await getSignedCmd(cmd);
     console.log('get signedCmd', signedCmd);
+    if (!signedCmd) {
+      return;
+    }
     const result = await fetch(`${serverUrl}/item`, signedCmd).then(res => res.json());
     console.log('get result', result);
     if (result.status === 'success') {
