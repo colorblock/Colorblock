@@ -10,7 +10,7 @@ db = SQLAlchemy()
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.url_map.strict_slashes = False
-    CORS(app)
+    CORS(app, supports_credentials=True, resources={r'/*': {'origins': 'http://localhost:3000'}})
 
     try:
         app.config.from_object('instance.config')
@@ -25,6 +25,8 @@ def create_app():
         app.config['DATABASE']
     )
     db.init_app(app)
+
+    app.secret_key = app.config['SECRET_KEY']
 
     app.json_encoder = CustomJSONEncoder 
 

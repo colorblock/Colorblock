@@ -1,36 +1,38 @@
-from flask import Blueprint, request, current_app as app
-import requests
+from flask import Blueprint, request, session, current_app as app
 import json
-from app import db
-from app.models.user import User
+
+from app.utils.response import get_error_response, get_success_response
+from app.utils.pact import local_req
 
 security_blueprint = Blueprint('security', __name__)
+
+@security_blueprint.route('/login_status', methods=['GET'])
+def login_status():
+    app.logger.debug(session)
+    if session.get('logged_in'):
+        return get_success_response(session['account'])
+    else:
+        return get_error_response('not logged')
 
 @security_blueprint.route('/login', methods=['POST'])
 def login():
     post_data = request.json
     account = post_data['account']
     local_cmd = post_data['cmds'][0]
+    app.logger.debug('account: {}, local_cmd: {}'.format(account, local_cmd))
 
-    app.logger.debug(local_cmd)
+    # validate code
     code = json.loads(local_cmd['cmd'])['payload']['exec']['code']
     verfiy_code = '(free.colorblock.validate-guard "{}")'.format(account)
-    app.logger.debug(code)
-    app.logger.debug(verfiy_code)
-    app.logger.debug(verfiy_code == code)
+    app.logger.debug('code: {}, verify_code: {}'.format(code, verfiy_code))
+    if verfiy_code != code:
+        return get_error_response('account and code is not matched')
 
-    url = '{}/api/v1/local'.format(app.config['PACT_URL'])
-    res = requests.post(url, json=local_cmd)
-    data = res.json()['result']
-    
-    app.logger.debug(data)
+    # set session
+    result = local_req(local_cmd)
+    if result['status'] == 'success':
+        session['account'] = account
+        session['logged_in'] = True
+        app.logger.debug(session)
 
-    result = {
-        'status': 'failure'
-    }
-
-    
-    if data['status'] == 'success':
-        result['status'] = 'success'
-    
     return result
