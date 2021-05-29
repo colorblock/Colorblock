@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import { switchWalletModal } from '../../store/actions/actionCreator';
-import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
+import { contractModules, getSignedCmd } from '../../utils/sign';
 import { serverUrl } from '../../config';
 
 const Header = (props) => {

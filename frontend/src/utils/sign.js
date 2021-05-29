@@ -36,7 +36,7 @@ export const contractModules = {
 */
 export const contractModules = {
   colorblock: 'free.colorblock',
-  cbmarket: 'free.cbmarket1',
+  cbmarket: 'free.cbmarket',
   marketAccount: 'colorblock-market'
 };
 

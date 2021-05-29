@@ -11,7 +11,7 @@ class Item(db.Model):
     description: str
     creator: str
     supply: int
-    block_hash: str
+    tx_id: str
     created_at: str
     updated_at: str
 
@@ -22,7 +22,7 @@ class Item(db.Model):
     description = db.Column(db.String())
     creator = db.Column(db.String())
     supply = db.Column(db.Integer())
-    block_hash = db.Column(db.String())
+    tx_id = db.Column(db.String())
     created_at = db.Column(db.DateTime(), server_default=func.now())
     updated_at = db.Column(db.DateTime(), server_default=func.now(), onupdate=func.now())
 

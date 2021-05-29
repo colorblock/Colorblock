@@ -12,7 +12,7 @@ import Preview from '../common/Preview';
 import * as actions from '../../store/actions/actionCreator';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
 import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
-import { serverUrl } from '../../config';
+import { serverUrl, itemConfig } from '../../config';
 import { saveStateToCookies } from '../../utils/storage';
 
 const CreatePage = (props) => {
@@ -125,8 +125,19 @@ const CreatePage = (props) => {
 
   const onSubmitItem = async () => {
     const singleFrameId = isPreviewStatic ? frames.activeId : null;
-    const { title, description } = submitItem;
+    const { title, description, supply } = submitItem;
     const tags = submitItem.tags.split(',').map(v => v.trim());
+
+    // validate supply
+    const supplyNumber = parseFloat(supply);
+    if (isNaN(supplyNumber) || supplyNumber < itemConfig.minSupply || supplyNumber > itemConfig.maxSupply) {
+      alert(`supply must in ${itemConfig.minSupply} ~ ${itemConfig.maxSupply}`);
+      return;
+    } else if (supplyNumber !== Math.floor(supplyNumber)) {
+      alert('supply must be integer');
+      return;
+    }
+
     const cells = convertFramesToString(frames, singleFrameId);
     
     // get hash id
@@ -139,13 +150,13 @@ const CreatePage = (props) => {
     const intervals = convertFramesToIntervals(frames, singleFrameId);
     const account = wallet.address;
     const cmd = {
-      code: `(${contractModules.colorblock}.create-item-with-new-user (read-msg "id") (read-msg "title") (read-msg "tags") (read-msg "description") (read-msg "cells") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account") (read-keyset "accountKeyset"))`,
+      code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "cells") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-msg "supply") (read-keyset "accountKeyset"))`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
         cap: {
-          name: `${contractModules.colorblock}.OWN-ACCOUNT`,
-          args: [account]
+          name: `${contractModules.colorblock}.MINT`,
+          args: [id, account]
         }
       }, {
         role: 'Pay Gas',
@@ -168,6 +179,7 @@ const CreatePage = (props) => {
         cols,
         frames: frameCnt,
         intervals,
+        supply: supplyNumber,
         account,
         accountKeyset: { 
           keys: [account],
@@ -176,10 +188,13 @@ const CreatePage = (props) => {
       }
     };
     const signedCmd = await getSignedCmd(cmd);
-    console.log(signedCmd);
+    console.log('get signedCmd', signedCmd);
     const result = await fetch(`${serverUrl}/item`, signedCmd).then(res => res.json());
-    console.log(result);
-    return result;
+    console.log('get result', result);
+    if (result.status === 'success') {
+      document.location.href = '/item/' + id;
+      return;
+    }
   };
 
   const saveProject = () => {
@@ -237,7 +252,7 @@ const CreatePage = (props) => {
 
   return (
     <div>
-      <div data-role='creator body' className={`w-11/12 mx-auto ${isModalOpen ? 'bg-opacity-20' : ''}`}>
+      <div data-role='creator body' className='w-11/12 mx-auto'>
         <div data-role='frame list container' className='flex h-20 mb-6'>
           <div data-role='button to append frame'>
             <button className='h-full bg-gray-800 text-white w-7 border-b-4 border-gray-400 rounded' onClick={ () => dpt.addFrame() }>
@@ -487,8 +502,8 @@ const CreatePage = (props) => {
         </div>
       </div>
       { isModalOpen && 
-      <div data-role='creator modal' className='absolute top-0 w-full h-full z-50 bg-white bg-opacity-90'>
-        <div className='relative mt-20 w-5/6 h-5/6 mx-auto border border-red-500 bg-white'>
+      <div data-role='creator modal' className='absolute top-0 w-full z-50 bg-white bg-opacity-90'>
+        <div className='relative mt-20 w-5/6 pb-20 mx-auto border border-red-500 bg-white'>
           <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => setIsModalOpen(false) }>
             <FontAwesomeIcon icon={fa.faTimes} />
           </button>
@@ -542,6 +557,14 @@ const CreatePage = (props) => {
                   type='text' 
                   className='border border-black w-full' 
                   onChange={ (e) => setSubmitItem({...submitItem, tags: e.target.value}) } 
+                />
+                <label className='my-1 w-full'>Supply - totol amount of tokens</label>
+                <input 
+                  type='number'
+                  min='1'
+                  pattern='[0-9]{1,}'
+                  className='border border-black w-full' 
+                  onChange={ (e) => setSubmitItem({...submitItem, supply: e.target.value}) } 
                 />
                 <button className='mt-8 bg-red-500 text-white w-2/3 py-1 px-3' onClick={ () => onSubmitItem() }>
                   Get signed from wallet

@@ -17,7 +17,7 @@ create table if not exists item (
     `description` varchar(1000),
     `creator` varchar(64) comment 'the initial creator of item',
     `supply` integer comment 'the initial supply of item',
-    `block_hash` varchar(128) comment 'the creation block hash',
+    `tx_id` varchar(128) comment 'the creation tx hash',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
@@ -28,7 +28,7 @@ create table if not exists ledger (
     `item_id` varchar(32) comment 'item id',
     `user_id` varchar(64) comment 'user id',
     `balance` varchar(64) comment 'balance of item',
-    `block_hash` varchar(128) comment 'the creation block hash',
+    `tx_id` varchar(128) comment 'the creation tx hash',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
@@ -42,7 +42,7 @@ create table if not exists deal (
     `total` integer comment 'total sale amount',
     `remain` integer comment 'remain sale amount',
     `open` boolean comment 'open status',
-    `block_hash` varchar(128) comment 'the creation block hash',
+    `tx_id` varchar(128) comment 'the creation tx hash',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
@@ -55,7 +55,7 @@ create table if not exists purchase (
     `seller_id` varchar(64) comment 'buyer id',
     `price` decimal(22, 12) comment 'sale price',
     `amount` integer comment 'purchase amount',
-    `block_hash` varchar(128) comment 'the creation block hash',
+    `tx_id` varchar(128) comment 'the creation tx hash',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)

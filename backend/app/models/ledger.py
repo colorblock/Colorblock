@@ -8,7 +8,7 @@ class Ledger(db.Model):
     item_id: str
     user_id: int
     balance: int
-    block_hash: str
+    tx_id: str
     created_at: str
     updated_at: str
 
@@ -16,7 +16,7 @@ class Ledger(db.Model):
     item_id = db.Column(db.String())
     user_id = db.Column(db.Integer())
     balance = db.Column(db.Integer())
-    block_hash = db.Column(db.String())
+    tx_id = db.Column(db.String())
     created_at = db.Column(db.DateTime(), server_default=func.now())
     updated_at = db.Column(db.DateTime(), server_default=func.now(), onupdate=func.now())
 

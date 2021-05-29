@@ -36,7 +36,6 @@ export const Footer = (props) => {
 };
 
 Footer.propTypes = {
-  props: PropTypes
 };
 
 const mapStateToProps = (state) => ({

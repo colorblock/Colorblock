@@ -3,7 +3,6 @@ import reducer from './reducers/reducer';
 import { loadStateFromCookies } from '../utils/storage';
 
 const preloadedState = loadStateFromCookies();
-console.log('preloadedState', preloadedState);
 
 const configureStore = createStore(
   reducer, 

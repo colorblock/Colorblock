@@ -1,13 +1,12 @@
 from flask import Blueprint, request, current_app as app, jsonify
-import requests
 import json
-import time
 
 from app import db
 from app.models.item import Item
 
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash
+from app.utils.pact import send_req
 
 item_blueprint = Blueprint('item', __name__)
 
@@ -25,11 +24,15 @@ def get_all_items():
 @item_blueprint.route('/', methods=['POST'])
 def submit_item():
     post_data = request.json
+    app.logger.debug('post_data: {}'.format(post_data))
+
+    # add item type, strip supply
     cmd = json.loads(post_data['cmds'][0]['cmd'])
     item_data = cmd['payload']['exec']['data']
+    item_data['type'] = 0 if item_data['frames'] == 1 else 1  # just 1 frame -> static -> type 0
+    item_data['supply'] = int(item_data['supply'])
+    app.logger.debug('item_data: {}'.format(item_data))
 
-    app.logger.debug(post_data)
-    
     # validate hash
     if not check_hash(item_data['cells'], item_data['id']):
         return 'hash error'
@@ -37,32 +40,21 @@ def submit_item():
     # create image
     generate_image_from_item(item_data)
 
-    url = '{}/api/v1/send'.format(app.config['PACT_URL'])
-    try:
-        res = requests.post(url, json=post_data)
-        request_key_data = res.json()
-        request_key = request_key_data['requestKeys'][0]
-
-        time.sleep(1)
-
-        url = '{}/api/v1/poll'.format(app.config['PACT_URL'])
-        res = requests.post(url, json=request_key_data)
-        result = res.json()[request_key]['result']
+    # submit item to pact server
+    result = send_req(post_data)
         
-        if result['status'] == 'success':
-            item = Item(
-                id=item_data['id'],
-                title=item_data['title'],
-                tags=','.join(item_data['tags']), 
-                description=item_data['description'],
-                creator=item_data['account'],
-                owner=item_data['account']
-            )
-            db.session.add(item)
-            db.session.commit()
-            return 'success'
-        else:
-            return 'failure'
-    except Exception as e:
-        app.logger.error(e)
-        return 'network error'
+    if result['status'] == 'success':
+        item = Item(
+            id=item_data['id'],
+            title=item_data['title'],
+            type=item_data['type'],
+            tags=','.join(item_data['tags']), 
+            description=item_data['description'],
+            creator=item_data['account'],
+            supply=item_data['supply'],
+            tx_id=result['tx_id']
+        )
+        db.session.add(item)
+        db.session.commit()
+    
+    return result
