@@ -25,6 +25,7 @@
           \   frames: the number of frames, fixed \
           \   intervals: the intervals to control gif presentaion, in seconds, fixed \
           \   creator: the creator account of item, fixed \
+          \   supply: the supply amount of item, fixed \
           \   valid-hash: hash by item colors, used to check duplication, unique, fixed "
 
     title:string
@@ -34,6 +35,7 @@
     frames:integer
     intervals:[decimal]
     creator:string
+    supply:decimal
     valid-hash:string
   )
 
@@ -375,6 +377,7 @@
           "frames" : frames,
           "intervals" : intervals,
           "creator": creator, 
+          "supply": amount,
           "valid-hash": valid-hash
         })
         ; Credit creator certain amount
