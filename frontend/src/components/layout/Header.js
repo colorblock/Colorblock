@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+
 import { switchWalletModal } from '../../store/actions/actionCreator';
+import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
+import { serverUrl } from '../../config';
+
 const Header = (props) => {
   const { wallet, switchWalletModal } = props;
+  const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
+
+  const onLogin = async () => {
+    const account = wallet.address;
+    const cmd = {
+      code: `(${contractModules.colorblock}.validate-guard "${account}")`,
+      caps: [],
+      sender: account,
+      signingPubKey: account,
+      gasLimit: 0
+    };
+    const signedCmd = await getSignedCmd(cmd, {
+      account
+    });
+    console.log(signedCmd);
+    const result = await fetch(`${serverUrl}/login`, signedCmd).then(res => res.json());
+    console.log(result);
+    return result;
+  };
 
   return (
     <div data-role='header page'>
@@ -37,7 +60,16 @@ const Header = (props) => {
           </div>
           <div data-role='right flex part' className='flex items-center space-x-8'>
             <span className='whitespace-nowrap'>My Profile</span>
-            <img src='/img/profile_picture.svg' className='h-full py-5 mx-2' alt='profile' />
+            <div className='relative'>
+              <img src='/img/profile_picture.svg' className='w-7 h-7 mx-2' alt='profile' onClick={ () => setIsUserPopupOpen(!isUserPopupOpen) } />
+              <div 
+                data-role='account popup' 
+                className='absolute top-12 -left-10 w-32 h-32 mt-2 bg-white border border-gray-300 rounded'
+                hidden={!isUserPopupOpen}  
+              >
+                <button className='w-full rounded py-2 border-b' onClick={ () => onLogin() }>Login</button>
+              </div>
+            </div>
             <button
               className='py-2 px-4 bg-cb-pink border rounded-lg border-white text-white'
               onClick={ () => switchWalletModal() }

@@ -35,12 +35,12 @@ export const contractModules = {
 };
 */
 export const contractModules = {
-  colorblock: 'colorblock',
-  cbmarket: 'cbmarket1',
+  colorblock: 'free.colorblock',
+  cbmarket: 'free.cbmarket1',
   marketAccount: 'colorblock-market'
 };
 
-export const getSignedCmd = async (inputCmd) => {
+export const getSignedCmd = async (inputCmd, postData={}) => {
   // set cmd correctly
   const fixedCmd = {
     gasPrice: 0.00001,
@@ -58,6 +58,7 @@ export const getSignedCmd = async (inputCmd) => {
 
   // send signed cmd
   const signedCmd = mkReq({
+    ...postData,
     cmds: [
       signingResult.body
     ]

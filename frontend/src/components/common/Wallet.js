@@ -16,17 +16,20 @@ export const Wallet = (props) => {
   };
 
   const clickConfirmAccount = () => {
+    let address;
     if (selectedKey) {
       // if key is chosen
-      setAccountAddress(selectedKey);
+      address = selectedKey;
     } else {
       // if not chosen, use first one
       if (wallet.keyList && wallet.keyList.length > 0) {
-        setAccountAddress(wallet.keyList[0]);
+        address = wallet.keyList[0];
       } else {
-        alert('please choose address!')
+        alert('please choose address!');
+        return;
       }
     }
+    setAccountAddress(address);
     switchWalletModal();
     setSelectedKey('');
   };
@@ -45,7 +48,7 @@ export const Wallet = (props) => {
             <p className='font-bold'>First step</p>
             <p className='my-2'>Log into your Zelcore wallet, and turn on server option. </p>
             <div>
-              <img className='w-24 m-auto m-2' src='/img/zelcore.png' alt='Zelcore' />
+              <img className='w-24 m-auto' src='/img/zelcore.png' alt='Zelcore' />
             </div>
           </div>
           <div className='my-5'>

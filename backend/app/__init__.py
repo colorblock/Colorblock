@@ -36,6 +36,8 @@ def create_app():
     app.register_blueprint(tool_blueprint, url_prefix='/tool')
     from app.blueprints.static import static_blueprint
     app.register_blueprint(static_blueprint, url_prefix='/static')
+    from app.blueprints.security import security_blueprint
+    app.register_blueprint(security_blueprint, url_prefix='/')
 
     return app
 
