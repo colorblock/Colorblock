@@ -14,23 +14,26 @@ const Shelf = (props) => {
         {
           entryList.map((entry) => (
             config.type === 'item' ? (
-              <li data-role='block container' className={`${width} h-56 flex-none px-4 py-4 border rounded-xl border-gray-300 hover-gray`}>
-          
+              <li 
+                data-role='block container' 
+                className={`${width} h-56 flex-none px-4 py-4 border rounded-xl border-gray-300 hover-gray`}
+                onClick={ () => document.location.href = `/item/${entry.id}` }
+              >
                 <div data-role='title and collection' className='h-8'>
                   <p>{entry.title}</p>
                   <p className='text-gray-400'>{entry.collection}</p>
                 </div>
                 <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
-                  <img className='h-full' src={`${serverUrl}/static/img/${entry.id}.png`} alt={entry.title} />
+                  <img className='h-full' src={`${serverUrl}/static/img/${entry.id}.${entry.type == 0 ? 'png' : 'gif'}`} alt={entry.title} />
                 </div>
-                <div data-role='owner and price' className='h-8 flex items-end justify-between'>
+                <div data-role='creator and price' className='h-8 flex items-end justify-between'>
                   <div>
-                    <p className='text-xxs text-gray-500'>Owner</p>
-                    <p>{`${entry.owner.slice(0, 4)}....${entry.owner.slice(-4)}`}</p>
+                    <p className='text-xxs text-gray-500'>Creator</p>
+                    <p>{`${entry.creator.slice(0, 4)}....${entry.creator.slice(-4)}`}</p>
                   </div>
                   <div className='text-right'>
                     <p className='text-xxs-r text-gray-500'>Price</p>
-                    <p className='text-cb-pink'>{entry.price.toFixed(1)} KDA</p>
+                    <p className='text-cb-pink'>{entry.price ? `${entry.price.toFixed(1)} KDA` : 'Not on sale' }</p>
                   </div>
                 </div>
               </li>

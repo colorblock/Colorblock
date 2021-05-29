@@ -1,30 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { shortAddress } from '../../utils/polish';
+import Shelf from '../common/Shelf';
 import { serverUrl } from '../../config';
 
 const UserPage = (props) => {
   const { userId } = useParams();
-  const { userData, setUserData } = useState({
-    id: 'ebf4xxxxdcdb',
-    itemIds: ['c246a25c421f7eb1']
-  });
+  const [user, setUser] = useState(null);
+  const [items, setItems] = useState([]);
+
+  const itemShelfConfig = {
+    type: 'item',
+    flow: 'grid',
+    cols: 5
+  };
 
   useEffect(() => {
     const fetchUser = async (userId) => {
       const url = `${serverUrl}/user/${userId}`;
       const userData = await fetch(url).then(res => res.json());
-      console.log(userData);
+      userData.avatar = userData.avatar || '/img/colorblock_logo.svg';
+      userData.uname = userData.uname || shortAddress(userData.address);
+      setUser(userData);
+
+      // fetch items
+      const itemsUrl = `${serverUrl}/item/created-by/${userId}`;
+      const itemsData = await fetch(itemsUrl).then(res => res.json());
+      console.log(itemsData);
+      setItems(itemsData);
     };
 
     fetchUser(userId);
   }, [userId]);
 
-  return (
+  return user ? (
     <div>
-      
+      <div data-role='user info' className='my-8 flex flex-col items-center justify-center'>
+        <img 
+          src={user.avatar} 
+          className='w-12 border rounded-full m-4'
+          alt={user.uname}
+        />
+        <p>{user.uname}</p>
+        <p className='py-2 text-xs text-gray-400'>{user.address}</p>
+      </div>
+      {
+        items.length > 0 ? (
+          <div data-role='item shelf'>
+            <Shelf entryList={items} config={itemShelfConfig} />
+          </div>
+        ) : (
+          <div>
+            No items
+          </div>
+        )
+      }
     </div>
-  );
+  ) : <></>;
 };
 
 export default UserPage;

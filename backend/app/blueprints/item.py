@@ -3,6 +3,7 @@ import json
 
 from app import db
 from app.models.item import Item
+from app.models.ledger import Ledger
 
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash
@@ -17,11 +18,20 @@ def get_item(item_id):
     item = db.session.query(Item).filter(Item.id == item_id).first()
     return jsonify(item)
 
-@item_blueprint.route('/all', methods=['GET'])
+@item_blueprint.route('/owned-by/<user_id>')
+def get_items_owned_by_user(user_id):
+    items = db.session.query(Ledger).filter(Ledger.user_id == user_id).all()
+    return jsonify(items)
+
+@item_blueprint.route('/created-by/<user_id>')
+def get_items_created_by_user(user_id):
+    items = db.session.query(Item).filter(Item.creator == user_id).all()
+    return jsonify(items)
+
+@item_blueprint.route('/all')
 def get_all_items():
     items = Item.query.all()
-    app.logger.debug(items)
-    return str(items)
+    return jsonify(items)
 
 @item_blueprint.route('/', methods=['POST'])
 @login_required
@@ -68,6 +78,16 @@ def submit_item():
             tx_id=result['tx_id']
         )
         db.session.add(item)
+        db.session.commit()
+
+        ledger = Ledger(
+            id='{}:{}'.format(item_data['id'], item_data['account']),
+            item_id=item_data['id'],
+            user_id=item_data['account'],
+            balance=item_data['supply'],
+            tx_id=result['tx_id']
+        )
+        db.session.add(ledger)
         db.session.commit()
 
     return result

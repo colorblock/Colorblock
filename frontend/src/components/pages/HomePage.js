@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Shelf from '../common/Shelf';
+import { serverUrl } from '../../config';
 
 const HomePage = (props) => {
+
+  const [items, setItems] = useState([]);
 
   const collections = Array(12).fill({
     id: 'c246a25c421f7eb1',
@@ -13,18 +16,22 @@ const HomePage = (props) => {
     flow: 'flex',
     cols: 4
   };
-  const items = Array(12).fill({
-    id: 'c246a25c421f7eb1',
-    title: 'Example Block',
-    collection: 'ColorBlock Genesis',
-    owner: 'ebf4xxxxdcdb',
-    price: 1000.0
-  });
   const itemShelfConfig = {
     type: 'item',
     flow: 'flex',
     cols: 5
   };
+
+  useEffect(() => {
+    const fetchAllItems = async () => {
+      const itemsUrl = `${serverUrl}/item/all`;
+      const itemsData = await fetch(itemsUrl).then(res => res.json());
+      console.log(itemsData);
+      setItems(itemsData);
+    };
+
+    fetchAllItems();
+  }, []);
 
   return (
     <div data-role='home container' className='bg-cb-gray text-sm'>
@@ -73,17 +80,20 @@ const HomePage = (props) => {
         </div>
         <Shelf entryList={items} config={itemShelfConfig} />
       </div>
-      <div data-role='recently minted' className='w-5/6 mx-auto my-12'>
-        <div data-role='info' className='flex justify-between my-5 tracking-wider'>
-          <div className='text-base'>
-            Recently Minted
+      {
+        items.length > 0 &&
+        <div data-role='recently minted' className='w-5/6 mx-auto my-12'>
+          <div data-role='info' className='flex justify-between my-5 tracking-wider'>
+            <div className='text-base'>
+              Recently Minted
+            </div>
+            <div className='text-gray-400'>
+              View More
+            </div>
           </div>
-          <div className='text-gray-400'>
-            View More
-          </div>
+          <Shelf entryList={items} config={itemShelfConfig} />
         </div>
-        <Shelf entryList={items} config={itemShelfConfig} />
-      </div>
+      }
       <div data-role='view more' className='w-5/6 mx-auto my-20'>
         <button className='w-full py-3 border rounded-xl shadow hover-gray'>View More</button>
       </div>
