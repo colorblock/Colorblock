@@ -3,28 +3,22 @@ from sqlalchemy.sql import func
 from app import db
 
 @dataclass
-class Item(db.Model):
+class Ledger(db.Model):
     id: str
-    title: str
-    type: int
-    tags: str
-    description: str
-    creator: str
-    supply: int
+    item_id: str
+    user_id: int
+    balance: int
     block_hash: str
     created_at: str
     updated_at: str
 
     id = db.Column(db.String(), primary_key=True)
-    title = db.Column(db.String())
-    type = db.Column(db.Integer())
-    tags = db.Column(db.String())
-    description = db.Column(db.String())
-    creator = db.Column(db.String())
-    supply = db.Column(db.Integer())
+    item_id = db.Column(db.String())
+    user_id = db.Column(db.Integer())
+    balance = db.Column(db.Integer())
     block_hash = db.Column(db.String())
     created_at = db.Column(db.DateTime(), server_default=func.now())
     updated_at = db.Column(db.DateTime(), server_default=func.now(), onupdate=func.now())
 
     def __repr__(self):
-        return '<Item {}>'.format(self.title)
+        return '<Ledger {}>'.format(self.id)

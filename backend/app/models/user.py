@@ -4,6 +4,14 @@ from app import db
 
 @dataclass
 class User(db.Model):
+    id: str
+    address: str
+    uname: int
+    avatar: str
+    profile: str
+    created_at: str
+    updated_at: str
+
     id = db.Column(db.Integer, primary_key=True)
     address = db.Column(db.String())
     uname = db.Column(db.String())
