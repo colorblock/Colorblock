@@ -1,5 +1,6 @@
 codeFile: "../colorblock.pact"
 data: 
+  ns: "free"
   cb-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
   upgrade: true
 keyPairs:

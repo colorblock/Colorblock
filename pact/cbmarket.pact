@@ -32,6 +32,24 @@
 
   (deftable deals:{deal-schema})
 
+  (defschema purchase-schema
+    @doc  " Record every purchase of token in market \
+          \ Column definitions: \
+          \   @key: the hashed key \
+          \   token: the token asset id \
+          \   buyer: the user who purchased \ 
+          \   seller: the user who sold \
+          \   price: item transaction price \
+          \   amount: purchase amount "
+    token:string
+    buyer:string
+    seller:string
+    price:decimal
+    amount:decimal
+  )
+
+  (deftable purchases:{purchase-schema})
+
   ; -------------------------------------------------------
   ; Capabilities
 
@@ -240,6 +258,15 @@
             (total-price (+ fees sale-price))
             (balance (coin.get-balance buyer))
             (remain-amount (- total-amount amount))
+            (purchase-info {
+              "token": token,
+              "buyer": buyer,
+              "seller": seller,
+              "price": price,
+              "amount": amount
+            })
+            (purchase-plus (+ {'remain: remain-amount} purchase-info))
+            (hash-id (hash (+ purchase-plus (chain-data))))
           )
           (enforce 
             (<= total-price balance)
@@ -261,6 +288,7 @@
             })
             "no need to close deal"
           )
+          (insert purchases hash-id purchase-info)
         )
       )
     )
@@ -286,6 +314,7 @@
   ["upgrade"]
   [
     (create-table deals)
+    (create-table purchases)
     (init-market-account)
   ]
 )

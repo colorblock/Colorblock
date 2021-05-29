@@ -24,7 +24,8 @@
           \   cols: the number of cols in each frame, fixed \
           \   frames: the number of frames, fixed \
           \   intervals: the intervals to control gif presentaion, in seconds, fixed \
-          \   hash-id: hash by item colors, used to check duplication, unique, fixed "
+          \   creator: the creator account of item, fixed \
+          \   valid-hash: hash by item colors, used to check duplication, unique, fixed "
 
     title:string
     colors:string
@@ -32,7 +33,8 @@
     cols:integer
     frames:integer
     intervals:[decimal]
-    hash-id:string
+    creator:string
+    valid-hash:string
   )
 
   (deftable items:{item-schema})
@@ -185,11 +187,11 @@
     )
   )
 
-  (defun valid-item-unique (hash-id:string key:string)
+  (defun valid-item-unique (valid-hash:string key:string)
     (let
-      ((db-hash-id (at 'hash-id (read items key))))
+      ((db-valid-hash (at 'valid-hash (read items key))))
       (enforce
-        (!= hash-id db-hash-id)
+        (!= valid-hash db-valid-hash)
         "The item is already existed"
       )
     )
@@ -359,10 +361,10 @@
       ; Insert into DB
       (let
         ; Create hash with colors
-        ((hash-id (hash colors)))
+        ((valid-hash (hash colors)))
 
         ; Make sure there's no existance
-        (map (valid-item-unique hash-id) (keys items))
+        (map (valid-item-unique valid-hash) (keys items))
 
         ; Add entry, setting creator as owner
         (insert items token {
@@ -372,7 +374,8 @@
           "cols" : cols,
           "frames" : frames,
           "intervals" : intervals,
-          "hash-id": hash-id
+          "creator": creator, 
+          "valid-hash": valid-hash
         })
         ; Credit creator certain amount
         (credit token creator guard amount)
