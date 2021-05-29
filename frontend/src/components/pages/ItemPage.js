@@ -21,7 +21,12 @@ export const ItemPage = (props) => {
 
   return item && (
     <div>
-      Hello Item {itemId}
+      <p>Item ID: {itemId}</p>
+      <p>Item title: {item.title}</p>
+      <p>Item tags: {item.tags}</p>
+      <p>Item description: {item.description}</p>
+      <p>Item creator: {item.creator}</p>
+      <p>Item txID: {item.tx_id}</p>
       <div>
         <img src={item.url} className='w-40' alt={item.title} />
       </div>

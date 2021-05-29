@@ -1,6 +1,8 @@
 from flask import current_app as app
 import requests
 
+from app.utils.response import get_error_response, get_success_response
+
 def send_req(post_data):
     return_data = {}
 
@@ -24,25 +26,14 @@ def send_req(post_data):
 
         # pack return_data
         if result['result']['status'] == 'success':
-            return_data = {
-                'status': 'success',
-                'data': result['result']['data'],
-                'tx_id': result['txId']
-            }
+            return_data = get_success_response(result['result']['data']) 
+            return_data['tx_id'] = result['txId']
         else:
-            return_data = {
-                'status': 'failure',
-                'data': result['result']['error']['message'],
-                'tx_id': None
-            }
+            return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
 
     except Exception as e:
         app.logger.error(e)
-        return_data = {
-            'status': 'error',
-            'data': 'network error',
-            'tx_id': None
-        }
+        return_data = get_error_response('network error')
 
     app.logger.debug('return data: {}'.format(return_data))
     return return_data

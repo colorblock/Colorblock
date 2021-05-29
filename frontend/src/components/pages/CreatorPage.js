@@ -193,7 +193,8 @@ const CreatePage = (props) => {
     console.log('get result', result);
     if (result.status === 'success') {
       document.location.href = '/item/' + id;
-      return;
+    } else {
+      alert(result.message);
     }
   };
 
