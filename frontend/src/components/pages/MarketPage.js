@@ -30,7 +30,7 @@ export const MarketPage = (props) => {
           <span className='py-1 px-6 flex items-center hover:bg-gray-200'>Collection</span>
         </div>
         <div data-role='sort at right' className='relative h-8'>
-          <select className='h-full px-10 border rounded-xl text-center mx-auto'>
+          <select className='h-full px-10 border rounded-xl mx-auto'>
             <option className='text-center mx-auto'>Popular</option>
             <option className='text-center mx-auto'>Mint Time</option>
           </select>

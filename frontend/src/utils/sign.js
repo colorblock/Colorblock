@@ -6,15 +6,25 @@ const chainId = '0';
 // const network = `https://api.chainweb.com/chainweb/0.0/${NETWORKID}/chain/${chainId}/pact`;
 const network = 'http://api.colorblockart.com';
 
+export const withCors = {
+  credentials: 'include'
+};
 
-export const mkReq = (cmd) => {
-  return {
+export const mkReq = (cmd, cors=true) => {
+  let req = {
     headers: {
-      "Content-Type": "application/json"
+      'Content-Type': 'application/json'
     },
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(cmd)
   }
+  if (cors) {
+    req = {
+      ...req,
+      ...withCors
+    }
+  }
+  return req;
 };
 
 export const getWalletAccounts = async () => {
@@ -22,7 +32,7 @@ export const getWalletAccounts = async () => {
   const cmd = { 
     asset: 'kadena' 
   };
-  const result = await fetch(url, mkReq(cmd)).then(res => res.json());
+  const result = await fetch(url, mkReq(cmd, false)).then(res => res.json());
   const accounts = result.data;
   return accounts;
 }
@@ -49,7 +59,7 @@ export const getSignedCmd = async (inputCmd, postData={}) => {
     ttl: 600,
     networkId: NETWORKID,
   };
-  const signingCmd = mkReq({...fixedCmd, ...inputCmd});
+  const signingCmd = mkReq({...fixedCmd, ...inputCmd}, false);
 
   // get sign from wallet
   console.log('signingCmd', signingCmd);

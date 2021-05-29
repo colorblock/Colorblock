@@ -8,6 +8,11 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # app
 SECRET_KEY = ''
+CORS_ORIGINS = [
+    'http://localhost:3000', 
+    'http://colorblockart.com:3000',
+    'https://colorblock.art:3000'
+]
 
 # url
 PACT_URL = 'http://api.colorblockart.com'

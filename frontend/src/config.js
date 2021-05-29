@@ -12,6 +12,9 @@ const getServerUrl = (devMode) => {
 export const serverUrl = getServerUrl(devMode);
 export const walletUrl = 'http://127.0.0.1:9467/v1';
 
+export const cookiesKey = 'colorblock';
+export const cookiesPersistKey = 'persist:' + cookiesKey;
+
 export const itemConfig = {
   minSupply: 1,
   maxSupply: 9999

@@ -1,16 +1,4 @@
-export const saveStateToCookies = (state, partialKey=null) => {
-  // set cookies and the mode full/partial is depended on partialKey
-  const preState = loadStateFromCookies();
-  let newState;
-  if (partialKey == null) {
-    newState = state;
-  } else {
-    newState = preState;
-    newState[partialKey] = state[partialKey];
-  }
-  const newStateString = JSON.stringify(newState);
-  localStorage.setItem('state', newStateString);
-};
+import { cookiesPersistKey } from '../config';
 
 export const hasStateInCookies = () => {
   const state = loadStateFromCookies();
@@ -19,7 +7,7 @@ export const hasStateInCookies = () => {
 };
 
 export const loadStateFromCookies = () => {
-  const stateString = localStorage.getItem('state') || '{}';
+  const stateString = localStorage.getItem(cookiesPersistKey) || '{}';
   const state = JSON.parse(stateString);
   return state;
 };

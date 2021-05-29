@@ -3,8 +3,11 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+
 import * as actions from '../../store/actions/actionCreator';
-import { getWalletAccounts } from '../../utils/sign';
+import { contractModules, getSignedCmd, getWalletAccounts } from '../../utils/sign';
+import { shortAddress } from '../../utils/polish';
+import { serverUrl } from '../../config';
 
 export const Wallet = (props) => {
   const { wallet, switchWalletModal, setPublicKeyList, setAccountAddress } = props;
@@ -15,7 +18,7 @@ export const Wallet = (props) => {
     setPublicKeyList(accounts);
   };
 
-  const clickConfirmAccount = () => {
+  const clickConfirmAccount = async () => {
     let address;
     if (selectedKey) {
       // if key is chosen
@@ -29,9 +32,25 @@ export const Wallet = (props) => {
         return;
       }
     }
-    setAccountAddress(address);
-    switchWalletModal();
-    setSelectedKey('');
+
+    const account = address;
+    const cmd = {
+      code: `(${contractModules.colorblock}.validate-guard "${account}")`,
+      caps: [],
+      sender: account,
+      signingPubKey: account,
+      gasLimit: 0
+    };
+    const signedCmd = await getSignedCmd(cmd, {
+      account
+    });
+    console.log(signedCmd);
+    const result = await fetch(`${serverUrl}/login`, signedCmd).then(res => res.json());
+    console.log(result);
+
+    setAccountAddress(address);  // set address
+    switchWalletModal();  // close modal
+    setSelectedKey('');  // clear selected key
   };
 
   return wallet.isModalOpen ? (
@@ -65,28 +84,35 @@ export const Wallet = (props) => {
             </div>
           </div>
           <div className='my-5'>
-            <p className='font-bold'>Last step</p>
+            <p className='font-bold'>Third step</p>
             <p className='my-2'>select your Zelcore account below.</p>
-            <select
-              className='block w-2/5 mx-auto text-center border border-black'
-              onChange={ (e) => setSelectedKey(e.target.value) }
-            >
-              { wallet.keyList &&
-              wallet.keyList.map((key, index) => (
-                <option key={index}>
-                  {key}
-                </option>
-              ))
-              }
-            </select>
+            <div className='relative w-2/5 mx-auto'>
+              <select
+                className='w-full border border-black px-10 border rounded-xl'
+                onChange={ (e) => setSelectedKey(e.target.value) }
+              >
+                { wallet.keyList &&
+                wallet.keyList.map((key, index) => (
+                  <option key={index} value={key}>
+                    {shortAddress(key)}
+                  </option>
+                ))
+                }
+              </select>
+              <div className='absolute top-0 left-2 mx-2 text-gray-300 h-full flex items-center'>
+                <FontAwesomeIcon icon={fa.faCaretDown} />
+              </div>
+            </div>
           </div>
           <div className='my-5'>
+            <p className='font-bold'>Last step</p>
+            <p className='my-2'>Login into colorblock within Zelcore.</p>
             <button
               type='button'
               className='bg-red-500 text-white px-3 py-1'
               onClick={ () => clickConfirmAccount() }
             >
-              Let's start
+              Auth in Zelcore
             </button>
           </div>
         </div>

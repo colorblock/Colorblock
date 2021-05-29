@@ -12,8 +12,9 @@ import Preview from '../common/Preview';
 import * as actions from '../../store/actions/actionCreator';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
 import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
+import { hasStateInCookies } from '../../utils/storage';
 import { serverUrl, itemConfig } from '../../config';
-import { saveStateToCookies } from '../../utils/storage';
+import exampleFrames from '../../assets/exampleFrames';
 
 const CreatePage = (props) => {
   const { frames, palette, dpt, wallet } = props;  // dpt means dispatch
@@ -205,7 +206,7 @@ const CreatePage = (props) => {
         palette
       }
     };
-    saveStateToCookies(state, 'creator');
+    // todo: send to server
   };
 
   // load pickr after DOM loaded
@@ -248,7 +249,15 @@ const CreatePage = (props) => {
       setPickr(currenctPickr);
     });
 
+    const initProject = async () => {
+      // if there's no state in cookies, then load reserved project
+      if (!hasStateInCookies()) {
+        dpt.loadProject(exampleFrames);
+      }
+    };
+
     setPickr(newPickr);
+    initProject()
   }, [dpt]);
 
   return (

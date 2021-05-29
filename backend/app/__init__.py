@@ -10,7 +10,6 @@ db = SQLAlchemy()
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.url_map.strict_slashes = False
-    CORS(app, supports_credentials=True, resources={r'/*': {'origins': 'http://localhost:3000'}})
 
     try:
         app.config.from_object('instance.config')
@@ -28,7 +27,9 @@ def create_app():
 
     app.secret_key = app.config['SECRET_KEY']
 
-    app.json_encoder = CustomJSONEncoder 
+    CORS(app, supports_credentials=True, resources={r'/*': {'origins': app.config['CORS_ORIGINS']}})
+
+    app.json_encoder = CustomJSONEncoder
 
     from app.blueprints.user import user_blueprint
     app.register_blueprint(user_blueprint, url_prefix='/user')

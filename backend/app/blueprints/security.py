@@ -6,9 +6,17 @@ from app.utils.pact import local_req
 
 security_blueprint = Blueprint('security', __name__)
 
+def require_login(function):
+    def wrapper(*args, **kwargs):
+        if session.get('logged_in'):
+            return function(*args, **kwargs)
+        else:
+            return get_error_response('not logged')
+    
+    return wrapper
+
 @security_blueprint.route('/login_status', methods=['GET'])
 def login_status():
-    app.logger.debug(session)
     if session.get('logged_in'):
         return get_success_response(session['account'])
     else:
