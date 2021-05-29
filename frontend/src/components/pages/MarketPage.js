@@ -1,25 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import Shelf from '../common/Shelf';
+import { serverUrl } from '../../config';
 
 export const MarketPage = (props) => {
   
-  const items = Array(30).fill({
-    id: 'c246a25c421f7eb1',
-    title: 'Example Block',
-    collection: 'ColorBlock Genesis',
-    owner: 'ebf4xxxxdcdb',
-    price: 1000.0
-  });
+  const [items, setItems] = useState([]);
+
   const itemShelfConfig = {
     type: 'item',
     flow: 'grid',
     cols: 5
   };
+
+  useEffect(() => {
+    const fetchAllItems = async () => {
+      const itemsUrl = `${serverUrl}/item/all`;
+      const itemsData = await fetch(itemsUrl).then(res => res.json());
+      console.log(itemsData);
+      setItems(itemsData);
+    };
+
+    fetchAllItems();
+  }, []);
 
   return (
     <div data-role='market container' className='bg-cb-gray text-sm'>
