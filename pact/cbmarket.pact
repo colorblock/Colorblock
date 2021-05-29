@@ -71,7 +71,9 @@
       (< 0.0 price)
       "Price must larger than zero"
     )
+    (valid-price-precision price)
     (enforce-unit token amount)
+
     (let 
       ((balance (colorblock.get-balance token seller)))
       (enforce 
@@ -154,6 +156,20 @@
 
   (defconst FEES_RATE 0.01
     "The rate of fees that platform taking"
+  )
+
+  (defconst PRICE_PRECISION 12
+    "The precision of sale price"
+  )
+
+  ; -------------------------------------------------------
+  ; Constants
+
+  (defun valid-price-precision (amount:decimal)
+    (enforce
+      (= (floor amount PRICE_PRECISION) amount)
+      "precision violation"
+    )
   )
 
 
