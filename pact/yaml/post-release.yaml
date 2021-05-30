@@ -1,0 +1,6 @@
+code: (free.colorblock-market.release "item-id" "bob" 10.0 1.0)
+signers:
+  - public: 7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c
+    caps: 
+      - name: "free.colorblock.TRANSFER"
+        args: ["item-id", "bob", "colorblock-market-pool", 1.0]

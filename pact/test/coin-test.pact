@@ -34,7 +34,8 @@
   ; Capabilities
 
   (defcap GOVERNANCE ()
-    (enforce false "Enforce non-upgradeability"))
+    true  ; open to upgrade in test
+  )
 
   (defcap GAS ()
     "Magic capability to protect gas buy and redeem"

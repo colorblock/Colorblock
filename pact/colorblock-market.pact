@@ -1,11 +1,11 @@
 (namespace (read-msg 'ns))
 
-(module cbmarket GOVERNANCE
+(module colorblock-market GOVERNANCE
   @doc "module for \
       \1. helping users release items into market for sale \
       \2. supporting pricing and trading efficiently. "
 
-  (use coin)
+  (use coin [ details ])
   (use colorblock)
 
   ; -------------------------------------------------------

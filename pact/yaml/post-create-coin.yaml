@@ -1,0 +1,11 @@
+code: 
+  (coin.create-account "colorblock-admin" (read-keyset "colorblock-admin-ks")) 
+  (coin.create-account "alice" (read-keyset "alice-keyset")) 
+  (coin.create-account "bob" (read-keyset "bob-keyset"))
+  (free.colorblock.create-account-maybe "item-id" "alice" (read-keyset "alice-keyset"))
+data: 
+  colorblock-admin-ks: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
+  alice-keyset: ["f0637dff39a34ea925612bf0b5d1354463a1ba124bc972ef7d045744085ec387"]
+  bob-keyset: ["7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c"]
+signers:
+  - public: ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d

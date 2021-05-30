@@ -7,8 +7,8 @@
 (define-namespace 'test (sig-keyset) (sig-keyset))
 (env-data { 
   "ns": "test",
-  "cb-admin-keyset": {"keys": ["admin"]},
-  "cb-admin-keyset-copy": {"keys": ["admin-copy"]},
+  "admin-keyset": {"keys": ["admin"]},
+  "admin-keyset-copy": {"keys": ["admin-copy"]},
   "alice-keyset": {"keys": ["alice"]},
   "bob-keyset": {"keys": ["bob"]},
   "lucy-keyset": {"keys": ["lucy"]},
@@ -35,7 +35,7 @@
 ;
 ; create account in COIN module
 ;
-(coin.create-account "admin" (read-keyset "cb-admin-keyset"))
+(coin.create-account "admin" (read-keyset "admin-keyset"))
 (coin.create-account "bob" (read-keyset "bob-keyset"))
 (coin.create-account "alice" (read-keyset "alice-keyset"))
 (coin.create-account "lucy" (read-keyset "lucy-keyset"))
@@ -69,17 +69,17 @@
 (expect
   "Create successfully for the first time"
   "Write succeeded"
-  (colorblock.create-account-maybe "token-id" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.create-account-maybe "token-id" "admin" (read-keyset "admin-keyset"))
 )
 (expect
   "No failure but nothing happened for the second time"
   "Account already exists"
-  (colorblock.create-account-maybe "token-id" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.create-account-maybe "token-id" "admin" (read-keyset "admin-keyset"))
 )
 (expect
   "Create successfully for the another token"
   "Write succeeded"
-  (colorblock.create-account-maybe "token-id-other" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.create-account-maybe "token-id-other" "admin" (read-keyset "admin-keyset"))
 )
 (expect-failure
   "Create failed when keyset not matched"
@@ -89,7 +89,7 @@
 (expect-failure
   "Create failed when token:account exists"
   "row found for key token-id:admin"
-  (colorblock.create-account "token-id" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.create-account "token-id" "admin" (read-keyset "admin-keyset"))
 )
 (expect
   "Create successfully for the another account"
@@ -119,7 +119,7 @@
     { "token": "token-id",
       "account": "admin",
       "balance": 0.0,
-      "guard": (read-keyset "cb-admin-keyset")
+      "guard": (read-keyset "admin-keyset")
     }
     (colorblock.details "token-id" "admin")
   )
@@ -132,32 +132,32 @@
 (expect-failure
   "Rotate will fail as user have no sig"
   "Keyset failure"
-  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "admin", "caps": []}])
 (expect
   "Rotate will succeed with sig"
   "Write succeeded"
-  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 )
 (env-sigs [
   {"key": "admin", "caps": []},
   {"key": "admin-copy", "caps": []}
 ])
-(coin.rotate "admin" (read-keyset 'cb-admin-keyset-copy))
+(coin.rotate "admin" (read-keyset 'admin-keyset-copy))
 (expect-failure
   "Rotate failed when keyset not matched"
   "Guard must match the same account of KDA"
-  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
+  (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 )
 (expect
   "Rotate will succeed with sig"
   "Write succeeded"
-  (colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset-copy"))
+  (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset-copy"))
 )
-(coin.rotate "admin" (read-keyset 'cb-admin-keyset))
-(colorblock.rotate "token-id" "admin" (read-keyset "cb-admin-keyset"))
+(coin.rotate "admin" (read-keyset 'admin-keyset))
+(colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 
 
 ;; -----------------------------
@@ -171,88 +171,88 @@
 (expect-failure
   "Creating will fail as title is blank"
   "Title can not be empty"
-  (colorblock.create-item "item-id" "" "colors" 1 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "" "colors" 1 1 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail as row length is smaller than limit"
   "the number of rows in each frame expected in range of"
-  (colorblock.create-item "item-id" "title" "colors" 1 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "colors" 1 1 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail as color length is wrong"
   "the length of colors is not correct"
-  (colorblock.create-item "item-id" "title" "colors" 2 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "colors" 2 1 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail as cols length is smaller than limit"
   "the number of cols in each frame expected in range of"
-  (colorblock.create-item "item-id" "title" "colorscolors" 2 1 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "colorscolors" 2 1 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail as colors contains illegal character"
   "not a digit"
-  (colorblock.create-item "item-id" "title" "colorscolorscolorscolors" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "colorscolorscolorscolors" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail as frames count is illegal"
   "the number of frames expected in range of"
-  (colorblock.create-item "item-id" "title" "" 2 2 0 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "" 2 2 0 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail as frames count is illegal"
   "the number of frames expected in range of"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd" 
-    4 4 17 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+    4 4 17 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 (expect-failure
   "Creating will fail as intervals count not equal to frame"
   "Interval count must equal to the number of frames"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
-    4 4 1 [0.5 0.5] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+    4 4 1 [0.5 0.5] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 (expect-failure
   "Creating will fail as intervals count not equal to frame"
   "Interval should between"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
-    4 4 1 [0.001] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+    4 4 1 [0.001] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 (expect-failure
   "Creating will fail as intervals count not equal to frame"
   "Interval should between"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
-    4 4 1 [1.1] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+    4 4 1 [1.1] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail without capability"
   "Managed capability not installed: (test.colorblock.MINT"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (expect-failure
   "Creating will fail without capability"
   "precision violation"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.2 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.2 (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "bob", "caps": [(colorblock.MINT "item-id" "admin")]}])
 (expect-failure
   "Creating will fail with incorrect capability"
   "Keyset failure (keys-all): [admin]"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "bob")]}])
 (expect-failure
   "Creating will fail with incorrect capability"
   "Managed capability not installed: (test.colorblock.MINT"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "admin", "caps": [
@@ -262,21 +262,21 @@
 (expect-failure
   "Creating will fail with incorrect capability"
   "Managed capability not installed: (test.colorblock.MINT"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id-other" "admin")]}])
 (expect-failure
   "Creating will fail with incorrect capability"
   "Managed capability not installed: (test.colorblock.MINT"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
 (expect
   "Creating will succeed with capability"
   "Write succeeded"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 (commit-tx)
@@ -288,7 +288,7 @@
 (expect-failure
   "Creating will fail as item is duplicate"
   "The item is already existed"
-  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+  (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
 
@@ -354,7 +354,7 @@
 (expect-failure
   "Cannot directly credit"
   "require-capability: not granted"
-  (colorblock.credit "item-id" "admin" (read-keyset "cb-admin-keyset") 1.0)
+  (colorblock.credit "item-id" "admin" (read-keyset "admin-keyset") 1.0)
 )
 
 (env-sigs [{"key": "admin", "caps": [(colorblock.DEBIT "item-id" "admin")]}])

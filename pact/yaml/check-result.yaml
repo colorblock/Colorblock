@@ -1,0 +1,12 @@
+code: 
+  (format 
+    "{}{}{}{}{}{}"
+    [
+      (free.colorblock.details "item-id" "alice")
+      (free.colorblock.details "item-id" "bob")
+      (free.colorblock.details "item-id" "colorblock-market-pool")
+      (coin.details "alice")
+      (coin.details "bob")
+      (coin.details "colorblock-market-pool")
+    ]
+  )

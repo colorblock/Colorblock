@@ -7,8 +7,7 @@
 (define-namespace 'test (sig-keyset) (sig-keyset))
 (env-data {
   "ns": "test",
-  "cb-admin-keyset": {"keys": ["admin"]},
-  "colorblock-market-admin-keyset": {"keys": ["colorblock-market"]},
+  "admin-keyset": {"keys": ["admin"]},
   "alice-keyset": {"keys": ["alice"]},
   "bob-keyset": {"keys": ["bob"]},
   "lucy-keyset": {"keys": ["lucy"]},
@@ -36,13 +35,13 @@
 ;
 ; create account in COIN module
 ;
-(coin.create-account "admin" (read-keyset "cb-admin-keyset"))
+(coin.create-account "admin" (read-keyset "admin-keyset"))
 (coin.create-account "bob" (read-keyset "bob-keyset"))
 (coin.create-account "alice" (read-keyset "alice-keyset"))
 (coin.create-account "lucy" (read-keyset "lucy-keyset"))
 
 (env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
-(colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "cb-admin-keyset"))
+(colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 (colorblock.create-account "item-id" "bob" (read-keyset "bob-keyset"))
 
 (commit-tx)
@@ -65,19 +64,19 @@
   "Keyset failure (keys-all): [admin]"
   (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market" 1.0)]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market-pool" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
   (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market" 1.0)]}])
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market-pool" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
   (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id-other" "admin" "colorblock-market" 1.0)]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id-other" "admin" "colorblock-market-pool" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
@@ -89,19 +88,19 @@
   "Keyset failure (keys-all): [admin]"
   (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.2)]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market-pool" 1.2)]}])
 (expect-failure
   "Release will fail as amount is not integer"
   "precision violation"
   (colorblock-market.release "item-id" "admin" 10.0 1.2)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 2.0)]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market-pool" 2.0)]}])
 (expect-failure
   "Release will fail as balance is not enough for amount"
   "Insufficient funds"
   (colorblock-market.release "item-id" "admin" 10.0 2.0)
 )
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.0)]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market-pool" 1.0)]}])
 (expect
   "Release will succeed with correct capability"
   "Write succeeded"
@@ -128,7 +127,7 @@
 (expect
   "Check release result"
   1.0
-  (colorblock.get-balance "item-id" "colorblock-market")
+  (colorblock.get-balance "item-id" "colorblock-market-pool")
 )
 
 
@@ -144,7 +143,7 @@
 )
 
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.TRANSFER "item-id" "colorblock-market" "admin" 1.0)
+  (colorblock.TRANSFER "item-id" "colorblock-market-pool" "admin" 1.0)
 ]}])
 (expect-failure
   "Recall will fail as managed cap hasn't been installed correctly in sig"
@@ -182,7 +181,7 @@
 (expect
   "Check release result"
   0.0
-  (colorblock.get-balance "item-id" "colorblock-market")
+  (colorblock.get-balance "item-id" "colorblock-market-pool")
 )
 
 (commit-tx)
@@ -191,7 +190,7 @@
 (namespace 'test)
 
 ; Release again
-(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.0)]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market-pool" 1.0)]}])
 (colorblock-market.release "item-id" "admin" 10.0 1.0)
 
 
@@ -217,7 +216,7 @@
   (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
 )
 
-(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "colorblock-market" "bob" 1.0)]}])
+(env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "colorblock-market-pool" "bob" 1.0)]}])
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
@@ -225,9 +224,9 @@
 )
 
 (env-sigs [{"key": "alice", "caps": [
-  (coin.TRANSFER "alice" "colorblock-market" 0.1)
+  (coin.TRANSFER "alice" "colorblock-market-pool" 0.1)
   (coin.TRANSFER "alice" "admin" 10.0)
-  (colorblock.TRANSFER "item-id" "colorblock-market" "alice" 1.0)
+  (colorblock.TRANSFER "item-id" "colorblock-market-pool" "alice" 1.0)
 ]}])
 (expect-failure
   "Purchase will fail as there has no record in ledger"
@@ -237,9 +236,9 @@
 
 (env-sigs [{"key": "alice", "caps": [
   (colorblock.MINT "item-id" "alice")
-  (coin.TRANSFER "alice" "colorblock-market" 0.1)
+  (coin.TRANSFER "alice" "colorblock-market-pool" 0.1)
   (coin.TRANSFER "alice" "admin" 10.0)
-  (colorblock.TRANSFER "item-id" "colorblock-market" "alice" 1.0)
+  (colorblock.TRANSFER "item-id" "colorblock-market-pool" "alice" 1.0)
 ]}])
 (expect-failure
   "Purchase will fail as precision is illegal"
@@ -279,7 +278,7 @@
 (expect
   "Check release result"
   0.0
-  (colorblock.get-balance "item-id" "colorblock-market")
+  (colorblock.get-balance "item-id" "colorblock-market-pool")
 )
 (expect
   "Check release result"
@@ -289,7 +288,7 @@
 (expect
   "Check release result"
   0.1
-  (coin.get-balance "colorblock-market")
+  (coin.get-balance "colorblock-market-pool")
 )
 (expect
   "Check release result"

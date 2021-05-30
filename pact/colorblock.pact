@@ -5,7 +5,7 @@
       \1. creating colorblock user \
       \2. creating/transfering colorblock items"
 
-  (use coin)
+  (use coin [ details ])
   (use fungible-util)
   (implements poly-fungible-v1)
 

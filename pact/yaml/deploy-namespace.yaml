@@ -1,0 +1,5 @@
+code: (define-namespace "free" (read-keyset "colorblock-admin-ks") (read-keyset "colorblock-admin-ks"))
+data: 
+  colorblock-admin-ks: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
+signers:
+  - public: ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d

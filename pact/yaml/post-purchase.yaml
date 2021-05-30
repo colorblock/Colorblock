@@ -1,0 +1,12 @@
+code: (free.colorblock-market.purchase "item-id" "alice" "bob" 1.0)
+signers:
+  - public: f0637dff39a34ea925612bf0b5d1354463a1ba124bc972ef7d045744085ec387
+    caps: 
+      - name: "coin.TRANSFER"
+        args: ["alice", "bob", 10.0]
+      - name: "coin.TRANSFER"
+        args: ["alice", "colorblock-market-pool", 0.1]
+      - name: "free.colorblock.TRANSFER"
+        args: ["item-id", "colorblock-market-pool", "alice", 1.0]
+      - name: "free.colorblock.MINT"
+        args: ["item-id", "alice"]

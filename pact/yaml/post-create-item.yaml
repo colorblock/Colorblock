@@ -1,0 +1,9 @@
+code: (free.colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "bob" 1.0 (read-keyset "bob-keyset"))
+data: 
+  bob-keyset: ["7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c"]
+signers:
+  - public: 7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c
+    caps:
+      - name: "free.colorblock.MINT"
+        args: ["item-id", "bob"]
+
