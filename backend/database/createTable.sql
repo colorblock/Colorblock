@@ -61,3 +61,14 @@ create table if not exists purchase (
     primary key (`id`)
 );
 
+create table if not exists block (
+    `hash` varchar(64),
+    `chain_id` integer,
+    `block_height` integer,
+    `block_time` DATETIME,
+    `verified` boolean,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`hash`)
+);
+

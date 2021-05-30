@@ -16,12 +16,13 @@ def create_app():
     except:
         app.config.from_object('config')
 
+    db_config = app.config['DATABASE']
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-        app.config['USERNAME'], 
-        app.config['PASSWORD'], 
-        app.config['HOSTNAME'], 
-        app.config['PORT'],
-        app.config['DATABASE']
+        db_config['USERNAME'], 
+        db_config['PASSWORD'], 
+        db_config['HOSTNAME'], 
+        db_config['PORT'],
+        db_config['DATABASE']
     )
     db.init_app(app)
 
@@ -39,8 +40,11 @@ def create_app():
     app.register_blueprint(tool_blueprint, url_prefix='/tool')
     from app.blueprints.static import static_blueprint
     app.register_blueprint(static_blueprint, url_prefix='/static')
+
     from app.blueprints.auth import auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/')
+    from app.blueprints.sync import sync_blueprint
+    app.register_blueprint(sync_blueprint, url_prefix='/')
 
     return app
 

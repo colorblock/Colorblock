@@ -2,5 +2,5 @@ flask
 flask-cors
 Flask-SQLAlchemy
 pymysql
-requests
+requests==2.7.0
 Pillow

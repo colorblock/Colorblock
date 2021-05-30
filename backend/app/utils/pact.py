@@ -1,7 +1,11 @@
 from flask import current_app as app
+from datetime import datetime
 import requests
+import hashlib
+import json
 
 from app.utils.response import get_error_response, get_success_response
+from app.utils.crypto import hex_to_base64_url
 
 def send_req(post_cmd):
     return_data = {}
@@ -44,6 +48,7 @@ def local_req(local_cmd):
     # send data to pact url
     try:
         res = requests.post(app.config['PACT_LOCAL_URL'], json=local_cmd)
+        app.logger.debug(res.text)
         result = res.json()
 
         # pack return_data
@@ -58,3 +63,39 @@ def local_req(local_cmd):
 
     app.logger.debug('return data: {}'.format(return_data))
     return return_data
+
+def build_local_cmd(pact_code, pact_data={}):
+    config = app.config['CHAINWEB']
+    cmd = {
+        'payload': {
+            'exec': {
+                'code': pact_code,
+                'data': pact_data,
+            },
+        },
+        'meta': {
+            'creationTime': int(datetime.timestamp(datetime.now())),
+            'ttl': 7200,
+            'gasLimit': 1200,
+            'gasPrice': 0.0000000001,
+            'chainId': config['CHAIN_ID'],
+            'sender': 'COLORBLOCK',
+        },
+        'networkId': config['NETWORK'],
+        'signers': [],
+        'nonce': str(datetime.now()),
+    }
+    pact_cmd = json.dumps(cmd)
+    app.logger.debug(pact_cmd)
+
+    # generate hash
+    hash2b = hashlib.blake2b(digest_size=32)
+    hash2b.update(pact_cmd.encode('utf-8'))
+    hash_code = hex_to_base64_url(hash2b.hexdigest())
+
+    result = {
+        'hash': hash_code,
+        'sigs': [],
+        'cmd': pact_cmd,
+    }
+    return result

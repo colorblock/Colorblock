@@ -54,3 +54,12 @@ def signup(account):
     except Exception as e:
         app.logger.exception(e)
         return get_error_response('db error: {}'.format(e))
+
+@auth_blueprint.route('/login_admin', methods=['POST'])
+def login_admin():
+    post_data = request.json
+    if post_data['admin_key'] == app.config['ADMIN_KEY']:
+        session['logged_as_admin'] = True
+        return get_success_response('login as admin successfully')
+    else:
+        return get_error_response('admin key does not matched')

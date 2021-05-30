@@ -10,6 +10,15 @@ def login_required(function):
     
     return wrapper
 
+def admin_required(function):
+    def wrapper(*args, **kwargs):
+        if session.get('logged_as_admin'):
+            return function(*args, **kwargs)
+        else:
+            return get_error_response('not admin')
+    
+    return wrapper
+
 def validate_account(account):
     if account == session.get('account'):
         return get_success_response('account matched')
