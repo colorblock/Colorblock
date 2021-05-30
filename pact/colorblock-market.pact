@@ -346,8 +346,8 @@
       "purchases": (purchases-txlog tx-id)
     }
   )
-  (defun all-txlogs (tx-ids:[integer])
-    (map (all-txlog) tx-ids)
+  (defun all-txlogs (tx-ids:[decimal])
+    (map (all-txlog) (map (floor) tx-ids))
   )
 
 )
