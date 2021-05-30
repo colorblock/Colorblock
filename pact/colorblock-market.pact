@@ -339,11 +339,15 @@
   )
   (defun all-txlog (tx-id:integer)
     {
+      "tx-id": tx-id,
       "items": (colorblock.items-txlog tx-id),
       "ledger": (colorblock.ledger-txlog tx-id),
       "deals": (deals-txlog tx-id),
       "purchases": (purchases-txlog tx-id)
     }
+  )
+  (defun all-txlogs (tx-ids:[integer])
+    (map (all-txlog) tx-ids)
   )
 
 )
