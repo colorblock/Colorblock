@@ -1,6 +1,6 @@
-code: (define-namespace "free" (read-keyset "cb-admin-keyset") (read-keyset "cb-admin-keyset"))
+code: (define-namespace "free" (read-keyset "colorblock-admin-keyset") (read-keyset "colorblock-admin-keyset"))
 data: 
-  cb-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
+  colorblock-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]
   upgrade: false
 keyPairs:
   - public: ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d

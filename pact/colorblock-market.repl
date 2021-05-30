@@ -8,7 +8,7 @@
 (env-data {
   "ns": "test",
   "cb-admin-keyset": {"keys": ["admin"]},
-  "cbmarket-admin-keyset": {"keys": ["colorblock-market"]},
+  "colorblock-market-admin-keyset": {"keys": ["colorblock-market"]},
   "alice-keyset": {"keys": ["alice"]},
   "bob-keyset": {"keys": ["bob"]},
   "lucy-keyset": {"keys": ["lucy"]},
@@ -22,7 +22,7 @@
 (load "coin/coin.pact")
 (load "colorblock.pact")
 
-(load "cbmarket.pact")
+(load "colorblock-market.pact")
 
 (commit-tx)
 
@@ -63,49 +63,49 @@
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.release "item-id" "admin" 10.0 1.0)
+  (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.release "item-id" "admin" 10.0 1.0)
+  (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
 (env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "bob" "colorblock-market" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.release "item-id" "admin" 10.0 1.0)
+  (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id-other" "admin" "colorblock-market" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.release "item-id" "admin" 10.0 1.0)
+  (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "cccccmarket" 1.0)]}])
 (expect-failure
   "Release will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.release "item-id" "admin" 10.0 1.0)
+  (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.2)]}])
 (expect-failure
   "Release will fail as amount is not integer"
   "precision violation"
-  (cbmarket.release "item-id" "admin" 10.0 1.2)
+  (colorblock-market.release "item-id" "admin" 10.0 1.2)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 2.0)]}])
 (expect-failure
   "Release will fail as balance is not enough for amount"
   "Insufficient funds"
-  (cbmarket.release "item-id" "admin" 10.0 2.0)
+  (colorblock-market.release "item-id" "admin" 10.0 2.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.0)]}])
 (expect
   "Release will succeed with correct capability"
   "Write succeeded"
-  (cbmarket.release "item-id" "admin" 10.0 1.0)
+  (colorblock-market.release "item-id" "admin" 10.0 1.0)
 )
 
 (expect
@@ -118,7 +118,7 @@
     "remain": 1.0,
     "open": true
   }
-  (cbmarket.item-sale-status "item-id" "admin")
+  (colorblock-market.item-sale-status "item-id" "admin")
 )
 (expect
   "Check release result"
@@ -140,7 +140,7 @@
 (expect-failure
   "Recall will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.recall "item-id" "admin")
+  (colorblock-market.recall "item-id" "admin")
 )
 
 (env-sigs [{"key": "admin", "caps": [
@@ -149,7 +149,7 @@
 (expect-failure
   "Recall will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [admin]"
-  (cbmarket.recall "item-id" "admin")
+  (colorblock-market.recall "item-id" "admin")
 )
 
 (env-sigs [{"key": "admin", "caps": [
@@ -158,7 +158,7 @@
 (expect
   "Recall will succeed with correct capabilities"
   "Write succeeded"
-  (cbmarket.recall "item-id" "admin")
+  (colorblock-market.recall "item-id" "admin")
 )
 
 (expect
@@ -171,7 +171,7 @@
     "remain": 0.0,
     "open": false
   }
-  (cbmarket.item-sale-status "item-id" "admin")
+  (colorblock-market.item-sale-status "item-id" "admin")
 )
 
 (expect
@@ -192,7 +192,7 @@
 
 ; Release again
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market" 1.0)]}])
-(cbmarket.release "item-id" "admin" 10.0 1.0)
+(colorblock-market.release "item-id" "admin" 10.0 1.0)
 
 
 ;
@@ -207,21 +207,21 @@
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
-  (cbmarket.purchase "item-id" "bob" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
 )
 
 (env-sigs [{"key": "bob", "caps": []}])
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
-  (cbmarket.purchase "item-id" "bob" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
 )
 
 (env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "colorblock-market" "bob" 1.0)]}])
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
-  (cbmarket.purchase "item-id" "bob" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
 )
 
 (env-sigs [{"key": "alice", "caps": [
@@ -232,7 +232,7 @@
 (expect-failure
   "Purchase will fail as there has no record in ledger"
   "row not found: item-id:alice"
-  (cbmarket.purchase "item-id" "alice" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "alice" "admin" 1.0)
 )
 
 (env-sigs [{"key": "alice", "caps": [
@@ -244,18 +244,18 @@
 (expect-failure
   "Purchase will fail as precision is illegal"
   "precision violation"
-  (cbmarket.purchase-new-account "item-id" "alice" "admin" 1.2 (read-keyset "alice-keyset"))
+  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 1.2 (read-keyset "alice-keyset"))
 )
 (expect-failure
   "Purchase will fail as purchase amount is illegal"
   "Purchase amount cannot be larger than remain amount"
-  (cbmarket.purchase-new-account "item-id" "alice" "admin" 2.0 (read-keyset "alice-keyset"))
+  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 2.0 (read-keyset "alice-keyset"))
 )
 
 (expect
   "Purchase-new-account will succeed with correct capabilities"
   "Write succeeded"
-  (cbmarket.purchase-new-account "item-id" "alice" "admin" 1.0 (read-keyset "alice-keyset"))
+  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 1.0 (read-keyset "alice-keyset"))
 )
 
 (expect
@@ -268,7 +268,7 @@
     "remain": 0.0,
     "open": false
   }
-  (cbmarket.item-sale-status "item-id" "admin")
+  (colorblock-market.item-sale-status "item-id" "admin")
 )
 
 (expect

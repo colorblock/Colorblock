@@ -1,5 +1,3 @@
-(define-keyset 'cb-admin-keyset (read-keyset "cb-admin-keyset"))
-
 (namespace (read-msg 'ns))
 
 (module colorblock GOVERNANCE
@@ -7,7 +5,7 @@
       \1. creating colorblock user \
       \2. creating/transfering colorblock items"
 
-  (use coin [ details ])
+  (use coin)
   (use fungible-util)
   (implements poly-fungible-v1)
 
@@ -64,7 +62,7 @@
 
   (defcap GOVERNANCE ()
     @doc " Only support upgrading by admin."
-    (enforce-keyset 'cb-admin-keyset)
+    (enforce-guard (at 'guard (coin.details "colorblock-admin")))
   )
 
   (defcap DEBIT (token:string sender:string)

@@ -1,4 +1,4 @@
-codeFile: "../cbmarket.pact"
+codeFile: "../colorblock-market.pact"
 data: 
   ns: "free"
   cbmarket-admin-keyset: ["ba54b224d1924dd98403f5c751abdd10de6cd81b0121800bf7bdbdcfaec7388d"]

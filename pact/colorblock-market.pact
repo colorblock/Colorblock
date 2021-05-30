@@ -1,5 +1,3 @@
-(define-keyset 'cbmarket-admin-keyset (read-keyset "cbmarket-admin-keyset"))
-
 (namespace (read-msg 'ns))
 
 (module cbmarket GOVERNANCE
@@ -7,6 +5,7 @@
       \1. helping users release items into market for sale \
       \2. supporting pricing and trading efficiently. "
 
+  (use coin)
   (use colorblock)
 
   ; -------------------------------------------------------
@@ -55,7 +54,7 @@
 
   (defcap GOVERNANCE ()
     @doc " Only support upgrading by admin "
-    (enforce-keyset 'cbmarket-admin-keyset)
+    (enforce-guard (at 'guard (coin.details "colorblock-admin")))
   )
 
   (defcap RELEASE:bool 
@@ -150,8 +149,8 @@
   ; -------------------------------------------------------
   ; Constants
 
-  (defconst COLORBLOCK_MARKET "colorblock-market"
-    "The official account of colorblock market"
+  (defconst COLORBLOCK_MARKET_POOL "colorblock-market-pool"
+    "The official account of colorblock market pool"
   )
 
   (defconst FEES_RATE 0.01
@@ -176,8 +175,8 @@
   ; -------------------------------------------------------
   ; Marketing Functions
 
-  (defun cb-market-guard ()
-    (create-module-guard 'cbmarket-guard)
+  (defun colorblock-market-guard ()
+    (create-module-guard 'colorblock-market-guard)
   )
 
   (defun release:string
@@ -189,8 +188,8 @@
     @doc " Release item for sale."
     (with-capability (RELEASE token account price amount)
       ; Transfer token to platform
-      (install-capability (colorblock.TRANSFER token account COLORBLOCK_MARKET amount))
-      (colorblock.transfer-create token account COLORBLOCK_MARKET (cb-market-guard) amount)
+      (install-capability (colorblock.TRANSFER token account COLORBLOCK_MARKET_POOL amount))
+      (colorblock.transfer-create token account COLORBLOCK_MARKET_POOL (colorblock-market-guard) amount)
       (write deals (key token account) {
         "token" : token,
         "seller" : account,
@@ -224,8 +223,8 @@
             0.0
           )
           [
-            (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET account remain-amount))
-            (colorblock.transfer token COLORBLOCK_MARKET account remain-amount)
+            (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL account remain-amount))
+            (colorblock.transfer token COLORBLOCK_MARKET_POOL account remain-amount)
           ]
           "no need to transfer token"
         )
@@ -289,11 +288,11 @@
             "Insufficient balance"
           )
           (install-capability (coin.TRANSFER buyer seller price))
-          (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET fees))
-          (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET buyer amount))
+          (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET_POOL fees))
+          (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL buyer amount))
           (coin.transfer buyer seller price)
-          (coin.transfer buyer COLORBLOCK_MARKET fees)
-          (colorblock.transfer token COLORBLOCK_MARKET buyer amount)
+          (coin.transfer buyer COLORBLOCK_MARKET_POOL fees)
+          (colorblock.transfer token COLORBLOCK_MARKET_POOL buyer amount)
           (update deals (key token seller) {
             "remain": remain-amount
           })
@@ -320,7 +319,7 @@
 
   (defun init-market-account ()
     @doc " Create market account with module guard."
-    (coin.create-account COLORBLOCK_MARKET (cb-market-guard))
+    (coin.create-account COLORBLOCK_MARKET_POOL (colorblock-market-guard))
   )
 
 )

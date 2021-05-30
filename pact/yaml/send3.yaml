@@ -1,10 +1,10 @@
-code: (namespace "free")(colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "bob" 1.0 (read-keyset "bob-keyset"))
+code: (colorblock-market.release "item-id" "bob" 10.0 1.0)
 data: 
+  ns: "free"
   bob-keyset: ["7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c"]
 keyPairs:
   - public: 7c38890ddd6c521451de282e8db2d0efd02f97ea954b0492f0a01fa59dd73e2c
     secret: 7caea68412ad9f02b705bc06a422ccff5ffdaa9b6e6ac45ba88303214a0a012a
     caps: 
-      - name: colorblock.MINT
-        args: ["item-id" "bob"]
-    
+      - name: colorblock.TRANSFER
+        args: ["item-id" "bob" "colorblock-market-pool" 1.0]
