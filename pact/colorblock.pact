@@ -567,6 +567,15 @@
     (step (enforce false "cross chain not supported"))
   )
 
+  ; -------------------------------------------------------
+  ; Transaction Logs
+  (defun items-txlog (tx-id:integer)
+    (map (at 'key) (txlog items tx-id))
+  )
+  (defun ledger-txlog (tx-id:integer)
+    (map (at 'key) (txlog ledger tx-id))
+  )
+
 )
 
 

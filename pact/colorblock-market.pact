@@ -322,6 +322,30 @@
     (coin.create-account COLORBLOCK_MARKET_POOL (colorblock-market-guard))
   )
 
+  (defun deal-details (key:string)
+    (read deals key)
+  )
+  (defun purchase-details (key:string)
+    (read purchases key)
+  )
+
+  ; -------------------------------------------------------
+  ; Transaction Logs
+  (defun deals-txlog (tx-id:integer)
+    (map (at 'key) (txlog deals tx-id))
+  )
+  (defun purchases-txlog (tx-id:integer)
+    (map (at 'key) (txlog purchases tx-id))
+  )
+  (defun all-txlog (tx-id:integer)
+    {
+      "items": (colorblock.items-txlog tx-id),
+      "ledger": (colorblock.ledger-txlog tx-id),
+      "deals": (deals-txlog tx-id),
+      "purchases": (purchases-txlog tx-id)
+    }
+  )
+
 )
 
 
