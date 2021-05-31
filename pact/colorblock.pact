@@ -65,23 +65,25 @@
     (enforce-guard (at 'guard (coin.details "colorblock-admin")))
   )
 
-  (defcap DEBIT (token:string sender:string)
+  (defcap AUTH (token:string account:string)
     (enforce-guard
       (at 'guard
-        (read ledger (key token sender))
+        (read ledger (key token account))
       )
     )
   )
-  (defcap CREDIT (token:string receiver:string) true)
 
-  (defcap MINT (token:string account:string)
-    @managed ;; one-shot for a given amount
-    (compose-capability (DEBIT token account))
-    (compose-capability (CREDIT token account))
+  (defcap DEBIT (token:string sender:string)
+    (compose-capability (AUTH token sender))
+  )
+  (defcap CREDIT (token:string receiver:string) 
+    true
   )
 
-  (defcap VALID-GUARD (guard:guard)
-    (enforce-guard guard)
+  (defcap MINT (token:string account:string)
+    @managed   ; make sure one-shot (only-once), will trigger event
+    (compose-capability (AUTH token account))
+    (compose-capability (CREDIT token account))
   )
 
   (defcap TRANSFER:bool 
@@ -97,7 +99,7 @@
           \ 2. sender must have corresponding account guard \
           \ 3. item must exist \
           \ 4. sender must be the owner of item "
-    @managed amount TRANSFER-mgr
+    @managed amount TRANSFER-mgr  ; make sure amount is sufficient, will trigger event
 
     (enforce-valid-transfer sender receiver (precision token) amount)
     (compose-capability (DEBIT token sender))
@@ -121,7 +123,7 @@
   (defcap ROTATE:bool
     ( token:string account:string )
     @doc "Controls rotation of ACCOUNT."
-    @managed ;; one-shot
+    @managed  ;; one-shot
     (enforce-valid-account account)
     (enforce-guard (at 'guard (read ledger (key token account))))
   )
@@ -503,6 +505,7 @@
          \ creating RECEIVER account if necessary with RECEIVER-GUARD. \
          \ Fails if account exists and GUARD does not match. \
          \ Managed by 'TRANSFER' capability. "
+
     (enforce (!= sender receiver)
       "sender cannot be the receiver of a transfer"
     )

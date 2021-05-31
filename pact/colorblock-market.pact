@@ -31,23 +31,6 @@
 
   (deftable deals:{deal-schema})
 
-  (defschema purchase-schema
-    @doc  " Record every purchase of token in market \
-          \ Column definitions: \
-          \   @key: the hashed key \
-          \   token: the token asset id \
-          \   buyer: the user who purchased \ 
-          \   seller: the user who sold \
-          \   price: item transaction price \
-          \   amount: purchase amount "
-    token:string
-    buyer:string
-    seller:string
-    price:decimal
-    amount:decimal
-  )
-
-  (deftable purchases:{purchase-schema})
 
   ; -------------------------------------------------------
   ; Capabilities
@@ -273,15 +256,6 @@
             (total-price (+ fees sale-price))
             (balance (coin.get-balance buyer))
             (remain-amount (- total-amount amount))
-            (purchase-info {
-              "token": token,
-              "buyer": buyer,
-              "seller": seller,
-              "price": price,
-              "amount": amount
-            })
-            (purchase-plus (+ {'remain: remain-amount} purchase-info))
-            (hash-id (hash (+ purchase-plus (chain-data))))
           )
           (enforce 
             (<= total-price balance)
@@ -303,7 +277,6 @@
             })
             "no need to close deal"
           )
-          (insert purchases hash-id purchase-info)
         )
       )
     )
@@ -325,25 +298,18 @@
   (defun deal-details (key:string)
     (read deals key)
   )
-  (defun purchase-details (key:string)
-    (read purchases key)
-  )
 
   ; -------------------------------------------------------
   ; Transaction Logs
   (defun deals-txlog (tx-id:integer)
     (map (at 'key) (txlog deals tx-id))
   )
-  (defun purchases-txlog (tx-id:integer)
-    (map (at 'key) (txlog purchases tx-id))
-  )
   (defun all-txlog (tx-id:integer)
     {
       "tx-id": tx-id,
       "items": (colorblock.items-txlog tx-id),
       "ledger": (colorblock.ledger-txlog tx-id),
-      "deals": (deals-txlog tx-id),
-      "purchases": (purchases-txlog tx-id)
+      "deals": (deals-txlog tx-id)
     }
   )
   (defun all-txlogs (tx-ids:[decimal])
@@ -357,7 +323,6 @@
   ["upgrade"]
   [
     (create-table deals)
-    (create-table purchases)
     (init-market-account)
   ]
 )
