@@ -3,14 +3,18 @@ from datetime import datetime
 import json
 import time
 
-from app import db
+from app import db, search
+from app.models.item import Item
+from app.models.user import User
 from app.models.block import Block
 from app.utils.pact import local_req, build_local_cmd
+from app.utils.security import admin_required
 from app.utils.chainweb import fetch_latest_block, fetch_previous_blocks, fetch_payloads
 
-sync_blueprint = Blueprint('sync', __name__)
+routine_blueprint = Blueprint('routine', __name__)
 
-@sync_blueprint.route('/sync/<chain_id>')
+@routine_blueprint.route('/sync/<chain_id>')
+@admin_required
 def sync_block(chain_id):
     # fetch latest block
     latest_block = fetch_latest_block(chain_id)
@@ -91,10 +95,18 @@ def sync_block(chain_id):
 
     return 'end of sync'
 
-
-
 def update_ledger(item_id, user_id):
     pact_code = '(free.colorblock.details "{}:{}")'.format(item_id, user_id)
     local_cmd = build_local_cmd(pact_code)
     data = local_req(local_cmd)
     app.logger.debug(data)
+
+
+# use this task to update existing data
+@routine_blueprint.route('/msearch/update/item')
+def update_item_index():
+    search.create_index(Item, update=True)
+
+@routine_blueprint.route('/msearch/update/user')
+def update_user_index():
+    search.create_index(User, update=True)

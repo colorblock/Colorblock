@@ -6,8 +6,8 @@ DATABASE = {
     'USERNAME': 'root',
     'PASSWORD': 'mypassword'
 }
-WHOOSH_BASE = ''
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+MSEARCH_INDEX_NAME = 'instance/msearch'
+MSEARCH_BACKEND = 'whoosh'
 
 # app
 SECRET_KEY = ''

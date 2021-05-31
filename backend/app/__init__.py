@@ -1,12 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-import flask_whooshalchemy
+from flask_msearch import Search
 
 from flask.json import JSONEncoder
 from datetime import datetime
 
 db = SQLAlchemy()
+search = Search()
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -27,8 +28,9 @@ def create_app():
     )
     db.init_app(app)
 
-    app.secret_key = app.config['SECRET_KEY']
+    search.init_app(app)
 
+    app.secret_key = app.config['SECRET_KEY']
     CORS(app, supports_credentials=True, resources={r'/*': {'origins': app.config['CORS_ORIGINS']}})
 
     app.json_encoder = CustomJSONEncoder
@@ -39,16 +41,15 @@ def create_app():
     app.register_blueprint(item_blueprint, url_prefix='/item')
     from app.blueprints.tool import tool_blueprint
     app.register_blueprint(tool_blueprint, url_prefix='/tool')
+    from app.blueprints.search import search_blueprint
+    app.register_blueprint(search_blueprint, url_prefix='/search')
     from app.blueprints.static import static_blueprint
     app.register_blueprint(static_blueprint, url_prefix='/static')
 
     from app.blueprints.auth import auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/')
-    from app.blueprints.sync import sync_blueprint
-    app.register_blueprint(sync_blueprint, url_prefix='/')
-
-    from app.models.item import Item
-    flask_whooshalchemy.search_index(app, Item)
+    from app.blueprints.routine import routine_blueprint
+    app.register_blueprint(routine_blueprint, url_prefix='/routine')
 
     return app
 

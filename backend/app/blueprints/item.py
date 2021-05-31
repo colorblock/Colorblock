@@ -28,11 +28,6 @@ def get_items_created_by_user(user_id):
     items = db.session.query(Item).filter(Item.creator == user_id).all()
     return jsonify(items)
 
-@item_blueprint.route('/search/<keyword>')
-def search(keyword):
-    items = Item.query.search(keyword).all()
-    return jsonify(items)
-
 @item_blueprint.route('/all')
 def get_all_items():
     items = Item.query.all()

@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
-import Shelf from '../common/Shelf';
+import ItemList from '../common/ItemList';
 import { serverUrl } from '../../config';
 
 export const MarketPage = (props) => {
   
-  const { keyword } = useParams();
   const [items, setItems] = useState([]);
 
-  const itemShelfConfig = {
+  const itemListConfig = {
     type: 'item',
     flow: 'grid',
     cols: 5
@@ -21,20 +19,14 @@ export const MarketPage = (props) => {
 
   useEffect(() => {
     const fetchAllItems = async () => {
-      let itemsUrl;
-      if (document.location.href.includes('/search/')) {
-        itemsUrl = `${serverUrl}/item/search/${keyword}`;
-      } else {
-        itemsUrl = `${serverUrl}/item/all`;
-      }
-      console.log(itemsUrl);
+      const itemsUrl = `${serverUrl}/item/all`;
       const itemsData = await fetch(itemsUrl).then(res => res.json());
       console.log(itemsData);
       setItems(itemsData);
     };
 
     fetchAllItems();
-  }, [keyword]);
+  }, []);
 
   return (
     <div data-role='market container' className='bg-cb-gray text-sm'>
@@ -55,7 +47,7 @@ export const MarketPage = (props) => {
         </div>
       </div>
       <div data-role='item list' className='w-5/6 mx-auto'>
-        <Shelf entryList={items} config={itemShelfConfig} />
+        <ItemList items={items} config={itemListConfig} />
       </div>
     </div>
   );

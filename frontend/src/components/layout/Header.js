@@ -11,9 +11,10 @@ const Header = (props) => {
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
 
   const onSearch = (e) => {
-    if (e.keyCode === 13) {
-      // if enter pressed, turn to search page
-      const url = '/search/' + e.target.value;
+    const value = e.target.value;
+    if (e.keyCode === 13 && value) {
+      // if enter pressed and value is not blank, turn to search page
+      const url = '/search/' + value;
       document.location.href = url;
     }
   };

@@ -19,3 +19,8 @@ def get_user(user_id):
     app.logger.debug('in user id')
     user = db.session.query(User).filter(User.id == user_id).first()
     return jsonify(user)
+
+@user_blueprint.route('/search/<keyword>')
+def search(keyword):
+    users = User.query.search(keyword).all()
+    return jsonify(users)

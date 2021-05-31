@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Shelf from '../common/Shelf';
+import CollectionList from '../common/CollectionList';
+import ItemList from '../common/ItemList';
 import { serverUrl } from '../../config';
 
 const HomePage = (props) => {
@@ -11,12 +12,12 @@ const HomePage = (props) => {
     name: 'Example Collection',
     count: 120
   });
-  const collectionShelfConfig = {
+  const collectionListConfig = {
     type: 'collection',
     flow: 'flex',
     cols: 4
   };
-  const itemShelfConfig = {
+  const itemListConfig = {
     type: 'item',
     flow: 'flex',
     cols: 5
@@ -67,7 +68,7 @@ const HomePage = (props) => {
             View More
           </div>
         </div>
-        <Shelf entryList={collections} config={collectionShelfConfig} />
+        <CollectionList collections={collections} config={collectionListConfig} />
       </div>
       <div data-role='trending' className='w-5/6 mx-auto my-12'>
         <div data-role='info' className='flex justify-between my-5 tracking-wider'>
@@ -78,7 +79,7 @@ const HomePage = (props) => {
             View More
           </div>
         </div>
-        <Shelf entryList={items} config={itemShelfConfig} />
+        <ItemList items={items} config={itemListConfig} />
       </div>
       {
         items.length > 0 &&
@@ -91,7 +92,7 @@ const HomePage = (props) => {
               View More
             </div>
           </div>
-          <Shelf entryList={items} config={itemShelfConfig} />
+          <ItemList items={items} config={itemListConfig} />
         </div>
       }
       <div data-role='view more' className='w-5/6 mx-auto my-20'>
