@@ -17,7 +17,6 @@ create table if not exists item (
     `description` varchar(1000),
     `creator` varchar(64) comment 'the initial creator of item',
     `supply` integer comment 'the initial supply of item',
-    `tx_id` varchar(128) comment 'the creation tx hash',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
@@ -28,7 +27,6 @@ create table if not exists ledger (
     `item_id` varchar(32) comment 'item id',
     `user_id` varchar(64) comment 'user id',
     `balance` varchar(64) comment 'balance of item',
-    `tx_id` varchar(128) comment 'the creation tx hash',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
@@ -42,22 +40,19 @@ create table if not exists deal (
     `total` integer comment 'total sale amount',
     `remain` integer comment 'remain sale amount',
     `open` boolean comment 'open status',
-    `tx_id` varchar(128) comment 'the creation tx hash',
-    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
 );
 
-create table if not exists purchase (
-    `id` varchar(64) comment 'unique hash of purchase',
-    `item_id` varchar(32) comment 'item id',
-    `buyer_id` varchar(64) comment 'buyer id',
-    `seller_id` varchar(64) comment 'buyer id',
-    `price` decimal(22, 12) comment 'sale price',
-    `amount` integer comment 'purchase amount',
-    `tx_id` varchar(128) comment 'the creation tx hash',
+create table if not exists block (
+    `hash` varchar(64),
+    `chain_id` integer,
+    `block_height` integer,
+    `block_time` DATETIME,
+    `verified` boolean,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    primary key (`id`)
+    primary key (`hash`)
 );
 

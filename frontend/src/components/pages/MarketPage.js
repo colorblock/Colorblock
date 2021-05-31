@@ -4,14 +4,14 @@ import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
-import Shelf from '../common/Shelf';
+import ItemList from '../common/ItemList';
 import { serverUrl } from '../../config';
 
 export const MarketPage = (props) => {
   
   const [items, setItems] = useState([]);
 
-  const itemShelfConfig = {
+  const itemListConfig = {
     type: 'item',
     flow: 'grid',
     cols: 5
@@ -47,7 +47,7 @@ export const MarketPage = (props) => {
         </div>
       </div>
       <div data-role='item list' className='w-5/6 mx-auto'>
-        <Shelf entryList={items} config={itemShelfConfig} />
+        <ItemList items={items} config={itemListConfig} />
       </div>
     </div>
   );

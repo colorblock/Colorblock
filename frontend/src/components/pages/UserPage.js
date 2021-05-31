@@ -3,15 +3,17 @@ import { useParams } from 'react-router-dom';
 
 import { shortAddress } from '../../utils/polish';
 import { withCors } from '../../utils/sign';
-import Shelf from '../common/Shelf';
+import ItemList from '../common/ItemList';
 import { serverUrl } from '../../config';
 
 const UserPage = (props) => {
+  console.log(useParams());
   const { userId } = useParams();
+  console.log(userId);
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
 
-  const itemShelfConfig = {
+  const itemListConfig = {
     type: 'item',
     flow: 'grid',
     cols: 5
@@ -59,8 +61,8 @@ const UserPage = (props) => {
       </div>
       {
         items.length > 0 ? (
-          <div data-role='item shelf'>
-            <Shelf entryList={items} config={itemShelfConfig} />
+          <div data-role='item list'>
+            <ItemList items={items} config={itemListConfig} />
           </div>
         ) : (
           <div>

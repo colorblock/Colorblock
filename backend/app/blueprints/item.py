@@ -33,8 +33,8 @@ def get_all_items():
     items = Item.query.all()
     return jsonify(items)
 
-@item_blueprint.route('/', methods=['POST'])
 @login_required
+@item_blueprint.route('/', methods=['POST'])
 def submit_item():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))
@@ -74,8 +74,7 @@ def submit_item():
             tags=','.join(item_data['tags']), 
             description=item_data['description'],
             creator=item_data['account'],
-            supply=item_data['supply'],
-            tx_id=result['tx_id']
+            supply=item_data['supply']
         )
         db.session.add(item)
         db.session.commit()
@@ -84,8 +83,7 @@ def submit_item():
             id='{}:{}'.format(item_data['id'], item_data['account']),
             item_id=item_data['id'],
             user_id=item_data['account'],
-            balance=item_data['supply'],
-            tx_id=result['tx_id']
+            balance=item_data['supply']
         )
         db.session.add(ledger)
         db.session.commit()

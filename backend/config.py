@@ -1,18 +1,30 @@
 # mysql settings
-HOSTNAME = 'example.com'
-PORT = '3306'
-DATABASE = 'example_db'
-USERNAME = 'root'
-PASSWORD = 'mypassword'
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+DATABASE = {
+    'HOSTNAME': 'example.com',
+    'PORT': '3306',
+    'DATABASE': 'example_db',
+    'USERNAME': 'root',
+    'PASSWORD': 'mypassword'
+}
+MSEARCH_INDEX_NAME = 'instance/msearch'
+MSEARCH_BACKEND = 'whoosh'
 
 # app
 SECRET_KEY = ''
+ADMIN_KEY = ''
 CORS_ORIGINS = [
     'http://localhost:3000', 
     'http://colorblockart.com:3000',
     'https://colorblock.art:3000'
 ]
+START_HEIGHT = None
+
+# chainweb
+CHAINWEB = {
+    'HOST': 'https://api.chainweb.com',
+    'NETWORK': 'mainnet01',
+    'CHAIN_ID': '0'
+}
 
 # url
 PACT_URL = 'http://api.colorblockart.com'

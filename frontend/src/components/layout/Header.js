@@ -10,6 +10,15 @@ const Header = (props) => {
   const { wallet, switchWalletModal } = props;
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
 
+  const onSearch = (e) => {
+    const value = e.target.value;
+    if (e.keyCode === 13 && value) {
+      // if enter pressed and value is not blank, turn to search page
+      const url = '/search/' + value;
+      document.location.href = url;
+    }
+  };
+
   return (
     <div data-role='header page'>
       <div data-role='non-fixed part taking space' className='h-16'>
@@ -27,6 +36,7 @@ const Header = (props) => {
               <input
                 className='w-full px-0.5 bg-gray-50 placeholder-gray-400 placeholder-opacity-75'
                 placeholder='Search collections, collectibles, and artists'
+                onKeyUp={ (e) => onSearch(e) }
               />
             </div>
             <div data-role='nav bar' className='ml-7'>
