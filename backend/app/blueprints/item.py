@@ -28,6 +28,11 @@ def get_items_created_by_user(user_id):
     items = db.session.query(Item).filter(Item.creator == user_id).all()
     return jsonify(items)
 
+@item_blueprint.route('/search/<keyword>')
+def search(keyword):
+    items = Item.query.search(keyword).all()
+    return jsonify(items)
+
 @item_blueprint.route('/all')
 def get_all_items():
     items = Item.query.all()
@@ -74,8 +79,7 @@ def submit_item():
             tags=','.join(item_data['tags']), 
             description=item_data['description'],
             creator=item_data['account'],
-            supply=item_data['supply'],
-            tx_id=result['tx_id']
+            supply=item_data['supply']
         )
         db.session.add(item)
         db.session.commit()
@@ -84,8 +88,7 @@ def submit_item():
             id='{}:{}'.format(item_data['id'], item_data['account']),
             item_id=item_data['id'],
             user_id=item_data['account'],
-            balance=item_data['supply'],
-            tx_id=result['tx_id']
+            balance=item_data['supply']
         )
         db.session.add(ledger)
         db.session.commit()

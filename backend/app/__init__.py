@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+import flask_whooshalchemy
 
 from flask.json import JSONEncoder
 from datetime import datetime
@@ -45,6 +46,9 @@ def create_app():
     app.register_blueprint(auth_blueprint, url_prefix='/')
     from app.blueprints.sync import sync_blueprint
     app.register_blueprint(sync_blueprint, url_prefix='/')
+
+    from app.models.item import Item
+    flask_whooshalchemy.search_index(app, Item)
 
     return app
 

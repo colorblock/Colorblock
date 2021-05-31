@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,6 +10,7 @@ import { serverUrl } from '../../config';
 
 export const MarketPage = (props) => {
   
+  const { keyword } = useParams();
   const [items, setItems] = useState([]);
 
   const itemShelfConfig = {
@@ -19,14 +21,20 @@ export const MarketPage = (props) => {
 
   useEffect(() => {
     const fetchAllItems = async () => {
-      const itemsUrl = `${serverUrl}/item/all`;
+      let itemsUrl;
+      if (document.location.href.includes('/search/')) {
+        itemsUrl = `${serverUrl}/item/search/${keyword}`;
+      } else {
+        itemsUrl = `${serverUrl}/item/all`;
+      }
+      console.log(itemsUrl);
       const itemsData = await fetch(itemsUrl).then(res => res.json());
       console.log(itemsData);
       setItems(itemsData);
     };
 
     fetchAllItems();
-  }, []);
+  }, [keyword]);
 
   return (
     <div data-role='market container' className='bg-cb-gray text-sm'>

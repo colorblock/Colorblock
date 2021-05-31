@@ -24,7 +24,7 @@ const App = (props) => {
         <Route path='/create'>
           <CreatorPage />
         </Route>
-        <Route path='/market'>
+        <Route path={['/market', '/search/:keyword']}>
           <MarketPage />
         </Route>
         <Route path='/item/:itemId'>

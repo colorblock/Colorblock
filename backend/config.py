@@ -6,6 +6,7 @@ DATABASE = {
     'USERNAME': 'root',
     'PASSWORD': 'mypassword'
 }
+WHOOSH_BASE = ''
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # app

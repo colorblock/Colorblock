@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 import hashlib
 import json
+import time
 
 from app.utils.response import get_error_response, get_success_response
 from app.utils.crypto import hex_to_base64_url
@@ -20,20 +21,28 @@ def send_req(post_cmd):
         request_key = request_key_data['requestKeys'][0]
         app.logger.debug('request key: {}'.format(request_key))
 
-        # fetch result for request key
-        res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
-        app.logger.debug('POLL response text: {}'.format(res.text))
+        for i in range(60):
+            # fetch result for request key
+            res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
+            app.logger.debug('POLL response text: {}'.format(res.text))
 
-        # extract result
-        result = res.json()[request_key]
-        app.logger.debug('result: {}'.format(result))
+            # extract result
+            result = res.json()
+            app.logger.debug('result: {}'.format(result))
+            if request_key not in result:
+                time.sleep(1)
+                continue
 
-        # pack return_data
-        if result['result']['status'] == 'success':
-            return_data = get_success_response(result['result']['data']) 
-            return_data['tx_id'] = result['txId']
-        else:
-            return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
+            result = result[request_key]
+
+            # pack return_data
+            if result['result']['status'] == 'success':
+                return_data = get_success_response(result['result']['data']) 
+                return_data['tx_id'] = result['txId']
+            else:
+                return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
+
+            break
 
     except Exception as e:
         app.logger.error(e)
