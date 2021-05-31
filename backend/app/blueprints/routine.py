@@ -6,14 +6,17 @@ import time
 from app import db, search
 from app.models.item import Item
 from app.models.user import User
+from app.models.ledger import Ledger
+from app.models.transfer import Transfer
 from app.models.block import Block
+from app.utils.crypto import hash_id
 from app.utils.pact import local_req, build_local_cmd
 from app.utils.security import admin_required
 from app.utils.chainweb import fetch_latest_block, fetch_previous_blocks, fetch_payloads
 
 routine_blueprint = Blueprint('routine', __name__)
 
-@routine_blueprint.route('/sync/<chain_id>')
+@routine_blueprint.route('/sync/<chain_id>', methods=['POST'])
 @admin_required
 def sync_block(chain_id):
     # fetch latest block
@@ -52,16 +55,52 @@ def sync_block(chain_id):
                 app.logger.debug('block {} is verified'.format(payload['height']))
                 continue
             else:
-                # check whether tx contains colorblock
-                if (app.config['ENV'] == 'production'):
-                    outputs = [v for v in payload['outputs'] if 'colorblock' in v['module']['name']]
-                else:
-                    outputs = payload['outputs']
+                # block info
+                block_hash = payload['hash']
+                block_height = payload['height'],
+                block_time = datetime.fromtimestamp(payload['creationTime'] // 10 ** 6)
+
+                # handle events
+                for output in payload['outputs']:
+                    # tx info
+                    tx_id = output['txId']
+                    tx_hash = output['reqKey']
+                    tx_status = output['result']['status']
+
+                    events = output['events']
+                    for event in events:
+                        module_name = '{}.{}'.format(event['module']['namesapce'], event['module']['name'])
+                        # check whether tx contains colorblock
+                        if module_name in ('free.colorblock', 'free.colorblock-market'):
+                            # create id combined with tx_hash and event
+                            combined_info = 'tx_hash: {}, event: {}'.format(tx_hash, event)
+                            event_id = hash_id(combined_info)
+
+                            event_name = event['name']
+                            if event_name == 'TRANSFER':
+                                (item_id, sender, receiver, amount) = event['params']
+                                amount = int(amount)
+                                transfer = Transfer(
+                                    id=event_id,
+                                    chain_id=chain_id,
+                                    block_hash=block_hash,
+                                    block_height=block_height,
+                                    block_time=block_time,
+                                    tx_id=tx_id,
+                                    tx_hash=tx_hash,
+                                    tx_status=tx_status,
+                                    item_id=item_id,
+                                    sender=sender,
+                                    receiver=receiver,
+                                    amount=amount
+                                )
+                                db.session.add(transfer)
+                                db.session.commit()
+                    
+                outputs = [v for v in payload['outputs'] if v and 'colorblock' in v['module']['name']]
                 app.logger.debug(outputs)
-                is_verified = False
-                if outputs == []:
-                    is_verified = True
-                else:
+
+                if outputs != []:
                     # loop each tx log and update latest data into colorblock db
                     tx_ids = [v['txId'] for v in outputs]
                     pact_data = {
@@ -73,19 +112,16 @@ def sync_block(chain_id):
                     data = local_req(local_cmd)
                     app.logger.debug(data)
 
-                    is_verified = True
-
-                if is_verified:
-                    block = Block(
-                        hash=payload['hash'],
-                        chain_id=chain_id,
-                        block_height=payload['height'],
-                        block_time=datetime.fromtimestamp(payload['creationTime'] // 10 ** 6),
-                        verified=True
-                    )
-                    db.session.add(block)
-                    db.session.commit()
-                    app.logger.debug('insert into db.block')
+                block = Block(
+                    hash=payload['hash'],
+                    chain_id=chain_id,
+                    block_height=payload['height'],
+                    block_time=datetime.fromtimestamp(payload['creationTime'] // 10 ** 6),
+                    verified=True
+                )
+                db.session.add(block)
+                db.session.commit()
+                app.logger.debug('insert into db.block')
 
         time.sleep(2)
         sorted_blocks = sorted(previous_blocks, key=lambda x: x['height'])
@@ -96,17 +132,34 @@ def sync_block(chain_id):
     return 'end of sync'
 
 def update_ledger(item_id, user_id):
-    pact_code = '(free.colorblock.details "{}:{}")'.format(item_id, user_id)
+    ledger_id = '{}:{}'.format(item_id, user_id)
+    pact_code = '(free.colorblock.details "{}")'.format(ledger_id)
     local_cmd = build_local_cmd(pact_code)
     data = local_req(local_cmd)
     app.logger.debug(data)
+    balance = data['balance']
+    ledger = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+    if ledger:
+        ledger.balance = balance
+        db.session.commit()
+    else:
+        ledger = Ledger(
+            id=ledger_id,
+            item_id=item_id,
+            user_id=user_id,
+            balance=balance
+        )
+        db.session.add()
+        db.session.commit()
 
 
 # use this task to update existing data
-@routine_blueprint.route('/msearch/update/item')
+@routine_blueprint.route('/msearch/update/item', methods=['POST'])
+@admin_required
 def update_item_index():
     search.create_index(Item, update=True)
 
-@routine_blueprint.route('/msearch/update/user')
+@routine_blueprint.route('/msearch/update/user', methods=['POST'])
+@admin_required
 def update_user_index():
     search.create_index(User, update=True)

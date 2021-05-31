@@ -33,8 +33,8 @@ def get_all_items():
     items = Item.query.all()
     return jsonify(items)
 
-@item_blueprint.route('/', methods=['POST'])
 @login_required
+@item_blueprint.route('/', methods=['POST'])
 def submit_item():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))

@@ -63,3 +63,10 @@ def login_admin():
         return get_success_response('login as admin successfully')
     else:
         return get_error_response('admin key does not matched')
+
+@auth_blueprint.route('/admin_status', methods=['GET'])
+def admin_status():
+    if session.get('logged_as_admin'):
+        return get_success_response('yes')
+    else:
+        return get_error_response('not logged')
