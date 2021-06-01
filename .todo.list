@@ -1,3 +1,5 @@
 PACT
 ----
 1. add token id validate, ascii charset
+2. remove tags and description when uploading to pact server
+3. switch to google fonts cdn

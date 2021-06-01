@@ -3,7 +3,7 @@ import produce from 'immer';
 import undoable, { excludeAction } from 'redux-undo';
 import * as types from '../actions/actionTypes';
 
-export const defaultColor = 'rgba(49, 49, 49, 1)';
+export const defaultColor = 'rgba(255, 255, 255, 1)';
 export const defaultWidth = 16;
 export const defaultHeight = 16;
 export const defaultDuration = 1;

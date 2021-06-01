@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import Preview from '../common/Preview';
+import PixelTool from '../common/PixelTool';
 import * as actions from '../../store/actions/actionCreator';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
 import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
@@ -21,7 +22,7 @@ const CreatePage = (props) => {
 
   const [isPreviewStatic, setIsPreviewStatic] = useState(true);  // whether preview box is showing static frame or not. true: static, false: animation
   const [isPreviewLarge, setIsPreviewLarge] = useState(true);    // control the size of preview box
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalState, setModalState] = useState([false, '']);     // first value is open or not, second is type
   const [submitItem, setSubmitItem] = useState({});
   const [pickr, setPickr] = useState(null);
 
@@ -118,7 +119,7 @@ const CreatePage = (props) => {
 
   const clickUpload = () => {
     if (wallet.address) {
-      setIsModalOpen(true);
+      setModalState([true, 'upload']);
     } else {
       alert('please connect to wallet first');
     }
@@ -139,10 +140,10 @@ const CreatePage = (props) => {
       return;
     }
 
-    const cells = convertFramesToString(frames, singleFrameId);
+    const colors = convertFramesToString(frames, singleFrameId);
     
     // get hash id
-    const hashCmd = mkReq({'to_hash': cells})
+    const hashCmd = mkReq({'to_hash': colors})
     const id = await fetch(`${serverUrl}/tool/hash`, hashCmd).then(res => res.text());
 
     const rows = frames.height;
@@ -151,7 +152,7 @@ const CreatePage = (props) => {
     const intervals = convertFramesToIntervals(frames, singleFrameId);
     const account = wallet.address;
     const cmd = {
-      code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "cells") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-msg "supply") (read-keyset "accountKeyset"))`,
+      code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-msg "supply") (read-keyset "accountKeyset"))`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
@@ -163,19 +164,17 @@ const CreatePage = (props) => {
         role: 'Pay Gas',
         description: 'Pay Gas',
         cap: {
-          name: 'coin.GAS',
-          args: []
+          name: `${contractModules.colorblockGasStation}.GAS_PAYER`,
+          args: ['hi', {int: 1.0}, 1.0]
         }
       }
       ],
-      sender: account,
+      sender: 'colorblock-gas-payer-test',
       signingPubKey: account,
       data: {
         id,
         title,
-        tags,
-        description,
-        cells,
+        colors,
         rows,
         cols,
         frames: frameCnt,
@@ -188,7 +187,12 @@ const CreatePage = (props) => {
         }
       }
     };
-    const signedCmd = await getSignedCmd(cmd);
+    const postData = {
+      tags,
+      description
+    };
+    const signedCmd = await getSignedCmd(cmd, postData);
+
     console.log('get signedCmd', signedCmd);
     if (!signedCmd) {
       return;
@@ -326,7 +330,7 @@ const CreatePage = (props) => {
             </div>
             <div className='flex justify-between mt-1'>
               <div className='w-1/2 pr-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'>LOAD</button>
+                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded' onClick={ () => setModalState([true, 'tool']) }>LOAD</button>
               </div>
               <div className='w-1/2 pl-1'>
                 <button 
@@ -434,7 +438,7 @@ const CreatePage = (props) => {
                 </button>
               </div>
               <div className='w-1/3 mx-0.5'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 rounded' onClick={ () => setIsModalOpen(!isModalOpen) }>
+                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 rounded' onClick={ () => setModalState([true, 'display']) }>
                   <div className='relative -top-0.5'>
                     <FontAwesomeIcon icon={fa.faPhotoVideo} size='xs' />
                   </div>
@@ -514,79 +518,89 @@ const CreatePage = (props) => {
           </div>
         </div>
       </div>
-      { isModalOpen && 
-      <div data-role='creator modal' className='absolute top-0 w-full z-50 bg-white bg-opacity-90'>
-        <div className='relative mt-20 w-5/6 pb-20 mx-auto border border-red-500 bg-white'>
-          <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => setIsModalOpen(false) }>
-            <FontAwesomeIcon icon={fa.faTimes} />
-          </button>
-          <div data-role='upload subpage'>
-            <div data-role='image type selection' className='w-1/4 mx-auto mt-20 flex text-lg space-x-5 content-center'>
-              <label className={'px-4 py-2 '.concat(isPreviewStatic ? 'selected' : '')} onClick={ () => setIsPreviewStatic(true) }>single</label>
-              <label className={'px-4 py-2 '.concat(isPreviewStatic ? '' : 'selected')} onClick={ () => setIsPreviewStatic(false) }>animation</label>
-            </div>
-            <div data-role='item submit board' className='mt-10 flex'>
-              <div data-role='preview' className='w-1/2'>
-                <div 
-                  className='mx-auto'
-                  style={{ 
-                    width: `${previewSizeXL.width}rem`,
-                    height: `${previewSizeXL.height}rem`
-                  }}
-                >
-                {
-                  isPreviewStatic ? 
-                  <Preview
-                    task={{
-                      type: 'single',
-                      frames,
-                      frameId: frames.activeId
-                    }} 
-                  /> :
-                  <Preview 
-                    task={{
-                      type: 'animation',
-                      frames: frames
-                    }} 
-                  />
-                }
-                </div>
+      { modalState[0] && modalState[1] === 'upload' && 
+        <div data-role='creator modal' className='fixed top-0 left-0 w-full min-h-full bg-white bg-opacity-90'>
+          <div className='relative mt-20 w-5/6 pb-20 mx-auto border border-red-500 bg-white'>
+            <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => setModalState([false, '']) }>
+              <FontAwesomeIcon icon={fa.faTimes} />
+            </button>
+            <div data-role='upload subpage'>
+              <div data-role='image type selection' className='w-1/4 mx-auto mt-20 flex text-lg space-x-5 content-center'>
+                <label className={'px-4 py-2 '.concat(isPreviewStatic ? 'selected' : '')} onClick={ () => setIsPreviewStatic(true) }>single</label>
+                <label className={'px-4 py-2 '.concat(isPreviewStatic ? '' : 'selected')} onClick={ () => setIsPreviewStatic(false) }>animation</label>
               </div>
-              <div data-role='item submit' className='w-1/3' onSubmit={ (e) => submitItem(e) }>
-                <label className='my-1 w-full'>Title</label>
-                <input 
-                  type='text' 
-                  className='border border-black w-full' 
-                  onChange={ (e) => setSubmitItem({...submitItem, title: e.target.value}) } 
-                />
-                <label className='my-1 w-full'>Description</label>
-                <input 
-                  type='text' 
-                  className='border border-black w-full' 
-                  onChange={ (e) => setSubmitItem({...submitItem, description: e.target.value}) } 
-                />
-                <label className='my-1 w-full'>Tags - separated by comma</label>
-                <input 
-                  type='text' 
-                  className='border border-black w-full' 
-                  onChange={ (e) => setSubmitItem({...submitItem, tags: e.target.value}) } 
-                />
-                <label className='my-1 w-full'>Supply - totol amount of tokens</label>
-                <input 
-                  type='number'
-                  min='1'
-                  pattern='[0-9]{1,}'
-                  className='border border-black w-full' 
-                  onChange={ (e) => setSubmitItem({...submitItem, supply: e.target.value}) } 
-                />
-                <button className='mt-8 bg-red-500 text-white w-2/3 py-1 px-3' onClick={ () => onSubmitItem() }>
-                  Get signed from wallet
-                </button>
+              <div data-role='item submit board' className='mt-10 flex'>
+                <div data-role='preview' className='w-1/2'>
+                  <div 
+                    className='mx-auto'
+                    style={{ 
+                      width: `${previewSizeXL.width}rem`,
+                      height: `${previewSizeXL.height}rem`
+                    }}
+                  >
+                  {
+                    isPreviewStatic ? 
+                    <Preview
+                      task={{
+                        type: 'single',
+                        frames,
+                        frameId: frames.activeId
+                      }} 
+                    /> :
+                    <Preview 
+                      task={{
+                        type: 'animation',
+                        frames: frames
+                      }} 
+                    />
+                  }
+                  </div>
+                </div>
+                <div data-role='item submit' className='w-1/3' onSubmit={ (e) => submitItem(e) }>
+                  <label className='my-1 w-full'>Title</label>
+                  <input 
+                    type='text' 
+                    className='border border-black w-full' 
+                    onChange={ (e) => setSubmitItem({...submitItem, title: e.target.value}) } 
+                  />
+                  <label className='my-1 w-full'>Description</label>
+                  <input 
+                    type='text' 
+                    className='border border-black w-full' 
+                    onChange={ (e) => setSubmitItem({...submitItem, description: e.target.value}) } 
+                  />
+                  <label className='my-1 w-full'>Tags - separated by comma</label>
+                  <input 
+                    type='text' 
+                    className='border border-black w-full' 
+                    onChange={ (e) => setSubmitItem({...submitItem, tags: e.target.value}) } 
+                  />
+                  <label className='my-1 w-full'>Supply - totol amount of tokens</label>
+                  <input 
+                    type='number'
+                    min='1'
+                    pattern='[0-9]{1,}'
+                    className='border border-black w-full' 
+                    onChange={ (e) => setSubmitItem({...submitItem, supply: e.target.value}) } 
+                  />
+                  <button className='mt-8 bg-red-500 text-white w-2/3 py-1 px-3' onClick={ () => onSubmitItem() }>
+                    Get signed from wallet
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      }
+      { modalState[0] && modalState[1] === 'tool' &&
+        <div data-role='creator modal' className='fixed top-0 left-0 w-full min-h-full bg-white bg-opacity-90'>
+          <div className='relative mt-20 w-5/6 pb-20 mx-auto border border-red-500 bg-white'>
+            <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => setModalState([false, '']) }>
+              <FontAwesomeIcon icon={fa.faTimes} />
+            </button>
+            <PixelTool closeModal={ () => setModalState([false, '']) }/>
+          </div>
+        </div>
       }
     </div>
   );

@@ -18,6 +18,9 @@ CORS_ORIGINS = [
     'https://colorblock.art:3000'
 ]
 START_HEIGHT = None
+PIXEL_FILETYPES = ['jpg', 'png', 'gif', 'svg', 'bmp']
+ADMIN_SEED_PATH = ''  # for auth
+ITEM_DATA_PATH = ''   # for item upload manually
 
 # chainweb
 CHAINWEB = {

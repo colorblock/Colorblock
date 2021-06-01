@@ -37,24 +37,25 @@ export const getWalletAccounts = async () => {
   return accounts;
 }
 
-/*
 export const contractModules = {
-  colorblock: 'colorblock-test-v1',
-  cbmarket: 'cbmarket-test-v1',
-  marketAccount: 'colorblock-test-v1-market'
+  colorblock: 'free.colorblock-test',
+  colorblockMarket: 'free.colorblock-market-test',
+  colorblockGasStation: 'free.colorblock-gas-station-test',
+  marketAccount: 'colorblock-market-pool-test'
 };
-*/
+/*
 export const contractModules = {
   colorblock: 'free.colorblock',
   cbmarket: 'free.cbmarket',
   marketAccount: 'colorblock-market'
 };
+*/
 
 export const getSignedCmd = async (inputCmd, postData={}) => {
   // set cmd correctly
   const fixedCmd = {
-    gasPrice: 0.00001,
-    gasLimit: 14999,
+    gasPrice: 0.000000000001,
+    gasLimit: 150000,
     chainId: chainId,
     ttl: 600,
     networkId: NETWORKID,

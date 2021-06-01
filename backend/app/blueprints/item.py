@@ -1,4 +1,4 @@
-from flask import Blueprint, request, current_app as app, jsonify
+from flask import Blueprint, request, session, current_app as app, jsonify
 import json
 
 from app import db
@@ -33,8 +33,8 @@ def get_all_items():
     items = Item.query.all()
     return jsonify(items)
 
-@login_required
 @item_blueprint.route('/', methods=['POST'])
+@login_required
 def submit_item():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))
@@ -42,6 +42,28 @@ def submit_item():
     # add item type, strip supply
     cmd = json.loads(post_data['cmds'][0]['cmd'])
     item_data = cmd['payload']['exec']['data']
+
+    if session.get('logged_as_admin'):
+        file_path = app.config['ITEM_DATA_PATH']
+        item_data['account'] = app.config['COLORBLOCK_CUTE']['address']
+        item_data['accountKeyset']['keys'][0] = app.config['COLORBLOCK_CUTE']['public']
+        cmd['signers'][0]['clist'][0]['args'][1] = app.config['COLORBLOCK_CUTE']['address']
+        cmd['signers'][0]['public'] = app.config['COLORBLOCK_CUTE']['public']
+        del cmd['signers'][0]['pubKey']
+        cmd['signers'][0]['caps'] = cmd['signers'][0]['clist']
+        del cmd['signers'][0]['clist']
+        cmd['data'] = cmd['payload']['exec']['data']
+        cmd['code'] = cmd['payload']['exec']['code']
+        del cmd['payload']
+        del cmd['meta']['creationTime']
+        cmd['publicMeta'] = cmd['meta']
+        del cmd['meta']
+        del cmd['nonce']
+        f = open(file_path, 'w')
+        f.write(json.dumps(cmd))
+        f.close()
+        return get_error_response('write success')
+        
     item_data['type'] = 0 if item_data['frames'] == 1 else 1  # just 1 frame -> static -> type 0
     item_data['supply'] = int(item_data['supply'])
     app.logger.debug('item_data: {}'.format(item_data))

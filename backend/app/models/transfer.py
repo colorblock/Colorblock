@@ -18,7 +18,7 @@ class Transfer(db.Model):
     tx_status: str
     item_id: str
     sender: str
-    buyer: str
+    receiver: str
     amount: int
     created_at: str
     updated_at: str
@@ -27,7 +27,7 @@ class Transfer(db.Model):
     chain_id = db.Column(db.Integer)
     block_height = db.Column(db.Integer)
     block_hash = db.Column(db.String)
-    block_time = db.Column(db.Datetime)
+    block_time = db.Column(db.DateTime)
     tx_id = db.Column(db.Integer)
     tx_hash = db.Column(db.String)
     tx_status = db.Column(db.String)

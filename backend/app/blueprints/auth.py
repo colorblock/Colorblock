@@ -7,6 +7,8 @@ from app import db
 from app.models.user import User
 from app.utils.response import get_error_response, get_success_response
 from app.utils.pact import local_req
+from app.utils.crypto import random
+from app.utils.security import admin_required
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -55,14 +57,21 @@ def signup(account):
         app.logger.exception(e)
         return get_error_response('db error: {}'.format(e))
 
-@auth_blueprint.route('/login_admin', methods=['POST'])
-def login_admin():
-    post_data = request.json
-    if post_data['admin_key'] == app.config['ADMIN_KEY']:
+@auth_blueprint.route('/login_admin/<seed>', methods=['GET'])
+def login_admin(seed):
+    file_path = app.config['ADMIN_SEED_PATH']
+    f = open(file_path, 'r')
+    check_seed = f.read()
+    f.close()
+    if seed == check_seed:
         session['logged_as_admin'] = True
+        # clear seed
+        f = open(file_path, 'w')
+        f.write('')
+        f.close()
         return get_success_response('login as admin successfully')
     else:
-        return get_error_response('admin key does not matched')
+        return get_error_response('admin seed does not matched')
 
 @auth_blueprint.route('/admin_status', methods=['GET'])
 def admin_status():
@@ -70,3 +79,18 @@ def admin_status():
         return get_success_response('yes')
     else:
         return get_error_response('not logged')
+
+@auth_blueprint.route('/logout_admin', methods=['GET'])
+@admin_required
+def logout_admin():
+    session['logged_as_admin'] = False
+    return 'admin logged out'
+
+@auth_blueprint.route('/admin_seed', methods=['GET'])
+def admin_seed():
+    seed = random()
+    file_path = app.config['ADMIN_SEED_PATH']
+    f = open(file_path, 'w')
+    f.write(seed)
+    f.close()
+    return 'seed is generated'

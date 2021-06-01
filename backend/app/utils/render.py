@@ -1,4 +1,9 @@
+import os
+import copy
+import numpy as np
 from PIL import Image, ImageDraw
+from skimage import io
+from pyxelate import Pyx
 
 def generate_image_from_item(item_data):
     cells = item_data['cells']
@@ -8,7 +13,7 @@ def generate_image_from_item(item_data):
     intervals = item_data['intervals']
     id = item_data['id']
 
-    unit = 100
+    unit = 1
     width = unit * cols
     height = unit * rows
 
@@ -42,3 +47,36 @@ def generate_image_from_item(item_data):
     else:
         intervals = [v * 1000 for v in intervals]
         first_img.save('app/static/img/{}.gif'.format(id), save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
+
+def generate_pixels_from_image(file_path):
+    save_path = os.path.abspath(file_path)
+    img_obj = Image.open(file_path)
+    compressed = []
+    frames = img_obj.n_frames
+    for i in range(frames):
+        img_obj.seek(i)
+        image = np.array(img_obj)
+        print(image[:20])
+        print(image.shape)
+        image_width = image.shape[1]
+        if image_width < 64:
+            compressed.append(copy.copy(img_obj))
+        else:
+            palette = 16
+            # 1) Instantiate Pyx transformer
+            pyx = Pyx(width=64, palette=palette)
+            # 2) fit an image, allow Pyxelate to learn the color palette
+            pyx.fit(image)
+            # 3) transform image to pixel art using the learned color palette
+            new_image = pyx.transform(image)
+            # save new image with 'skimage.io.imsave()'
+            n = Image.fromarray(new_image)
+            compressed.append(n)
+            
+    if frames == 1:
+        compressed[0].save(file_path)
+    else:
+        intervals = [200 for v in range(frames)]
+        compressed[0].save(file_path, save_all=True, append_images=compressed[1:], duration=intervals, loop=0)
+
+    return save_path

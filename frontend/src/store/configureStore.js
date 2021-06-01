@@ -7,7 +7,8 @@ import reducer from './reducers/reducer';
 
 const persistConfig = {
   key: cookiesKey,
-  storage
+  storage,
+  blacklist: ['creator']
 };
 
 const persistedReducer = persistReducer(persistConfig, reducer);

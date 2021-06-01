@@ -1,4 +1,7 @@
 import GIFEncoder from 'gif-encoder-2';
+import gifFrames from 'gif-frames';
+
+import { defaultColor } from '../store/reducers/creator';
 
 const fillCanvasWithFrame = (ctx, frameInfo) => {
   const { cells, cols, cellSize } = frameInfo;
@@ -100,4 +103,84 @@ export const convertFramesToIntervals = (frames, singleFrameId=null) => {
   } else {
     return [1.0];
   }
+};
+
+export const createFramesFromImage = async (imageBlob) => {
+
+  const config = { 
+    url: URL.createObjectURL(imageBlob), 
+    frames: 'all',
+    outputType: 'canvas',
+    cumulative: true
+  };
+  const canvasList = [];
+  const delaysRaw = [];
+  await gifFrames(config).then((frameData) => {
+    frameData.forEach(frame => {
+      canvasList.push(frame.getImage());
+      delaysRaw.push(frame.frameInfo.delay);
+    });
+  });
+
+  /*
+  const canvas = await new Promise(resolve => {
+    // load image into canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.fillStyle = defaultColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas);
+    }
+    img.src = URL.createObjectURL(imageBlob);
+  });
+  */
+
+  const width = canvasList[0].width;
+  const height = canvasList[0].height;
+  const delays = delaysRaw.map(delay => delay / 100);
+  const duration = delays.reduce((a, b) => a + b, 0);
+  const intervals = []
+  delays.forEach((_, index) => {
+    const accuDelay = delays.slice(0, index + 1).reduce((a, b) => a + b, 0);
+    const interval = Math.floor(accuDelay * 100 / duration);
+    intervals.push(interval);
+  });
+  const frameIds = delaysRaw.map((_, index) => index);
+
+  const frames = {
+    width,
+    height,
+    activeId: 0,
+    duration,
+    frameIds,
+    frameList: {}
+  };
+
+  canvasList.forEach((canvas, index) => {
+    // read image data from canvas
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const pixels = imgData.data;
+    const cells = [];
+    for (var i = 0; i < pixels.length; i += 4) {
+      const color = pixels.slice(i, i + 3);
+      const rgba = `rgba(${color.join()},1)`;
+      cells.push(rgba);
+    }
+
+    const interval = intervals[index];
+    const frame = {
+      id: 0,
+      interval,
+      cells
+    };
+    frames.frameList[index] = frame;
+  });
+
+  return frames;
 };

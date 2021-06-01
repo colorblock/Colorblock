@@ -1,5 +1,7 @@
-from flask import Blueprint, request
-from app.utils.crypto import hash_id
+from flask import Blueprint, config, request, current_app as app, send_file
+
+from app.utils.crypto import hash_id, random
+from app.utils.render import generate_pixels_from_image
 
 tool_blueprint = Blueprint('tool', __name__)
 
@@ -9,3 +11,16 @@ def get_hash():
     input_str = post_data['to_hash']
     id = hash_id(input_str)
     return id
+
+@tool_blueprint.route('/pixel', methods=['POST'])
+def get_pixel():
+    image_id = random()
+    file = request.files['image']
+    file_type = file.filename.split('.')[-1].lower()
+    if file_type not in app.config['PIXEL_FILETYPES']:
+        return 'File extension is not supported', 500
+    else:
+        file_path = 'app/static/img/tmp/{}.{}'.format(image_id, file_type)
+        file.save(file_path)
+        save_path = generate_pixels_from_image(file_path)
+        return send_file(save_path, mimetype='image/{}'.format(file_type))

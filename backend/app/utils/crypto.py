@@ -11,6 +11,10 @@ def hash_id(input_str):
 def check_hash(input_str, id):
     return hash_id(input_str) == id
 
+def random():
+    h = blake2b(digest_size=8)
+    return h.hexdigest()
+
 def base64_to_string(b):
     return base64.b64decode(b + '==').decode('utf-8')
 
