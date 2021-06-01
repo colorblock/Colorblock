@@ -1,6 +1,6 @@
 (namespace (read-msg 'ns))
 
-(module colorblock-gas-station GOVERNANCE
+(module colorblock-gas-station-test GOVERNANCE
 
   (implements gas-payer-v1)
   (use coin)
@@ -14,7 +14,7 @@
 
   (defcap GOVERNANCE ()
     @doc " Only support upgrading by admin."
-    (enforce-guard (at 'guard (coin.details "colorblock-admin")))
+    (enforce-guard (at 'guard (coin.details "colorblock-admin-test")))
   )
 
   (defcap GAS_PAYER:bool
@@ -52,6 +52,6 @@
 (if (read-msg "upgrade")
   ["upgrade"]
   [
-    (coin.transfer-create "colorblock-admin-test" "colorblock-gas-payer-test" (free.colorblock-gas-station.create-gas-payer-guard) 1)
+    (coin.transfer-create "colorblock-admin-test" "colorblock-gas-payer-test" (colorblock-gas-station-test.create-gas-payer-guard) 0.01)
   ]
 )

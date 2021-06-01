@@ -1,12 +1,12 @@
 (namespace (read-msg 'ns))
 
-(module colorblock-market GOVERNANCE
+(module colorblock-market-test GOVERNANCE
   @doc "module for \
       \1. helping users release items into market for sale \
       \2. supporting pricing and trading efficiently. "
 
   (use coin [ details ])
-  (use colorblock)
+  (use colorblock-test)
 
   ; -------------------------------------------------------
   ; Schemas and Tables
@@ -37,7 +37,7 @@
 
   (defcap GOVERNANCE ()
     @doc " Only support upgrading by admin "
-    (enforce-guard (at 'guard (coin.details "colorblock-admin")))
+    (enforce-guard (at 'guard (coin.details "colorblock-admin-test")))
   )
 
   (defcap RELEASE:bool 
@@ -57,7 +57,7 @@
     (enforce-unit token amount)
 
     (let 
-      ((balance (colorblock.get-balance token seller)))
+      ((balance (colorblock-test.get-balance token seller)))
       (enforce 
         ( > 
           balance
@@ -132,8 +132,8 @@
   ; -------------------------------------------------------
   ; Constants
 
-  (defconst COLORBLOCK_MARKET_POOL "colorblock-market-pool"
-    "The official account of colorblock market pool"
+  (defconst COLORBLOCK_MARKET_POOL "colorblock-market-pool-test"
+    "The official account of colorblock market pool-test"
   )
 
   (defconst FEES_RATE 0.01
@@ -171,8 +171,8 @@
     @doc " Release item for sale."
     (with-capability (RELEASE token account price amount)
       ; Transfer token to platform
-      (install-capability (colorblock.TRANSFER token account COLORBLOCK_MARKET_POOL amount))
-      (colorblock.transfer-create token account COLORBLOCK_MARKET_POOL (colorblock-market-guard) amount)
+      (install-capability (colorblock-test.TRANSFER token account COLORBLOCK_MARKET_POOL amount))
+      (colorblock-test.transfer-create token account COLORBLOCK_MARKET_POOL (colorblock-market-guard) amount)
       (write deals (key token account) {
         "token" : token,
         "seller" : account,
@@ -196,7 +196,7 @@
           (remain-amount (at 'remain deal))
         )
         ; Check ownership
-        (install-capability (colorblock.AUTH token account))
+        (install-capability (colorblock-test.AUTH token account))
         (validate-ownership token account)
 
         ; Transfer token back
@@ -206,8 +206,8 @@
             0.0
           )
           [
-            (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL account remain-amount))
-            (colorblock.transfer token COLORBLOCK_MARKET_POOL account remain-amount)
+            (install-capability (colorblock-test.TRANSFER token COLORBLOCK_MARKET_POOL account remain-amount))
+            (colorblock-test.transfer token COLORBLOCK_MARKET_POOL account remain-amount)
           ]
           "no need to transfer token"
         )
@@ -228,7 +228,7 @@
       guard:guard
     )
     @doc " Create account and purchase item"
-    (colorblock.create-account-maybe token buyer guard)
+    (colorblock-test.create-account-maybe token buyer guard)
     (purchase token buyer seller amount)
   )
 
@@ -241,7 +241,7 @@
     @doc " Purchase item."
 
     ; validate receiver first
-    (install-capability (colorblock.AUTH token buyer))
+    (install-capability (colorblock-test.AUTH token buyer))
     (validate-ownership token buyer)
 
     (with-capability (PURCHASE token buyer seller amount)
@@ -263,10 +263,10 @@
           )
           (install-capability (coin.TRANSFER buyer seller price))
           (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET_POOL fees))
-          (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL buyer amount))
+          (install-capability (colorblock-test.TRANSFER token COLORBLOCK_MARKET_POOL buyer amount))
           (coin.transfer buyer seller price)
           (coin.transfer buyer COLORBLOCK_MARKET_POOL fees)
-          (colorblock.transfer token COLORBLOCK_MARKET_POOL buyer amount)
+          (colorblock-test.transfer token COLORBLOCK_MARKET_POOL buyer amount)
           (update deals (key token seller) {
             "remain": remain-amount
           })
@@ -307,8 +307,8 @@
   (defun all-txlog (tx-id:integer)
     {
       "tx-id": tx-id,
-      "items": (colorblock.items-txlog tx-id),
-      "ledger": (colorblock.ledger-txlog tx-id),
+      "items": (colorblock-test.items-txlog tx-id),
+      "ledger": (colorblock-test.ledger-txlog tx-id),
       "deals": (deals-txlog tx-id)
     }
   )

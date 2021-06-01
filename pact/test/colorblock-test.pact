@@ -1,13 +1,13 @@
 (namespace (read-msg 'ns))
 
-(module colorblock GOVERNANCE
+(module colorblock-test GOVERNANCE
   @doc "module for \
       \1. creating colorblock user \
       \2. creating/transfering colorblock items"
 
   (use coin [ details ])
-  (use fungible-util)
-  (implements poly-fungible-v1)
+  (use colorblock-fungible-util-test)
+  (implements colorblock-poly-fungible-v1-test)
 
   ; -------------------------------------------------------
   ; Schemas and Tables
@@ -62,7 +62,7 @@
 
   (defcap GOVERNANCE ()
     @doc " Only support upgrading by admin."
-    (enforce-guard (at 'guard (coin.details "colorblock-admin")))
+    (enforce-guard (at 'guard (coin.details "colorblock-admin-test")))
   )
 
   (defcap AUTH (token:string account:string)
@@ -440,7 +440,7 @@
     (at 'balance (read ledger (key token account)))
   )
 
-  (defun details:object{poly-fungible-v1.account-details} 
+  (defun details:object{colorblock-poly-fungible-v1-test.account-details} 
     ( token:string 
       account:string
     )

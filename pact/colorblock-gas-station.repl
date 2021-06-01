@@ -1,0 +1,24 @@
+;; -----------------------------
+;; Prepare
+;; -----------------------------
+
+(begin-tx)
+
+(define-namespace 'test (sig-keyset) (sig-keyset))
+(env-data { 
+  "ns": "test",
+  "admin-keyset": {"keys": ["admin"]},
+  "admin-keyset-copy": {"keys": ["admin-copy"]},
+  "alice-keyset": {"keys": ["alice"]},
+  "bob-keyset": {"keys": ["bob"]},
+  "lucy-keyset": {"keys": ["lucy"]},
+  "jack-keyset": {"keys": ["jack"]},
+  "upgrade": false
+})
+
+(load "coin/fungible-v1.pact")
+(load "coin/coin.pact")
+(load "gas-payer-v1.pact")
+(load "colorblock-gas-station.pact")
+
+(commit-tx)

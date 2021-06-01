@@ -1,0 +1,26 @@
+;; -----------------------------
+;; Prepare
+;; -----------------------------
+
+(begin-tx)
+
+(define-namespace 'test (sig-keyset) (sig-keyset))
+(env-data { 
+  "ns": "test",
+  "admin-keyset": {"keys": ["admin"]},
+  "admin-keyset-copy": {"keys": ["admin-copy"]},
+  "alice-keyset": {"keys": ["alice"]},
+  "bob-keyset": {"keys": ["bob"]},
+  "lucy-keyset": {"keys": ["lucy"]},
+  "jack-keyset": {"keys": ["jack"]},
+  "upgrade": false
+})
+(load "../../poly-fungible-v1.pact")
+
+(load "../../fungible-util.pact")
+
+(load "../../coin/fungible-v1.pact")
+(load "../../coin/coin.pact")
+(load "../../test/colorblock-test.pact")
+
+(commit-tx)

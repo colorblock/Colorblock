@@ -152,7 +152,7 @@
 )
 
 (env-sigs [{"key": "admin", "caps": [
-  (colorblock.MINT "item-id" "admin")
+  (colorblock.AUTH "item-id" "admin")
 ]}])
 (expect
   "Recall will succeed with correct capabilities"
@@ -235,7 +235,7 @@
 )
 
 (env-sigs [{"key": "alice", "caps": [
-  (colorblock.MINT "item-id" "alice")
+  (colorblock.AUTH "item-id" "alice")
   (coin.TRANSFER "alice" "colorblock-market-pool" 0.1)
   (coin.TRANSFER "alice" "admin" 10.0)
   (colorblock.TRANSFER "item-id" "colorblock-market-pool" "alice" 1.0)
