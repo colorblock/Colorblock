@@ -386,6 +386,10 @@
     )
   )
 
+  (defun item-details:{item-schema} (id:string)
+    (read items id)
+  )
+
 
   ; -------------------------------------------------------
   ; Account Functions

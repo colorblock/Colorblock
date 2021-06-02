@@ -1,0 +1,13 @@
+codeFile: "../../test/colorblock-gas-station-test.pact"
+publicMeta:
+  chainId: "0"
+  sender: "colorblock-admin-test"
+  gasLimit: 10000
+  gasPrice: 0.00000001
+  ttl: 28800
+data:
+  ns: "free"
+  upgrade: true
+signers:
+  - public: "b7220f7a3c588baf0fba64dea081067eb565d29185bbdd970e42e7b67e48fcc8"
+networkId: "mainnet01"

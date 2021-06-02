@@ -103,6 +103,7 @@
     ( token:string
       buyer:string 
       seller:string
+      price:decimal
       amount:decimal
     )
     @doc "Notifies purchase of TOKEN from SELLER to BUYER"
@@ -111,8 +112,13 @@
     (enforce-unit token amount)
     (with-read deals (key token seller)
       { "remain" := remain,
-        "open" := open 
+        "open" := open,
+        "price" := sale-price
       }
+      (enforce
+        (= sale-price price)
+        "Purchase price must equal sale-price"
+      )
       (enforce
         (<= amount remain)
         "Purchase amount cannot be larger than remain amount"
@@ -224,18 +230,20 @@
     ( token:string
       buyer:string
       seller:string
+      price:decimal
       amount:decimal
       guard:guard
     )
     @doc " Create account and purchase item"
     (colorblock-test.create-account-maybe token buyer guard)
-    (purchase token buyer seller amount)
+    (purchase token buyer seller price amount)
   )
 
   (defun purchase:string 
     ( token:string
       buyer:string
       seller:string
+      price:decimal
       amount:decimal
     )
     @doc " Purchase item."
@@ -244,10 +252,9 @@
     (install-capability (colorblock-test.AUTH token buyer))
     (validate-ownership token buyer)
 
-    (with-capability (PURCHASE token buyer seller amount)
+    (with-capability (PURCHASE token buyer seller price amount)
       (with-read deals (key token seller)
-        { "price" := price,
-          "total" := total-amount
+        { "total" := total-amount
         }
         (let* 
           (
