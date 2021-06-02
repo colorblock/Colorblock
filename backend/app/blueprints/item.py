@@ -118,7 +118,7 @@ def validate_item(item):
         return get_error_response('supply is not correct')
     
     # validate hash
-    if not check_hash(item['cells'], item['id']):
+    if not check_hash(item['colors'], item['id']):
         return get_error_response('hash error')
 
     # check duplication

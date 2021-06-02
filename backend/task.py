@@ -5,7 +5,7 @@ import time
 
 import instance.config as settings
 
-class SyncBot:
+class TaskBot:
 
     def __init__(self):
         self.s = requests.Session()
@@ -25,10 +25,16 @@ class SyncBot:
         url = 'http://localhost:5000/routine/sync/0'
         res = self.s.post(url)
         print(res.text)
+
+    def mint(self):
+        url = 'http://localhost:5000/mint'
+        res = self.s.post(url)
+        print(res.text)
             
 
 if __name__ == '__main__':
-    bot = SyncBot()
+    bot = TaskBot()
     bot.login_as_admin()
     print('admin logged successfully')
-    bot.run()
+    #bot.run()
+    bot.mint()

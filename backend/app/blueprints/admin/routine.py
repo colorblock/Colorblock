@@ -104,7 +104,9 @@ def sync_block(chain_id):
                                 db.session.commit()
                             elif event_name == 'MINT':
                                 (item_id, sender) = event['params']
-                                update_item(item_id)
+                                update_mint(item_id)
+                                if tx_status == 'success':
+                                    update_item(item_id)
                             elif event_name == 'RELEASE':
                                 (item_id, seller, price, amount) = event['params']
                                 update_release(item_id, seller, price, amount)
@@ -200,6 +202,9 @@ def update_item(item_id):
         )
         db.session.add(item)
         db.session.commit()
+
+def update_mint(item_id):
+    pass
 
 def update_release(item_id, seller, price, amount):
     pass

@@ -48,6 +48,13 @@ def generate_image_from_item(item_data):
         intervals = [v * 1000 for v in intervals]
         first_img.save('app/static/img/{}.gif'.format(id), save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
 
+def hex_to_rgba(hex):
+    h = hex.lstrip('#')
+    return [int(h[i:i+2], 16) for i in (0, 2, 4)] + [1]
+
+def rgba_to_hex(rgba):
+    return '#' + ''.join(f'{i:02X}' for i in rgba[:3])
+
 def generate_pixels_from_image(file_path):
     save_path = os.path.abspath(file_path)
     img_obj = Image.open(file_path)

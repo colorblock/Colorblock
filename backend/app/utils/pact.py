@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 import hashlib
 import json
+import yaml
 import time
 
 from app.utils.response import get_error_response, get_success_response
@@ -72,6 +73,30 @@ def local_req(local_cmd):
 
     app.logger.debug('return data: {}'.format(return_data))
     return return_data
+
+def build_unsigned_send_cmd(pact_code, pact_data={}, cmd_config={}, output_path=''):
+    config = app.config['CHAINWEB']
+    cmd = {
+        'networkId': config['NETWORK'],
+        'signers': [{
+            'public': cmd_config['public_key'],
+            'caps': cmd_config['capabilities'],
+        }],
+        'data': pact_data,
+        'code': pact_code,
+        'publicMeta': {
+            'ttl': 7200,
+            'gasLimit': cmd_config['gas_limit'],
+            'gasPrice': cmd_config['gas_price'],
+            'chainId': config['CHAIN_ID'],
+            'sender': cmd_config['sender'],
+        },
+    }
+    
+    with open(output_path, 'w') as outfile:
+        yaml.dump(cmd, outfile, default_flow_style=False)
+
+    return 'success'
 
 def build_local_cmd(pact_code, pact_data={}):
     config = app.config['CHAINWEB']

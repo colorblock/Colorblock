@@ -91,7 +91,7 @@ export const Wallet = (props) => {
             <p className='my-2'>select your Zelcore account below.</p>
             <div className='relative w-2/5 mx-auto'>
               <select
-                className='w-full border border-black px-10 border rounded-xl'
+                className='w-full border border-black px-10 rounded-xl'
                 onChange={ (e) => setSelectedKey(e.target.value) }
               >
                 { wallet.keyList &&

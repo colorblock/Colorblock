@@ -48,8 +48,10 @@ def create_app():
 
     from app.blueprints.auth import auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/')
-    from app.blueprints.routine import routine_blueprint
+    from app.blueprints.admin.routine import routine_blueprint
     app.register_blueprint(routine_blueprint, url_prefix='/routine')
+    from app.blueprints.admin.mint import mint_blueprint
+    app.register_blueprint(mint_blueprint, url_prefix='/mint')
 
     return app
 
