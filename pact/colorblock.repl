@@ -237,18 +237,18 @@
 
 (expect-failure
   "Creating will fail without capability"
-  "precision violation"
+  "Managed capability not installed:"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.2 (read-keyset "admin-keyset"))
 )
 
-(env-sigs [{"key": "bob", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(env-sigs [{"key": "bob", "caps": [(colorblock.MINT "item-id" "admin" 1.0)]}])
 (expect-failure
   "Creating will fail with incorrect capability"
   "Keyset failure (keys-all): [admin]"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
-(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "bob")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "bob" 1.0)]}])
 (expect-failure
   "Creating will fail with incorrect capability"
   "Managed capability not installed: (test.colorblock.MINT"
@@ -265,14 +265,14 @@
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
-(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id-other" "admin")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id-other" "admin" 1.0)]}])
 (expect-failure
   "Creating will fail with incorrect capability"
   "Managed capability not installed: (test.colorblock.MINT"
   (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 )
 
-(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin" 1.0)]}])
 (expect
   "Creating will succeed with capability"
   "Write succeeded"
@@ -284,7 +284,7 @@
 (begin-tx)
 (namespace 'test)
 
-(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin" 1.0)]}])
 (expect-failure
   "Creating will fail as item is duplicate"
   "The item is already existed"

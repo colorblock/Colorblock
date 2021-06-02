@@ -80,8 +80,9 @@
     true
   )
 
-  (defcap MINT (token:string account:string)
+  (defcap MINT (token:string account:string amount:decimal)
     @managed   ; make sure one-shot (only-once), will trigger event
+    (enforce-unit token amount)
     (compose-capability (AUTH token account))
     (compose-capability (CREDIT token account))
   )
@@ -355,11 +356,8 @@
     ; Validate intervals
     (valid-intervals intervals frames)
 
-    ; Validate amount
-    (enforce-unit token amount)
-
     ; Validate creator
-    (with-capability (MINT token creator)
+    (with-capability (MINT token creator amount)
       ; Insert into DB
       (let
         ; Create hash with colors
