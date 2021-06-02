@@ -30,10 +30,9 @@ CHAINWEB = {
 }
 
 # url
-PACT_URL = 'http://api.colorblockart.com'
-PACT_SEND_URL = '{}/api/v1/send'.format(PACT_URL)
-PACT_POLL_URL = '{}/api/v1/poll'.format(PACT_URL)
-PACT_LOCAL_URL = '{}/api/v1/local'.format(PACT_URL)
+PACT_SEND_URL = '{}/chainweb/0.0/{}/chain/{}/pact/api/v1/send'.format(CHAINWEB['HOST'], CHAINWEB['NETWORK'], CHAINWEB['CHAIN_ID'])
+PACT_POLL_URL = '{}/chainweb/0.0/{}/chain/{}/pact/api/v1/poll'.format(CHAINWEB['HOST'], CHAINWEB['NETWORK'], CHAINWEB['CHAIN_ID'])
+PACT_LOCAL_URL = '{}/chainweb/0.0/{}/chain/{}/pact/api/v1/local'.format(CHAINWEB['HOST'], CHAINWEB['NETWORK'], CHAINWEB['CHAIN_ID'])
 
 # item
 ITEM_MIN_SUPPLY = 1

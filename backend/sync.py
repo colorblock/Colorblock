@@ -11,17 +11,15 @@ class SyncBot:
         self.s = requests.Session()
 
     def login_as_admin(self):
-        url = 'http://localhost:5000/login_admin'
-        data = {
-            'admin_key': settings.ADMIN_KEY
-        }
-        res = self.s.post(url, json=data)
-        print(res.text)
-
-    def check_admin_status(self):
-        url = 'http://localhost:5000/admin_status'
+        url = 'http://localhost:5000/admin_seed'
         res = self.s.get(url)
-        return res.json()['status'] == 'success'
+        file_path = settings.ADMIN_SEED_PATH
+        f = open(file_path, 'r')
+        seed = f.read()
+        f.close()
+        url = 'http://localhost:5000/login_admin/{}'.format(seed)
+        res = self.s.get(url)
+        print(res.text)
 
     def run(self):
         url = 'http://localhost:5000/routine/sync/0'

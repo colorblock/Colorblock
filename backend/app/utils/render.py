@@ -56,8 +56,6 @@ def generate_pixels_from_image(file_path):
     for i in range(frames):
         img_obj.seek(i)
         image = np.array(img_obj)
-        print(image[:20])
-        print(image.shape)
         image_width = image.shape[1]
         if image_width < 64:
             compressed.append(copy.copy(img_obj))

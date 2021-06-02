@@ -28,25 +28,30 @@ def sync_block(chain_id):
     current_block_height = latest_block['height']
     current_block_hash = latest_block['hash']
     while True:
-        # confirm whether there're unverified blocks
-        verified_blocks = db.session.query(Block).filter((Block.block_height <= current_block_height) & (Block.block_height > current_block_height - height_step) & (Block.verified == True)).all()
-        if len(verified_blocks) == height_step:
-            # if all verified, then skip
-            current_block_height -= height_step
-            continue
         if current_block_height < app.config['START_HEIGHT']:
             # if less than START_HEIGHT
             break
+        # confirm whether there're unverified blocks
+        fetched_blocks = db.session.query(Block).filter(Block.block_height <= current_block_height, Block.block_height > current_block_height - height_step).all()
+        fetched_block_hashes = [v.hash for v in fetched_blocks]
+        verified_blocks = [v for v in fetched_blocks if v.verified == True]
+        app.logger.debug('fetched_blocks len: {}, verified_blocks len: {}'.format(len(fetched_blocks), len(verified_blocks)))
+        if len(verified_blocks) == height_step:
+            # if all verified, then skip
+            sorted_blocks = sorted(fetched_blocks, key=lambda x: x.block_height)
+            current_block_height = sorted_blocks[0].block_height
+            current_block_hash = sorted_blocks[0].hash
+            app.logger.debug('all blocks verified, ready for next turn, current block height: {}, hash: {}'.format(current_block_height, current_block_hash))
+
+            continue
 
         # fetch previous blocks
         previous_blocks = fetch_previous_blocks(current_block_hash, limit=height_step)
-        app.logger.debug(previous_blocks)
 
         # fetch previous txs
         for block in previous_blocks:
             block['payload_hash'] = block['payloadHash']
         payloads = fetch_payloads(previous_blocks)
-        app.logger.debug(payloads)
 
         # loop over payloads and verify each payload
         for payload in payloads:
@@ -67,11 +72,12 @@ def sync_block(chain_id):
                     tx_hash = output['reqKey']
                     tx_status = output['result']['status']
 
-                    events = output['events']
+                    events = output.get('events', [])
                     for event in events:
-                        module_name = '{}.{}'.format(event['module']['namesapce'], event['module']['name'])
+                        module_name = '{}.{}'.format(event['module']['namespace'], event['module']['name'])
                         # check whether tx contains colorblock
-                        if module_name in ('free.colorblock', 'free.colorblock-market'):
+                        if module_name in ('free.colorblock', 'free.colorblock-market', 'free.colorblock-test', 'free.colorblock-market-test'):
+                            app.logger.debug(output)
                             # create id combined with tx_hash and event
                             combined_info = 'tx_hash: {}, event: {}'.format(tx_hash, event)
                             event_id = hash_id(combined_info)
@@ -96,38 +102,61 @@ def sync_block(chain_id):
                                 )
                                 db.session.add(transfer)
                                 db.session.commit()
+                            elif event_name == 'MINT':
+                                (item_id, sender) = event['params']
+                                update_item(item_id)
+                            elif event_name == 'RELEASE':
+                                (item_id, seller, price, amount) = event['params']
+                                update_release(item_id, seller, price, amount)
+                            elif event_name == 'RECALL':
+                                (item_id, seller) = event['params']
+                                update_recall(item_id)
+                            elif event_name == 'PURCHASE':
+                                (item_id, buyer, sender, price, amount) = event['params']
+                                update_purchase(item_id, buyer, sender, price, amount)
                     
-                outputs = [v for v in payload['outputs'] if v and 'colorblock' in v['module']['name']]
-                app.logger.debug(outputs)
+                filtered_tx_ids = []
+                for input, index in enumerate(payload['inputs']):
+                    if 'colorblock' in json.dumps(input):
+                        app.logger.debug('input: {}, index: {}'.format(input, index))
+                        tx_id = payload['outputs'][index]['txId']
+                        filtered_tx_ids.append(tx_id)
 
-                if outputs != []:
+                if filtered_tx_ids != []:
                     # loop each tx log and update latest data into colorblock db
-                    tx_ids = [v['txId'] for v in outputs]
                     pact_data = {
-                        'tx-ids': tx_ids
+                        'tx-ids': filtered_tx_ids
                     }
-                    pact_code = '(free.colorblock-market.all-txlogs (read-msg "tx-ids"))'
+                    pact_code = '(free.colorblock-market-test.all-txlogs (read-msg "tx-ids"))'
                     local_cmd = build_local_cmd(pact_code, pact_data)
                     app.logger.debug(json.dumps(local_cmd))
                     data = local_req(local_cmd)
                     app.logger.debug(data)
 
-                block = Block(
-                    hash=payload['hash'],
-                    chain_id=chain_id,
-                    block_height=payload['height'],
-                    block_time=datetime.fromtimestamp(payload['creationTime'] // 10 ** 6),
-                    verified=True
-                )
-                db.session.add(block)
-                db.session.commit()
-                app.logger.debug('insert into db.block')
+                hash = payload['hash']
+                if hash in fetched_block_hashes:
+                    block = fetched_blocks[fetched_block_hashes.index(hash)]
+                    block.verified = True
+                else:
+                    block = Block(
+                        hash=payload['hash'],
+                        chain_id=chain_id,
+                        block_height=payload['height'],
+                        block_time=datetime.fromtimestamp(payload['creationTime'] // 10 ** 6),
+                        verified=True
+                    )
+                    db.session.add(block)
 
-        time.sleep(2)
+        # commit to blockchain
+        db.session.commit()
+        app.logger.debug('insert into db.block')
+
+        # ready for next round
+        time.sleep(10)
         sorted_blocks = sorted(previous_blocks, key=lambda x: x['height'])
         current_block_height = sorted_blocks[0]['height']
         current_block_hash = sorted_blocks[0]['hash']
-        app.logger.debug('current block height: {}, hash: {}'.format(current_block_height, current_block_hash))
+        app.logger.debug('finished, current block height: {}, hash: {}'.format(current_block_height, current_block_hash))
 
     return 'end of sync'
 
@@ -151,6 +180,36 @@ def update_ledger(item_id, user_id):
         )
         db.session.add()
         db.session.commit()
+
+def update_item(item_id):
+    item = db.session.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        pact_code = '(free.colorblock-test.item-details "{}")'.format(item_id)
+        local_cmd = build_local_cmd(pact_code)
+        result = local_req(local_cmd)
+        app.logger.debug(result)
+        if result['status'] != 'success':
+            return result
+        
+        item_data = result['message']
+        item = Item(
+            id=item_id,
+            title=item_data['title'],
+            creator=item_data['creator'],
+            supply=item_data['supply']
+        )
+        db.session.add(item)
+        db.session.commit()
+
+def update_release(item_id, seller, price, amount):
+    pass
+
+def update_recall(item_id, seller):
+    pass
+
+def update_purchase(item_id, buyer, seller, price, amount):
+    pass
+
 
 
 # use this task to update existing data

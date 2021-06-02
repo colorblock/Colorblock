@@ -64,12 +64,16 @@ def fetch_payloads(blocks):
 
     payloads = []
     for index, payload in enumerate(data):
+        inputs = []
         outputs = []
         for tx in payload['transactions']:
+            input = json.loads(base64_to_string(tx[0]))
             output = json.loads(base64_to_string(tx[1]))
+            inputs.append(input)
             outputs.append(output)
 
         block = blocks[index]
+        block['inputs'] = inputs
         block['outputs'] = outputs
         payloads.append(block)
     
