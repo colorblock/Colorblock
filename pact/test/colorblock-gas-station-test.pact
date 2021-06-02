@@ -26,13 +26,13 @@
     (enforce (= 1 (length (at "exec-code" (read-msg)))) "Tx of only one pact function")
     (enforce 
       ( or
-        (= "(free.colorblock." (take 16 (at 0 (at "exec-code" (read-msg)))))
-        (= "(free.colorblock-market." (take 23 (at 0 (at "exec-code" (read-msg)))))
+        (= "(free.colorblock-test." (take 22 (at 0 (at "exec-code" (read-msg)))))
+        (= "(free.colorblock-market-test." (take 29 (at 0 (at "exec-code" (read-msg)))))
       )
       "only colorblock smart contract"
     )
     (enforce-below-or-at-gas-price 0.000000000001)
-    (enforce-below-or-at-gas-limit 800)
+    (enforce-below-or-at-gas-limit 150000)
     (compose-capability (ALLOW_GAS))
   )
 

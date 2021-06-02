@@ -206,21 +206,21 @@
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
-  (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "bob" "admin" 10.0 1.0)
 )
 
 (env-sigs [{"key": "bob", "caps": []}])
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
-  (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "bob" "admin" 10.0 1.0)
 )
 
 (env-sigs [{"key": "bob", "caps": [(colorblock.TRANSFER "item-id" "colorblock-market-pool" "bob" 1.0)]}])
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
   "Keyset failure (keys-all): [bob]"
-  (colorblock-market.purchase "item-id" "bob" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "bob" "admin" 10.0 1.0)
 )
 
 (env-sigs [{"key": "alice", "caps": [
@@ -231,7 +231,7 @@
 (expect-failure
   "Purchase will fail as there has no record in ledger"
   "row not found: item-id:alice"
-  (colorblock-market.purchase "item-id" "alice" "admin" 1.0)
+  (colorblock-market.purchase "item-id" "alice" "admin" 10.0 1.0)
 )
 
 (env-sigs [{"key": "alice", "caps": [
@@ -243,18 +243,18 @@
 (expect-failure
   "Purchase will fail as precision is illegal"
   "precision violation"
-  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 1.2 (read-keyset "alice-keyset"))
+  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 10.0 1.2 (read-keyset "alice-keyset"))
 )
 (expect-failure
   "Purchase will fail as purchase amount is illegal"
   "Purchase amount cannot be larger than remain amount"
-  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 2.0 (read-keyset "alice-keyset"))
+  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 10.0 2.0 (read-keyset "alice-keyset"))
 )
 
 (expect
   "Purchase-new-account will succeed with correct capabilities"
   "Write succeeded"
-  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 1.0 (read-keyset "alice-keyset"))
+  (colorblock-market.purchase-new-account "item-id" "alice" "admin" 10.0 1.0 (read-keyset "alice-keyset"))
 )
 
 (expect
