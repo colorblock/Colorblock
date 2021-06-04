@@ -2,6 +2,7 @@ from flask import Blueprint, request, current_app as app, jsonify
 from datetime import datetime
 import json
 import time
+import os
 
 from app import db, search
 from app.models.item import Item
@@ -10,6 +11,7 @@ from app.models.ledger import Ledger
 from app.models.transfer import Transfer
 from app.models.block import Block
 from app.utils.crypto import hash_id
+from app.utils.render import generate_image_from_item
 from app.utils.pact import local_req, build_local_cmd
 from app.utils.security import admin_required
 from app.utils.chainweb import fetch_latest_block, fetch_previous_blocks, fetch_payloads
@@ -103,7 +105,7 @@ def sync_block(chain_id):
                                 db.session.add(transfer)
                                 db.session.commit()
                             elif event_name == 'MINT':
-                                (item_id, sender) = event['params']
+                                item_id = event['params'][0]
                                 update_mint(item_id)
                                 if tx_status == 'success':
                                     update_item(item_id)
@@ -184,24 +186,36 @@ def update_ledger(item_id, user_id):
         db.session.commit()
 
 def update_item(item_id):
+    pact_code = '(free.colorblock-test.item-details "{}")'.format(item_id)
+    local_cmd = build_local_cmd(pact_code)
+    result = local_req(local_cmd)
+    app.logger.debug(result)
+    if result['status'] != 'success':
+        return result
+    
+    item_data = result['message']
+    item_data['frames'] = item_data['frames']['int']
+    item_data['cols'] = item_data['cols']['int']
+    item_data['rows'] = item_data['rows']['int']
+    item_data['id'] = item_id
+    item_type = 1 if item_data['frames'] > 1 else 0
+        
     item = db.session.query(Item).filter(Item.id == item_id).first()
     if not item:
-        pact_code = '(free.colorblock-test.item-details "{}")'.format(item_id)
-        local_cmd = build_local_cmd(pact_code)
-        result = local_req(local_cmd)
-        app.logger.debug(result)
-        if result['status'] != 'success':
-            return result
-        
-        item_data = result['message']
         item = Item(
             id=item_id,
             title=item_data['title'],
+            type=item_type,
             creator=item_data['creator'],
             supply=item_data['supply']
         )
         db.session.add(item)
         db.session.commit()
+
+    file_type = 'gif' if item.type == 1 else 'png'
+    file_path = 'app/static/img/{}.{}'.format(item.id, file_type)
+    if not os.path.exists(file_path):
+        generate_image_from_item(item_data)
 
 def update_mint(item_id):
     pass

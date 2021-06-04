@@ -61,16 +61,21 @@ def mint_item():
             img_obj.seek(i)
             new_img = copy.copy(img_obj)
             img_data = new_img.convert('RGB')
-            for x in range(width):
-                for y in range(height):
+            for y in range(height):
+                for x in range(width):
                     pixel = img_data.getpixel((x, y))
+                    to_write = True
                     if pixel == green:
                         pixel = rgb_list[0]
                     elif pixel == orange:
                         pixel = rgb_list[1]
                     elif pixel == red:
                         pixel = rgb_list[2]
-                    img_data.putpixel((x, y), pixel)
+                    else:
+                        to_write = False
+
+                    if to_write:
+                        img_data.putpixel((x, y), pixel)
                     rgba_list.append(pixel)
             
             new_image_list.append(img_data)
@@ -87,12 +92,13 @@ def mint_item():
         # write cmd
         colors = ''.join([rgba_to_hex(rgba)[1:] for rgba in rgba_list])
         item_id = hash_id(colors)
+        supply = 2.0
         cmd_config = {
             'public_key': app.config['COLORBLOCK_CUTE']['public'],
             'capabilities': [
                 {
                     'name': 'free.colorblock-test.MINT',
-                    'args': [item_id, '=COLOR=BLOCK=']
+                    'args': [item_id, '=COLOR=BLOCK=', supply]
                 }, 
                 {
                     'name': 'free.colorblock-gas-station-test.GAS_PAYER',
@@ -111,7 +117,7 @@ def mint_item():
             'cols': width,
             'frames': frames,
             'intervals': [v/1000 for v in intervals],
-            'supply': 2,
+            'supply': supply,
             'account': app.config['COLORBLOCK_CUTE']['address'],
             'accountKeyset': {
                 'keys': [app.config['COLORBLOCK_CUTE']['public']],
@@ -123,7 +129,7 @@ def mint_item():
         build_unsigned_send_cmd(code, pact_data=data, cmd_config=cmd_config, output_path=output_path)
 
         app.logger.debug('{} finished'.format(title))
-        time.sleep(0.5)
+        time.sleep(0.2)
 
     return 'all finished'
 

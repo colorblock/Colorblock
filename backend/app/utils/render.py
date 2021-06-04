@@ -6,7 +6,7 @@ from skimage import io
 from pyxelate import Pyx
 
 def generate_image_from_item(item_data):
-    cells = item_data['cells']
+    colors = item_data['colors']
     rows = item_data['rows']
     cols = item_data['cols']
     frames = item_data['frames']
@@ -22,7 +22,7 @@ def generate_image_from_item(item_data):
         img = Image.new('RGB', (width, height))
         draw = ImageDraw.Draw(img)
         frame_size = rows * cols * 6
-        partial_cells = cells[frame_size * frame_index: frame_size * (frame_index + 1)]
+        partial_colors = colors[frame_size * frame_index: frame_size * (frame_index + 1)]
 
         for i in range(rows):
             index = i * cols * 6
@@ -35,7 +35,7 @@ def generate_image_from_item(item_data):
 
                 start = j * 6 + index
                 end = (j + 1) * 6 + index
-                color = '#{}'.format(partial_cells[start: end])
+                color = '#{}'.format(partial_colors[start: end])
 
                 draw.rectangle(size, fill=color)
 

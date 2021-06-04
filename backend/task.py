@@ -36,5 +36,5 @@ if __name__ == '__main__':
     bot = TaskBot()
     bot.login_as_admin()
     print('admin logged successfully')
-    #bot.run()
-    bot.mint()
+    bot.run()
+    #bot.mint()
