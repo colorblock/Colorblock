@@ -6,8 +6,6 @@ DATABASE = {
     'USERNAME': 'root',
     'PASSWORD': 'mypassword'
 }
-SQLALCHEMY_POOL_RECYCLE = 299
-SQLALCHEMY_POOL_SIZE = 20
 MSEARCH_INDEX_NAME = 'instance/msearch'
 MSEARCH_BACKEND = 'whoosh'
 

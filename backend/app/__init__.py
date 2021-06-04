@@ -2,11 +2,17 @@ from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_msearch import Search
+from sqlalchemy.orm import close_all_sessions
+
 
 from flask.json import JSONEncoder
 from datetime import datetime
 
-db = SQLAlchemy()
+db = SQLAlchemy(engine_options={
+    'pool_recycle': 30, 
+    'pool_size': 5,
+    'pool_pre_ping': True,
+})
 search = Search()
 
 def create_app():
