@@ -1,8 +1,11 @@
 (namespace (read-msg 'ns))
 
-(module fungible-util GOVERNANCE
+(module colorblock-fungible-util GOVERNANCE
 
-  (defcap GOVERNANCE () true)
+  (defcap GOVERNANCE ()
+    @doc " Only support upgrading by admin "
+    (enforce-guard (at 'guard (coin.details "colorblock-admin")))
+  )
 
   (defun enforce-valid-amount
     ( precision:integer
