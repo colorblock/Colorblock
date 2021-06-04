@@ -57,7 +57,7 @@ def create_app():
 
 
 class CustomJSONEncoder(JSONEncoder):
-  "Add support for serializing timedeltas"
+  'Add support for serializing timedeltas'
 
   def default(self, o):
     if type(o) == datetime:
