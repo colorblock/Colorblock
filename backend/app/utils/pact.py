@@ -22,10 +22,14 @@ def send_req(post_cmd):
         request_key = request_key_data['requestKeys'][0]
         app.logger.debug('request key: {}'.format(request_key))
 
+        at_first = True
         for i in range(180):
             # fetch result for request key
             try:
                 res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
+                if at_first:
+                    time.sleep(30)
+                    at_first = False
             except Exception as e:
                 app.logger.exception(e)
                 time.sleep(5)
@@ -137,3 +141,13 @@ def build_local_cmd(pact_code, pact_data={}):
         'cmd': pact_cmd,
     }
     return result
+
+def get_module_names():
+    mode = app.config['mode']
+    modules = app.config['MODULES']
+    return modules[mode]
+
+def get_accounts():
+    mode = app.config['mode']
+    accounts = app.config['ACCOUNTS']
+    return accounts[mode]

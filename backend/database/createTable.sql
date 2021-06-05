@@ -27,14 +27,14 @@ create table if not exists ledger (
     `asset_id` varchar(32) comment 'asset id',
     `item_id` varchar(32) comment 'item id',
     `user_id` varchar(64) comment 'user id',
-    `balance` varchar(64) comment 'balance of item',
+    `balance` integer comment 'balance of item',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
 );
 
 create table if not exists deal (
-    `id` varchar(32) comment 'item_id:user_id format',
+    `id` varchar(128) comment 'item_id:user_id format',
     `item_id` varchar(32) comment 'item id',
     `user_id` varchar(64) comment 'user id',
     `price` decimal(22, 12) comment 'sale price',

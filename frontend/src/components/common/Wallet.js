@@ -5,9 +5,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import * as actions from '../../store/actions/actionCreator';
-import { contractModules, getSignedCmd, getWalletAccounts } from '../../utils/sign';
+import { getSignedCmd, getWalletAccounts } from '../../utils/sign';
 import { shortAddress } from '../../utils/polish';
-import { serverUrl } from '../../config';
+import { serverUrl, contractModules } from '../../config';
 
 export const Wallet = (props) => {
   const { wallet, switchWalletModal, setPublicKeyList, setAccountAddress } = props;

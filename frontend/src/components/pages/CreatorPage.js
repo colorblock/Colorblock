@@ -12,9 +12,9 @@ import Preview from '../common/Preview';
 import PixelTool from '../common/PixelTool';
 import * as actions from '../../store/actions/actionCreator';
 import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
-import { contractModules, getSignedCmd, mkReq } from '../../utils/sign';
+import { getSignedCmd, mkReq } from '../../utils/sign';
 import { hasStateInCookies } from '../../utils/storage';
-import { serverUrl, itemConfig } from '../../config';
+import { serverUrl, itemConfig, contractModules } from '../../config';
 import exampleFrames from '../../assets/exampleFrames';
 
 const CreatePage = (props) => {
@@ -165,11 +165,11 @@ const CreatePage = (props) => {
         description: 'Pay Gas',
         cap: {
           name: `${contractModules.colorblockGasStation}.GAS_PAYER`,
-          args: ['hi', {int: 1.0}, 1.0]
+          args: ['colorblock-gas', {int: 1.0}, 1.0]
         }
       }
       ],
-      sender: 'colorblock-gas-payer-test',
+      sender: contractModules.gasPayerAccount,
       signingPubKey: account,
       data: {
         id,
@@ -202,7 +202,7 @@ const CreatePage = (props) => {
     if (result.status === 'success') {
       document.location.href = '/item/' + id;
     } else {
-      alert(result.message);
+      alert(result.data);
     }
   };
 

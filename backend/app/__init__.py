@@ -10,6 +10,8 @@ db = SQLAlchemy(engine_options={
     'pool_recycle': 299, 
     'pool_size': 5,
     'pool_pre_ping': True,
+}, session_options={
+    'autoflush': False
 })
 search = Search()
 

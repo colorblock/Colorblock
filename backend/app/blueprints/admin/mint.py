@@ -7,7 +7,7 @@ import time
 from app.utils.security import admin_required
 from app.utils.render import hex_to_rgba, rgba_to_hex
 from app.utils.crypto import hash_id
-from app.utils.pact import build_unsigned_send_cmd
+from app.utils.pact import build_unsigned_send_cmd, get_accounts, get_module_names
 
 mint_blueprint = Blueprint('mint', __name__)
 
@@ -89,6 +89,10 @@ def mint_item():
             intervals = [200 for v in range(frames)]
             first_img.save('app/static/img/colorblock/{}.gif'.format(title), save_all=True, append_images=new_image_list[1:], duration=intervals, loop=0)
         
+        # constants
+        modules = get_module_names()
+        accounts = get_accounts()
+
         # write cmd
         colors = ''.join([rgba_to_hex(rgba)[1:] for rgba in rgba_list])
         item_id = hash_id(colors)
@@ -97,17 +101,17 @@ def mint_item():
             'public_key': app.config['COLORBLOCK_CUTE']['public'],
             'capabilities': [
                 {
-                    'name': 'free.colorblock-test.MINT',
+                    'name': '{}.MINT'.format(modules['colorblock']),
                     'args': [item_id, '=COLOR=BLOCK=', supply]
                 }, 
                 {
-                    'name': 'free.colorblock-gas-station-test.GAS_PAYER',
+                    'name': modules['colorblock-gas-payer'],
                     'args': ['hi', {'int': 1}, 1.0]
                 }
             ],
             'gas_limit': 50000,
             'gas_price': 1 / 10 ** 12,
-            'sender': app.config['COLORBLOCK_GAS_PAYER']['address'],
+            'sender': accounts['gas-payer'],
         }
         data = {
             'id': item_id,

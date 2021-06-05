@@ -15,7 +15,7 @@ from app.models.mint import Mint
 from app.models.block import Block
 from app.utils.crypto import hash_id
 from app.utils.render import generate_image_from_item
-from app.utils.pact import local_req, build_local_cmd
+from app.utils.pact import local_req, build_local_cmd, get_module_names
 from app.utils.security import admin_required
 from app.utils.chainweb import fetch_latest_block, fetch_previous_blocks, fetch_payloads
 from app.utils.tools import get_datetime_from_timestamp
@@ -198,11 +198,6 @@ def sync_block(chain_id):
         app.logger.debug('finished, current block height: {}, hash: {}'.format(current_block_height, current_block_hash))
 
     return 'end of sync'
-
-def get_module_names():
-    mode = app.config['mode']
-    modules = app.config['MODULES']
-    return modules[mode]
 
 def update_ledger(ledger_id):
     app.logger.debug('now update ledger: {}'.format(ledger_id))

@@ -1,4 +1,4 @@
-from flask import session
+from flask import session, current_app as app
 from functools import wraps
 from app.utils.response import get_error_response, get_success_response
 

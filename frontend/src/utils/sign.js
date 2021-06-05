@@ -37,20 +37,6 @@ export const getWalletAccounts = async () => {
   return accounts;
 }
 
-export const contractModules = {
-  colorblock: 'free.colorblock-test',
-  colorblockMarket: 'free.colorblock-market-test',
-  colorblockGasStation: 'free.colorblock-gas-station-test',
-  marketAccount: 'colorblock-market-pool-test'
-};
-/*
-export const contractModules = {
-  colorblock: 'free.colorblock',
-  cbmarket: 'free.cbmarket',
-  marketAccount: 'colorblock-market'
-};
-*/
-
 export const getSignedCmd = async (inputCmd, postData={}) => {
   // set cmd correctly
   const fixedCmd = {

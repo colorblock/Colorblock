@@ -6,7 +6,7 @@ from flask.helpers import url_for
 from app import db
 from app.models.user import User
 from app.utils.response import get_error_response, get_success_response
-from app.utils.pact import local_req
+from app.utils.pact import local_req, get_module_names
 from app.utils.crypto import random
 from app.utils.security import admin_required
 
@@ -28,7 +28,8 @@ def login():
 
     # validate code
     code = json.loads(local_cmd['cmd'])['payload']['exec']['code']
-    verfiy_code = '(free.colorblock.validate-guard "{}")'.format(account)
+    module_name = get_module_names()['colorblock']
+    verfiy_code = '({}.validate-guard "{}")'.format(module_name, account)
     app.logger.debug('code: {}, verify_code: {}'.format(code, verfiy_code))
     if verfiy_code != code:
         return get_error_response('account and code is not matched')
@@ -38,6 +39,7 @@ def login():
     if result['status'] == 'success':
         session['account'] = account
         session['logged_in'] = True
+        app.logger.debug('after login, session = {}'.format(session))
         user = db.session.query(User).filter(User.id == account).first()
         if not user:
             return signup(account)

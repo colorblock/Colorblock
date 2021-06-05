@@ -5,6 +5,7 @@ from app import db
 from app.models.item import Item
 from app.models.ledger import Ledger
 
+from app.blueprints.admin.routine import update_item, update_ledger
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash, hash_id
 from app.utils.pact import send_req
@@ -29,7 +30,7 @@ def get_all_items():
     return jsonify(items)
 
 @item_blueprint.route('/', methods=['POST'])
-#@login_required TODO:test
+@login_required
 def submit_item():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))
@@ -41,10 +42,10 @@ def submit_item():
     item_data['supply'] = int(item_data['supply'])
     app.logger.debug('item_data: {}'.format(item_data))
 
-    # validate account TODO:test
-    #user_valid_result = validate_account(item_data['account'])
-    #if user_valid_result['status'] != 'success':
-    #    return user_valid_result
+    # validate account
+    user_valid_result = validate_account(item_data['account'])
+    if user_valid_result['status'] != 'success':
+        return user_valid_result
 
     # validate item
     item_valid_result = validate_item(item_data)
@@ -62,29 +63,10 @@ def submit_item():
     result = send_req(post_data)
         
     if result['status'] == 'success':
-        item = Item(
-            id=item_data['id'],
-            title=item_data['title'],
-            type=item_data['type'],
-            tags=','.join(item_data['tags']), 
-            description=item_data['description'],
-            creator=item_data['account'],
-            supply=item_data['supply']
-        )
-        db.session.add(item)
-        db.session.commit()
-
+        item_id = item_data['id']
+        update_item(item_id)
         ledger_id = '{}:{}'.format(item_data['id'], item_data['account'])
-        asset_id = hash_id(ledger_id)
-        ledger = Ledger(
-            id=ledger_id,
-            asset_id=asset_id,
-            item_id=item_data['id'],
-            user_id=item_data['account'],
-            balance=item_data['supply']
-        )
-        db.session.add(ledger)
-        db.session.commit()
+        update_ledger(ledger_id)
 
     return result
 
