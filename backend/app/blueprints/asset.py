@@ -10,32 +10,35 @@ from app.utils.response import get_error_response
 from app.utils.security import login_required
 from app.utils.tools import jsonify_data
 from app.utils.pact import send_req
+from app.utils.crypto import hash_id
 
 asset_blueprint = Blueprint('asset', __name__)
 
 @asset_blueprint.route('/<asset_id>', methods=['GET'])
 def get_asset(asset_id):
     asset = db.session.query(Ledger).filter(Ledger.asset_id == asset_id).first()
-    asset = jsonify_data(asset)
-    item = db.session.query(Item).filter(Item.id == asset['item_id']).first()
-    item = jsonify_data(item)
-    asset['item'] = item
-    deal = db.session.query(Deal).filter(Deal.item_id == item['id']).first()
-    deal = jsonify_data(deal)
-    asset['deal'] = deal
+    if asset:
+        asset = jsonify_data(asset)
+        item = db.session.query(Item).filter(Item.id == asset['item_id']).first()
+        item = jsonify_data(item)
+        asset['item'] = item
+        deal = db.session.query(Deal).filter(Deal.item_id == item['id'], Deal.user_id == asset['user_id']).first()
+        deal = jsonify_data(deal)
+        asset['deal'] = deal
     return jsonify(asset)
 
 @asset_blueprint.route('/owned-by/<user_id>', methods=['GET'])
 def get_assets_owned_by_user(user_id):
     assets = db.session.query(Ledger).filter(Ledger.user_id == user_id).all()
-    assets = jsonify_data(assets)
-    item_ids = [v['item_id'] for v in assets]
-    items = db.session.query(Item).filter(Item.id.in_(item_ids)).all()
-    for asset in assets:
-        item_id = asset['item_id']
-        item = [v for v in items if v.id == item_id][0]
-        item = jsonify_data(item)
-        asset['item'] = item
+    if len(assets) > 0:
+        assets = jsonify_data(assets)
+        item_ids = [v['item_id'] for v in assets]
+        items = db.session.query(Item).filter(Item.id.in_(item_ids)).all()
+        for asset in assets:
+            item_id = asset['item_id']
+            item = [v for v in items if v.id == item_id][0]
+            item = jsonify_data(item)
+            asset['item'] = item
     return jsonify(assets)
 
 @asset_blueprint.route('/all', methods=['GET'])
@@ -90,5 +93,35 @@ def recall_asset():
         deal_id = ledger_id
         update_deal(deal_id)
         update_ledger(ledger_id)
+
+    return result
+
+@asset_blueprint.route('/purchase', methods=['POST'])
+@login_required
+def purchase_asset():
+    post_data = request.json
+    app.logger.debug('post_data: {}'.format(post_data))
+
+    cmd = json.loads(post_data['cmds'][0]['cmd'])
+    asset_data = cmd['payload']['exec']['data']
+
+    item_id = asset_data['token']
+    buyer = asset_data['buyer']
+    seller = asset_data['seller']
+    ledger_buyer_id = '{}:{}'.format(item_id, buyer)
+    ledger_seller_id = '{}:{}'.format(item_id, seller)
+
+    # submit item to pact server
+    result = send_req(post_data)
+        
+    if result['status'] == 'success':
+        deal_id = ledger_seller_id
+        update_deal(deal_id)
+        update_ledger(ledger_buyer_id)
+        update_ledger(ledger_seller_id)
+        
+        result['data'] = {
+            'assetId': hash_id(ledger_buyer_id)
+        }
 
     return result

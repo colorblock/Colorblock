@@ -9,6 +9,7 @@ import { loadProject } from '../../store/actions/actionCreator';
 export const PixelTool = (props) => {
 
   const { loadProject, closeModal } = props;
+  const [maxWidth, setMaxWidth] = useState(null);
   const [images, setImages] = useState({
     origin: null,
     compressed: null
@@ -22,6 +23,7 @@ export const PixelTool = (props) => {
     const url = `${serverUrl}/tool/pixel`;
     const formData = new FormData();
     formData.append('image', images.origin);
+    formData.append('max_width', maxWidth);
     const postData = {
       method: 'POST',
       body: formData
@@ -87,6 +89,14 @@ export const PixelTool = (props) => {
             alt='Origin Image Preview' 
           />
         }
+        <div className='flex justify-center space-x-5'>
+          <span>Max-width</span>
+          <input 
+            type='number' 
+            className='w-16 border rouned' 
+            onChange={ (e) => setMaxWidth(parseInt(e.target.value)) } 
+          />
+        </div>
         <button 
           className='mx-auto bg-pink-500 border rounded px-6 py-2 my-3 text-xs text-white'
           onClick={ () => onUploadImage() }

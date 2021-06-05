@@ -34,3 +34,7 @@ export const itemConfig = {
   minSupply: 1,
   maxSupply: 9999
 };
+
+export const marketConfig = {
+  fees: 0.01
+}

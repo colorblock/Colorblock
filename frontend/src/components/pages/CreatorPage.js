@@ -20,6 +20,7 @@ import exampleFrames from '../../assets/exampleFrames';
 const CreatePage = (props) => {
   const { frames, palette, dpt, wallet } = props;  // dpt means dispatch
 
+  const [projects, setProjects] = useState(null);
   const [isPreviewStatic, setIsPreviewStatic] = useState(true);  // whether preview box is showing static frame or not. true: static, false: animation
   const [isPreviewLarge, setIsPreviewLarge] = useState(true);    // control the size of preview box
   const [modalState, setModalState] = useState([false, '']);     // first value is open or not, second is type
@@ -256,15 +257,24 @@ const CreatePage = (props) => {
       setPickr(currenctPickr);
     });
 
-    const initProject = async () => {
-      // if there's no state in cookies, then load reserved project
-      if (!hasStateInCookies()) {
+    const fetchProjects = async () => {
+      // if there's no project from server, then load examples
+      const url = `${serverUrl}/user/projects`;
+      const projects = await fetch(url, mkReq()).then(res => res.json());
+      if (projects.length > 0) {
+        projects.forEach(project => {
+          project.frames = JSON.parse(project.frames);
+        });
+        const frames = projects[0].frames;
+        dpt.loadProject(frames);
+        setProjects(projects);
+      } else {
         dpt.loadProject(exampleFrames);
       }
     };
 
     setPickr(newPickr);
-    initProject()
+    fetchProjects()
   }, [dpt]);
 
   return (
