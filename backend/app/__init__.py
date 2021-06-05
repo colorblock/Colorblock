@@ -6,7 +6,11 @@ from flask_msearch import Search
 from flask.json import JSONEncoder
 from datetime import datetime
 
-db = SQLAlchemy()
+db = SQLAlchemy(engine_options={
+    'pool_recycle': 299, 
+    'pool_size': 5,
+    'pool_pre_ping': True,
+})
 search = Search()
 
 def create_app():
@@ -17,6 +21,7 @@ def create_app():
         app.config.from_object('instance.config')
     except:
         app.config.from_object('config')
+    app.config['mode'] = 'prod' if app.config['ENV'] == 'production' else 'dev'
 
     db_config = app.config['DATABASE']
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
@@ -39,6 +44,8 @@ def create_app():
     app.register_blueprint(user_blueprint, url_prefix='/user')
     from app.blueprints.item import item_blueprint
     app.register_blueprint(item_blueprint, url_prefix='/item')
+    from app.blueprints.asset import asset_blueprint
+    app.register_blueprint(asset_blueprint, url_prefix='/asset')
     from app.blueprints.tool import tool_blueprint
     app.register_blueprint(tool_blueprint, url_prefix='/tool')
     from app.blueprints.search import search_blueprint
@@ -57,7 +64,7 @@ def create_app():
 
 
 class CustomJSONEncoder(JSONEncoder):
-  "Add support for serializing timedeltas"
+  'Add support for serializing timedeltas'
 
   def default(self, o):
     if type(o) == datetime:

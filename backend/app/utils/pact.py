@@ -22,9 +22,13 @@ def send_req(post_cmd):
         request_key = request_key_data['requestKeys'][0]
         app.logger.debug('request key: {}'.format(request_key))
 
-        for i in range(60):
+        for i in range(180):
             # fetch result for request key
-            res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
+            try:
+                res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
+            except Exception as e:
+                app.logger.exception(e)
+                time.sleep(5)
             app.logger.debug('POLL response text: {}'.format(res.text))
 
             # extract result
@@ -110,7 +114,7 @@ def build_local_cmd(pact_code, pact_data={}):
         'meta': {
             'creationTime': int(datetime.timestamp(datetime.now())),
             'ttl': 7200,
-            'gasLimit': 1200,
+            'gasLimit': 1500000,
             'gasPrice': 0.0000000001,
             'chainId': config['CHAIN_ID'],
             'sender': 'COLORBLOCK',

@@ -1,3 +1,4 @@
+from flask import current_app as app
 import os
 import copy
 import numpy as np
@@ -60,28 +61,33 @@ def generate_pixels_from_image(file_path):
     img_obj = Image.open(file_path)
     compressed = []
     frames = img_obj.n_frames
+    intervals = []
     for i in range(frames):
         img_obj.seek(i)
+        intervals.append(img_obj.info['duration'])
         image = np.array(img_obj)
         image_width = image.shape[1]
         if image_width < 64:
             compressed.append(copy.copy(img_obj))
         else:
+            rgb_img = img_obj.convert('RGB')
+            rgb_img_data = np.array(rgb_img)
+            app.logger.debug('rgb_img_data: {}'.format(rgb_img_data[1]))
+
             palette = 16
             # 1) Instantiate Pyx transformer
             pyx = Pyx(width=64, palette=palette)
             # 2) fit an image, allow Pyxelate to learn the color palette
-            pyx.fit(image)
+            pyx.fit(rgb_img_data)
             # 3) transform image to pixel art using the learned color palette
-            new_image = pyx.transform(image)
+            new_image = pyx.transform(rgb_img_data)
             # save new image with 'skimage.io.imsave()'
-            n = Image.fromarray(new_image)
-            compressed.append(n)
+            new_img_obj = Image.fromarray(new_image)
+            compressed.append(new_img_obj)
             
     if frames == 1:
         compressed[0].save(file_path)
     else:
-        intervals = [200 for v in range(frames)]
         compressed[0].save(file_path, save_all=True, append_images=compressed[1:], duration=intervals, loop=0)
 
     return save_path

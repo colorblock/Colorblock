@@ -6,7 +6,7 @@ from app.models.item import Item
 from app.models.ledger import Ledger
 
 from app.utils.render import generate_image_from_item
-from app.utils.crypto import check_hash
+from app.utils.crypto import check_hash, hash_id
 from app.utils.pact import send_req
 from app.utils.response import get_error_response, get_success_response
 from app.utils.security import login_required, validate_account
@@ -17,11 +17,6 @@ item_blueprint = Blueprint('item', __name__)
 def get_item(item_id):
     item = db.session.query(Item).filter(Item.id == item_id).first()
     return jsonify(item)
-
-@item_blueprint.route('/owned-by/<user_id>')
-def get_items_owned_by_user(user_id):
-    items = db.session.query(Ledger).filter(Ledger.user_id == user_id).all()
-    return jsonify(items)
 
 @item_blueprint.route('/created-by/<user_id>')
 def get_items_created_by_user(user_id):
@@ -34,7 +29,7 @@ def get_all_items():
     return jsonify(items)
 
 @item_blueprint.route('/', methods=['POST'])
-@login_required
+#@login_required TODO:test
 def submit_item():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))
@@ -42,36 +37,14 @@ def submit_item():
     # add item type, strip supply
     cmd = json.loads(post_data['cmds'][0]['cmd'])
     item_data = cmd['payload']['exec']['data']
-
-    if session.get('logged_as_admin'):
-        file_path = app.config['ITEM_DATA_PATH']
-        item_data['account'] = app.config['COLORBLOCK_CUTE']['address']
-        item_data['accountKeyset']['keys'][0] = app.config['COLORBLOCK_CUTE']['public']
-        cmd['signers'][0]['clist'][0]['args'][1] = app.config['COLORBLOCK_CUTE']['address']
-        cmd['signers'][0]['public'] = app.config['COLORBLOCK_CUTE']['public']
-        del cmd['signers'][0]['pubKey']
-        cmd['signers'][0]['caps'] = cmd['signers'][0]['clist']
-        del cmd['signers'][0]['clist']
-        cmd['data'] = cmd['payload']['exec']['data']
-        cmd['code'] = cmd['payload']['exec']['code']
-        del cmd['payload']
-        del cmd['meta']['creationTime']
-        cmd['publicMeta'] = cmd['meta']
-        del cmd['meta']
-        del cmd['nonce']
-        f = open(file_path, 'w')
-        f.write(json.dumps(cmd))
-        f.close()
-        return get_error_response('write success')
-        
     item_data['type'] = 0 if item_data['frames'] == 1 else 1  # just 1 frame -> static -> type 0
     item_data['supply'] = int(item_data['supply'])
     app.logger.debug('item_data: {}'.format(item_data))
 
-    # validate account
-    user_valid_result = validate_account(item_data['account'])
-    if user_valid_result['status'] != 'success':
-        return user_valid_result
+    # validate account TODO:test
+    #user_valid_result = validate_account(item_data['account'])
+    #if user_valid_result['status'] != 'success':
+    #    return user_valid_result
 
     # validate item
     item_valid_result = validate_item(item_data)
@@ -101,8 +74,11 @@ def submit_item():
         db.session.add(item)
         db.session.commit()
 
+        ledger_id = '{}:{}'.format(item_data['id'], item_data['account'])
+        asset_id = hash_id(ledger_id)
         ledger = Ledger(
-            id='{}:{}'.format(item_data['id'], item_data['account']),
+            id=ledger_id,
+            asset_id=asset_id,
             item_id=item_data['id'],
             user_id=item_data['account'],
             balance=item_data['supply']

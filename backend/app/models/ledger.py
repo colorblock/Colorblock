@@ -5,6 +5,7 @@ from app import db
 @dataclass
 class Ledger(db.Model):
     id: str
+    asset_id: str
     item_id: str
     user_id: int
     balance: int
@@ -12,6 +13,7 @@ class Ledger(db.Model):
     updated_at: str
 
     id = db.Column(db.String, primary_key=True)
+    asset_id = db.Column(db.String)
     item_id = db.Column(db.String)
     user_id = db.Column(db.Integer)
     balance = db.Column(db.Integer)
