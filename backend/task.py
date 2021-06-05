@@ -2,6 +2,7 @@
 
 import requests
 import time
+from datetime import datetime
 
 import instance.config as settings
 
@@ -29,9 +30,16 @@ class TaskBot:
         return result['status'] == 'success'
 
     def run(self):
-        url = 'http://localhost:5000/routine/sync/0'
-        res = self.s.post(url)
-        print(res.text)
+        while True:
+            print('now start sync, dt = {}'.format(datetime.now()))
+            url = 'http://localhost:5000/routine/sync/0'
+            try:
+                res = self.s.post(url)
+                print(res.text)
+            except Exception as e:
+                print(e)
+
+            time.sleep(60)
 
     def mint(self):
         url = 'http://localhost:5000/mint'

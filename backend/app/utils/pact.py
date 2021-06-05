@@ -22,9 +22,13 @@ def send_req(post_cmd):
         request_key = request_key_data['requestKeys'][0]
         app.logger.debug('request key: {}'.format(request_key))
 
-        for i in range(60):
+        for i in range(180):
             # fetch result for request key
-            res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
+            try:
+                res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
+            except Exception as e:
+                app.logger.exception(e)
+                time.sleep(5)
             app.logger.debug('POLL response text: {}'.format(res.text))
 
             # extract result

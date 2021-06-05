@@ -26,12 +26,7 @@ routine_blueprint = Blueprint('routine', __name__)
 @admin_required
 def sync_block(chain_id):
     # fetch latest block
-    #latest_block = fetch_latest_block(chain_id)
-    # TODO: for test
-    latest_block = {
-        'height': 1674580,
-        'hash': 'BXlnaX3w7Jr0qvA6HIAKli447Mf8faXH-x-l9smAwDY',
-    }
+    latest_block = fetch_latest_block(chain_id)
     app.logger.debug('latest block: {}'.format(latest_block))
 
     # constants
@@ -70,6 +65,9 @@ def sync_block(chain_id):
 
         # loop over payloads and verify each payload
         for payload in payloads:
+            if payload['height'] < app.config['START_HEIGHT']:
+                continue
+
             db_block = db.session.query(Block).filter(Block.hash == payload['hash']).first()
             if db_block and db_block.verified:
                 app.logger.debug('block {} is verified, skip'.format(payload['height']))
@@ -82,7 +80,8 @@ def sync_block(chain_id):
                 relevant = False
 
                 # handle events
-                for output in payload['outputs']:
+                to_varify_input_indexes = []
+                for index, output in enumerate(payload['outputs']):
                     # tx info
                     tx_id = output['txId']
                     tx_hash = output['reqKey']
@@ -97,12 +96,16 @@ def sync_block(chain_id):
                         'tx_status': tx_status,
                     }
 
+                    if 'colorblock' in json.dumps(output):
+                        app.logger.debug('output: {}'.format(output))
+                        if tx_status == 'success':
+                            to_varify_input_indexes.append(index)
+
                     events = output.get('events', [])
                     for event in events:
                         module_name = '{}.{}'.format(event['module']['namespace'], event['module']['name'])
                         # check whether tx contains colorblock
                         if module_name in module_name_list:
-                            app.logger.debug('output: {}'.format(output))
                             # create id combined with tx_hash and event
                             combined_info = 'tx_hash: {}, event: {}'.format(tx_hash, event)
                             event['event_id'] = hash_id(combined_info)
@@ -127,10 +130,9 @@ def sync_block(chain_id):
                     
                 filtered_tx_ids = []
                 for index, input in enumerate(payload['inputs']):
-                    app.logger.debug('input: {}'.format(json.dumps(input)))
-                    if 'colorblock' in json.dumps(input):
-                        relevant = True
+                    if index in to_varify_input_indexes:
                         app.logger.debug('input: {}, index: {}'.format(input, index))
+                        relevant = True
                         tx_id = payload['outputs'][index]['txId']
                         filtered_tx_ids.append(tx_id)
 

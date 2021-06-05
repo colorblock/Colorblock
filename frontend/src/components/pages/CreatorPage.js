@@ -158,7 +158,7 @@ const CreatePage = (props) => {
         description: 'Identity Verification',
         cap: {
           name: `${contractModules.colorblock}.MINT`,
-          args: [id, account]
+          args: [id, account, supplyNumber]
         }
       }, {
         role: 'Pay Gas',
