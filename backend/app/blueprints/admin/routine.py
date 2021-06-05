@@ -32,15 +32,28 @@ def sync_block(chain_id):
     # constants
     module_name_dict = get_module_names()
     module_name_list = list(module_name_dict.values())
+    start_height = app.config['START_HEIGHT']
     
     # loop and verify each previous unverified block
     height_step = 50
     current_block_height = latest_block['height']
     current_block_hash = latest_block['hash']
     while True:
-        if current_block_height < app.config['START_HEIGHT']:
+        if current_block_height < start_height:
             # if less than START_HEIGHT, then job is finished
             break
+
+        verified_count = db.session.query(Block).filter(
+            Block.block_height <= current_block_height, 
+            Block.block_height >= start_height,
+            Block.verified == True
+        ).count()
+        all_verified = (current_block_height - start_height + 1) == verified_count
+        app.logger.debug('verified_count = {}, (current_block_height - start_height + 1) = {}'.format(verified_count, (current_block_height - start_height + 1)))
+        if all_verified:
+            # if all blocks are verified, then job is finished
+            break
+
         # confirm whether there're unverified blocks
         fetched_blocks = db.session.query(Block).filter(Block.block_height <= current_block_height, Block.block_height > current_block_height - height_step).all()
         fetched_block_hashes = [v.hash for v in fetched_blocks]
@@ -56,16 +69,18 @@ def sync_block(chain_id):
             continue
 
         # fetch previous blocks
+        time.sleep(1)
         previous_blocks = fetch_previous_blocks(current_block_hash, limit=height_step)
         
         # fetch previous txs
         for block in previous_blocks:
             block['payload_hash'] = block['payloadHash']
+        time.sleep(1)
         payloads = fetch_payloads(previous_blocks)
 
         # loop over payloads and verify each payload
         for payload in payloads:
-            if payload['height'] < app.config['START_HEIGHT']:
+            if payload['height'] < start_height:
                 continue
 
             db_block = db.session.query(Block).filter(Block.hash == payload['hash']).first()
@@ -127,6 +142,8 @@ def sync_block(chain_id):
                             elif event_name == 'PURCHASE':
                                 (item_id, buyer, sender, price, amount) = event['params']
                                 update_purchase(item_id, buyer, sender, price, amount)
+                        
+                            time.sleep(1)
                     
                 filtered_tx_ids = []
                 for index, input in enumerate(payload['inputs']):
@@ -151,6 +168,8 @@ def sync_block(chain_id):
                             update_ledger(ledger_id)
                         for deal_id in record['deals']:
                             update_deal(deal_id)
+                        
+                        time.sleep(1)
 
                 hash = payload['hash']
                 if hash in fetched_block_hashes:

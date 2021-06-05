@@ -9,6 +9,7 @@ import CreatorPage from './pages/CreatorPage';
 import MarketPage from './pages/MarketPage';
 import SearchPage from './pages/SearchPage';
 import ItemPage from './pages/ItemPage';
+import AssetPage from './pages/AssetPage';
 import UserPage from './pages/UserPage';
 import Wallet from './common/Wallet';
 
@@ -33,6 +34,9 @@ const App = (props) => {
         </Route>
         <Route path='/item/:itemId'>
           <ItemPage />
+        </Route>
+        <Route path='/asset/:assetId'>
+          <AssetPage />
         </Route>
         <Route path='/user' exact>
           <UserPage />

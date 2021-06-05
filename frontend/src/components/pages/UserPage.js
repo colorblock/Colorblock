@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import { shortAddress } from '../../utils/polish';
 import { withCors } from '../../utils/sign';
-import ItemList from '../common/ItemList';
+import AssetList from '../common/AssetList';
 import { serverUrl } from '../../config';
 
 const UserPage = (props) => {
@@ -11,10 +11,10 @@ const UserPage = (props) => {
   const { userId } = useParams();
   console.log(userId);
   const [user, setUser] = useState(null);
-  const [items, setItems] = useState([]);
+  const [assets, setAssets] = useState([]);
 
-  const itemListConfig = {
-    type: 'item',
+  const assetListConfig = {
+    type: 'asset',
     flow: 'grid',
     cols: 5
   };
@@ -38,11 +38,11 @@ const UserPage = (props) => {
       userData.uname = userData.uname || shortAddress(userData.address);
       setUser(userData);
 
-      // fetch items
-      const itemsUrl = `${serverUrl}/item/created-by/${userId}`;
-      const itemsData = await fetch(itemsUrl).then(res => res.json());
-      console.log(itemsData);
-      setItems(itemsData);
+      // fetch assets
+      const assetsUrl = `${serverUrl}/asset/owned-by/${userId}`;
+      const assetsData = await fetch(assetsUrl).then(res => res.json());
+      console.log(assetsData);
+      setAssets(assetsData);
     };
 
     fetchUser(userId);
@@ -60,13 +60,13 @@ const UserPage = (props) => {
         <p className='py-2 text-xs text-gray-400'>{user.address}</p>
       </div>
       {
-        items.length > 0 ? (
-          <div data-role='item list'>
-            <ItemList items={items} config={itemListConfig} />
+        assets.length > 0 ? (
+          <div data-role='asset list'>
+            <AssetList assets={assets} config={assetListConfig} />
           </div>
         ) : (
           <div>
-            No items
+            No assets
           </div>
         )
       }

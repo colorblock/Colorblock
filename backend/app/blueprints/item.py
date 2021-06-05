@@ -18,11 +18,6 @@ def get_item(item_id):
     item = db.session.query(Item).filter(Item.id == item_id).first()
     return jsonify(item)
 
-@item_blueprint.route('/owned-by/<user_id>')
-def get_items_owned_by_user(user_id):
-    items = db.session.query(Ledger).filter(Ledger.user_id == user_id).all()
-    return jsonify(items)
-
 @item_blueprint.route('/created-by/<user_id>')
 def get_items_created_by_user(user_id):
     items = db.session.query(Item).filter(Item.creator == user_id).all()

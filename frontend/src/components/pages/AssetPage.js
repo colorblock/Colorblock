@@ -5,29 +5,28 @@ import { serverUrl } from '../../config';
 
 const AssetPage = (props) => {
   const { assetId } = useParams();
-  const [item, setItem] = useState(null);
+  const [asset, setItem] = useState(null);
 
   useEffect(() => {
-    const fetchItem = async (itemId) => {
-      const url = `${serverUrl}/item/${itemId}`;
-      const itemData = await fetch(url).then(res => res.json());
-      itemData.url = `${serverUrl}/static/img/${itemId}.${itemData.type === 0 ? 'png' : 'gif'}`;
-      setItem(itemData);
+    const fetchItem = async (assetId) => {
+      const url = `${serverUrl}/asset/${assetId}`;
+      const assetData = await fetch(url).then(res => res.json());
+      assetData.url = `${serverUrl}/static/img/${assetData.item.id}.${assetData.item.type === 0 ? 'png' : 'gif'}`;
+      setItem(assetData);
     };
 
-    fetchItem(itemId);
-  }, [itemId]);
+    fetchItem(assetId);
+  }, [assetId]);
 
-  return item ? (
+  return asset ? (
     <div>
-      <p>Item ID: {itemId}</p>
-      <p>Item title: {item.title}</p>
-      <p>Item tags: {item.tags}</p>
-      <p>Item description: {item.description}</p>
-      <p>Item creator: <a href={`/user/${item.creator}`}>{item.creator}</a></p>
-      <p>Item txID: {item.tx_id}</p>
+      <p>Item ID: {assetId}</p>
+      <p>Item title: {asset.item.title}</p>
+      <p>Item tags: {asset.item.tags}</p>
+      <p>Item description: {asset.item.description}</p>
+      <p>Item creator: <a href={`/user/${asset.item.creator}`}>{asset.item.creator}</a></p>
       <div>
-        <img src={item.url} className='w-40' alt={item.title} />
+        <img src={asset.url} className='w-40' alt={asset.title} />
       </div>
     </div>
   ) : <></>;
