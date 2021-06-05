@@ -3,6 +3,7 @@ import json
 
 from app import db
 from app.blueprints.admin.routine import update_deal, update_ledger
+from app.models.deal import Deal
 from app.models.item import Item
 from app.models.ledger import Ledger
 from app.utils.response import get_error_response
@@ -19,6 +20,9 @@ def get_asset(asset_id):
     item = db.session.query(Item).filter(Item.id == asset['item_id']).first()
     item = jsonify_data(item)
     asset['item'] = item
+    deal = db.session.query(Deal).filter(Deal.item_id == item['id']).first()
+    deal = jsonify_data(deal)
+    asset['deal'] = deal
     return jsonify(asset)
 
 @asset_blueprint.route('/owned-by/<user_id>', methods=['GET'])
@@ -55,6 +59,29 @@ def release_asset():
 
     if asset_data['amount'] > asset.balance:
         return get_error_response('Balance is not sufficient')
+
+    # submit item to pact server
+    result = send_req(post_data)
+        
+    if result['status'] == 'success':
+        deal_id = ledger_id
+        update_deal(deal_id)
+        update_ledger(ledger_id)
+
+    return result
+
+@asset_blueprint.route('/recall', methods=['POST'])
+@login_required
+def recall_asset():
+    post_data = request.json
+    app.logger.debug('post_data: {}'.format(post_data))
+
+    cmd = json.loads(post_data['cmds'][0]['cmd'])
+    asset_data = cmd['payload']['exec']['data']
+
+    item_id = asset_data['token']
+    seller = asset_data['seller']
+    ledger_id = '{}:{}'.format(item_id, seller)
 
     # submit item to pact server
     result = send_req(post_data)

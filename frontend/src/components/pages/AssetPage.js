@@ -68,6 +68,52 @@ const AssetPage = (props) => {
     }
   };
 
+  const onRecall = async () => {
+    // post recall request
+    const itemId = asset.item.id;
+    const seller = wallet.address;
+    const amount = asset.deal.remain;
+    const cmd = {
+      code: `(${contractModules.colorblockMarket}.recall (read-msg "token") (read-msg "seller"))`,
+      caps: [{
+        role: 'Identity Verification',
+        description: 'Identity Verification',
+        cap: {
+          name: `${contractModules.colorblock}.AUTH`,
+          args: [itemId, seller]
+        }
+      }, {
+        role: 'Pay Gas',
+        description: 'Pay Gas',
+        cap: {
+          name: `${contractModules.colorblockGasStation}.GAS_PAYER`,
+          args: ['colorblock-gas', {int: 1.0}, 1.0]
+        }
+      }
+      ],
+      sender: contractModules.gasPayerAccount,
+      signingPubKey: seller,
+      data: {
+        token: itemId,
+        seller
+      }
+    };
+    const signedCmd = await getSignedCmd(cmd);
+
+    console.log('get signedCmd', signedCmd);
+    if (!signedCmd) {
+      return;
+    }
+    const result = await fetch(`${serverUrl}/asset/recall`, signedCmd).then(res => res.json());
+    console.log('get result', result);
+    if (result.status === 'success') {
+      alert('release successfully');
+      document.location.href = document.location.href;
+    } else {
+      alert(result.data);
+    }
+  };
+
   useEffect(() => {
     const fetchItem = async (assetId) => {
       const url = `${serverUrl}/asset/${assetId}`;
@@ -92,7 +138,7 @@ const AssetPage = (props) => {
         <img src={asset.url} className='w-40' alt={asset.item.title} />
       </div>
       {
-        asset.user_id === wallet.address && 
+        asset.user_id === wallet.address && asset.deal.open === false &&
         <div data-role='market board' className='flex space-x-3 items-center'>
           <span>Price</span>
           <input 
@@ -111,6 +157,20 @@ const AssetPage = (props) => {
             onClick={ () => onRelease() }
           >
             Release
+          </button>
+        </div>
+      }
+      
+      {
+        asset.user_id === wallet.address && asset.deal.open === true &&
+        <div data-role='market board' className='flex space-x-3 items-center'>
+          <p>Deal total amount: {asset.deal.total}</p>
+          <p>Deal remain amount: {asset.deal.remain}</p>
+          <button
+            className='px-3 py-2 bg-cb-pink text-white'
+            onClick={ () => onRecall() }
+          >
+            Recall
           </button>
         </div>
       }

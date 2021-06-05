@@ -5,6 +5,7 @@ from flask_msearch import Search
 
 from flask.json import JSONEncoder
 from datetime import datetime
+import decimal
 
 db = SQLAlchemy(engine_options={
     'pool_recycle': 299, 
@@ -69,7 +70,9 @@ class CustomJSONEncoder(JSONEncoder):
   'Add support for serializing timedeltas'
 
   def default(self, o):
-    if type(o) == datetime:
+    if isinstance(o, datetime):
       return o.isoformat()
+    if isinstance(o, decimal.Decimal):
+        return float(o)
     else:
       return super().default(o)
