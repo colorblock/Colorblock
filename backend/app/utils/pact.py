@@ -110,7 +110,7 @@ def build_local_cmd(pact_code, pact_data={}):
         'meta': {
             'creationTime': int(datetime.timestamp(datetime.now())),
             'ttl': 7200,
-            'gasLimit': 1200,
+            'gasLimit': 1500000,
             'gasPrice': 0.0000000001,
             'chainId': config['CHAIN_ID'],
             'sender': 'COLORBLOCK',

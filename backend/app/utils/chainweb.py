@@ -47,6 +47,11 @@ def fetch_payloads(blocks):
         height,
         hash,
         payload_hash,
+        inputs -> {
+            hash,
+            sigs,
+            cmd
+        }
         outputs -> [{
             txId,
             module: { namespace, name }

@@ -21,6 +21,13 @@ class TaskBot:
         res = self.s.get(url)
         print(res.text)
 
+    def admin_status(self):
+        url = 'http://localhost:5000/admin_status'
+        res = self.s.get(url)
+        result = res.json()
+        print(result)
+        return result['status'] == 'success'
+
     def run(self):
         url = 'http://localhost:5000/routine/sync/0'
         res = self.s.post(url)
@@ -34,7 +41,10 @@ class TaskBot:
 
 if __name__ == '__main__':
     bot = TaskBot()
-    bot.login_as_admin()
-    print('admin logged successfully')
+    if not bot.admin_status():
+        print('now login as admin')
+        bot.login_as_admin()
+    else:
+        print('admin logged successfully')
     bot.run()
     #bot.mint()

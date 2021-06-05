@@ -1,11 +1,11 @@
 def get_error_response(message):
     return {
         'status': 'error',
-        'message': message
+        'data': message
     }
 
-def get_success_response(message):
+def get_success_response(data):
     return {
         'status': 'success',
-        'message': message
+        'data': data
     }
