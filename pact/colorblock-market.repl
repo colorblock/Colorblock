@@ -40,7 +40,7 @@
 (coin.create-account "alice" (read-keyset "alice-keyset"))
 (coin.create-account "lucy" (read-keyset "lucy-keyset"))
 
-(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin")]}])
+(env-sigs [{"key": "admin", "caps": [(colorblock.MINT "item-id" "admin" 1.0)]}])
 (colorblock.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0 (read-keyset "admin-keyset"))
 (colorblock.create-account "item-id" "bob" (read-keyset "bob-keyset"))
 
@@ -97,7 +97,7 @@
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market-pool" 2.0)]}])
 (expect-failure
   "Release will fail as balance is not enough for amount"
-  "Insufficient funds"
+  "Amount must not exceed balance"
   (colorblock-market.release "item-id" "admin" 10.0 2.0)
 )
 (env-sigs [{"key": "admin", "caps": [(colorblock.TRANSFER "item-id" "admin" "colorblock-market-pool" 1.0)]}])

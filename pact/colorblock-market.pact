@@ -258,20 +258,20 @@
         }
         (let* 
           (
-            (sale-price (* price amount))
-            (fees (* FEES_RATE sale-price))
-            (total-price (+ fees sale-price))
+            (payment (* price amount))
+            (fees (* FEES_RATE payment))
+            (total-pay (+ fees payment))
             (balance (coin.get-balance buyer))
             (remain-amount (- total-amount amount))
           )
           (enforce 
-            (<= total-price balance)
+            (<= total-pay balance)
             "Insufficient balance"
           )
-          (install-capability (coin.TRANSFER buyer seller price))
+          (install-capability (coin.TRANSFER buyer seller payment))
           (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET_POOL fees))
           (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL buyer amount))
-          (coin.transfer buyer seller price)
+          (coin.transfer buyer seller payment)
           (coin.transfer buyer COLORBLOCK_MARKET_POOL fees)
           (colorblock.transfer token COLORBLOCK_MARKET_POOL buyer amount)
           (update deals (key token seller) {
