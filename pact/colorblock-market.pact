@@ -67,10 +67,10 @@
       )
       (enforce 
         ( <= 
-          balance
           amount
+          balance
         )
-        "Amount cannot be larger than balance"
+        "Amount must not exceed balance"
       )
     )
     (with-default-read deals (key token seller)
