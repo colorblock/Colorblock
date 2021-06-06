@@ -1,0 +1,9 @@
+<svg id="brush_button" xmlns="http://www.w3.org/2000/svg" width="56.331" height="56.331" viewBox="0 0 56.331 56.331">
+  <g id="Group_354" data-name="Group 354">
+    <g id="Rectangle_458" data-name="Rectangle 458" fill="#fbfafd" stroke="#b9b5c7" stroke-width="1" opacity="0.74">
+      <rect width="56.331" height="56.331" rx="8" stroke="none"/>
+      <rect x="0.5" y="0.5" width="55.331" height="55.331" rx="7.5" fill="none"/>
+    </g>
+  </g>
+  <path id="Icon_ionic-md-brush" data-name="Icon ionic-md-brush" d="M9.423,18.841a4.256,4.256,0,0,0-4.3,4.216A2.882,2.882,0,0,1,2.25,25.868a7.459,7.459,0,0,0,5.737,2.817,5.681,5.681,0,0,0,5.737-5.622A4.258,4.258,0,0,0,9.423,18.841ZM29.087,5.668,27.165,3.782a1.447,1.447,0,0,0-2.02,0l-12.856,12.6,3.943,3.863L29.081,7.652A1.376,1.376,0,0,0,29.087,5.668Z" transform="translate(12.363 11.573)" fill="#b9b5c7"/>
+</svg>

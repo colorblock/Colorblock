@@ -30,11 +30,25 @@ export const contractModules = inProd ? {
   gasPayerAccount: 'colorblock-gas-payer-test'
 };
 
+export const signConfig = {
+  gasPrice: 0.000000000001,
+  gasLimit: 150000
+};
+
 export const itemConfig = {
   minSupply: 1,
   maxSupply: 9999
 };
 
+export const collectionConfig = {
+  lengthOfId: 16
+};
+
 export const marketConfig = {
   fees: 0.01
-}
+};
+
+export const creatorConfig = {
+  maxWidth: 16,
+  maxHeight: 16
+};

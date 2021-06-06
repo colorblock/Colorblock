@@ -33,6 +33,24 @@ create table if not exists ledger (
     primary key (`id`)
 );
 
+create table if not exists collection (
+    `id` varchar(64),
+    `user_id` varchar(64),
+    `title` varchar(64),
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`id`)
+);
+
+create table if not exists collectible (
+    `id` varchar(64),
+    `item_id` varchar(64),
+    `collection_id` varchar(64),
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`id`)
+);
+
 create table if not exists deal (
     `id` varchar(128) comment 'item_id:user_id format',
     `item_id` varchar(32) comment 'item id',

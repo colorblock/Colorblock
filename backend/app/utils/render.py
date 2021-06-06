@@ -3,8 +3,10 @@ import os
 import copy
 import numpy as np
 from PIL import Image, ImageDraw
-from skimage import io
-from pyxelate import Pyx
+import imutils
+import pyguetzli
+import tinify
+import requests
 
 def generate_image_from_item(item_data):
     colors = item_data['colors']
@@ -68,24 +70,36 @@ def generate_pixels_from_image(file_path, max_width=64):
         if not static:
             intervals.append(img_obj.info['duration'])
         image = np.array(img_obj)
+        image_height = image.shape[0]
         image_width = image.shape[1]
         if image_width < max_width:
             compressed.append(copy.copy(img_obj))
         else:
-            rgb_img = img_obj.convert('RGB')
-            rgb_img_data = np.array(rgb_img)
-            app.logger.debug('rgb_img_data: {}'.format(rgb_img_data[1]))
+            new_img = copy.copy(img_obj)
+            path = 'app/static/img/tmp/test{}.png'.format(i)
+            new_img.save(path)
+            tinify.key = app.config['TINIFY_KEY']
+            source = tinify.from_file(path)
+            optimized_path = 'app/static/img/tmp/optimized{}.png'.format(i)
+            resized = source.resize(
+                method='scale',
+                width=max_width
+            )
+            resized.to_file(optimized_path)
+            #new_img.convert('RGB').save(path, optimize = True, quality=30, progressive=True)
+            #new_jpg = Image.open(path)
+            ##app.logger.debug(new_jpg.width)
+            #app.logger.debug(new_jpg.height)
+            #new_img = pyguetzli.process_pil_image(new_img)
+            #max_height = int(max_width / image_width * image_height)
+            #optimized = new_jpg.resize((max_width, max_height))
+            
+            #app.logger.debug(optimized.width)
+            #app.logger.debug(optimized.height)
+            new_img = Image.open(optimized_path)
+            compressed.append(new_img)
 
-            palette = 8
-            # 1) Instantiate Pyx transformer
-            pyx = Pyx(width=max_width, palette=palette)
-            # 2) fit an image, allow Pyxelate to learn the color palette
-            pyx.fit(rgb_img_data)
-            # 3) transform image to pixel art using the learned color palette
-            new_image = pyx.transform(rgb_img_data)
-            # save new image with 'skimage.io.imsave()'
-            new_img_obj = Image.fromarray(new_image)
-            compressed.append(new_img_obj)
+        break
             
     if frames == 1:
         compressed[0].save(file_path)

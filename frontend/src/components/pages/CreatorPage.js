@@ -11,25 +11,25 @@ import * as fa from '@fortawesome/free-solid-svg-icons';
 import Preview from '../common/Preview';
 import PixelTool from '../common/PixelTool';
 import * as actions from '../../store/actions/actionCreator';
-import { convertFramesToString, convertFramesToIntervals } from '../../utils/render';
+import { convertFramesToString, convertFramesToIntervals, convertRgbaToHex } from '../../utils/render';
 import { getSignedCmd, mkReq } from '../../utils/sign';
-import { hasStateInCookies } from '../../utils/storage';
-import { serverUrl, itemConfig, contractModules } from '../../config';
+import { serverUrl, itemConfig, contractModules, collectionConfig } from '../../config';
 import exampleFrames from '../../assets/exampleFrames';
+import { randomId } from '../../utils/tool';
 
 const CreatePage = (props) => {
   const { frames, palette, dpt, wallet } = props;  // dpt means dispatch
 
   const [projects, setProjects] = useState(null);
   const [isPreviewStatic, setIsPreviewStatic] = useState(true);  // whether preview box is showing static frame or not. true: static, false: animation
-  const [isPreviewLarge, setIsPreviewLarge] = useState(true);    // control the size of preview box
   const [modalState, setModalState] = useState([false, '']);     // first value is open or not, second is type
   const [submitItem, setSubmitItem] = useState({});
   const [pickr, setPickr] = useState(null);
+  const [tabType, setTabType] = useState('collection');
+  const [onSale, setOnSale] = useState(false);
+  const [collections, setCollections] = useState([]);
+  const [mintedFrames, setMintedFrames] = useState(null);
 
-  const ratio = frames.height / frames.width;
-  const totalWidthNum = ratio <= 1 ? 1.0 : 1 / ratio;
-  const totalWidth = `${100.0 * totalWidthNum}%`;
   const widthPct = `${100.0 / frames.width}%`;
 
   // calc suitable size for preview presentation
@@ -75,25 +75,19 @@ const CreatePage = (props) => {
   // function when clicking left palette color board
   const clickPaletteColor = (colorIndex) => {
     dpt.selectPaletteColor(colorIndex);
-    if (palette.toolType !== 'bucket' && palette.toolType !== 'brush') {
-      dpt.changeToolType('brush');
+    if (palette.toolType !== 'bucket' && palette.toolType !== 'pencil') {
+      dpt.changeToolType('pencil');
     }
   };
 
   // function when clicking left palette tool board
   const clickPaletteTool = (toolType) => {
-    if (toolType === palette.toolType) {
-      // reset to default - brush
-      dpt.changeToolType('brush');
-    } else {
-      // set to new toolType
-      dpt.changeToolType(toolType);
-    }
+    dpt.changeToolType(toolType);
   
     // do some detailed actions
     if (toolType === 'brush') {
       openPickr();
-    } else if (toolType !== 'bucket') {
+    } else if (toolType !== 'pencil' && toolType !== 'bucket') {
       dpt.selectPaletteColor(-1);
     }
   };
@@ -101,15 +95,21 @@ const CreatePage = (props) => {
   // function when clicking center painting board
   const clickGridCell = (cellIndex, cellColor) => {
     switch (palette.toolType) {
-      case 'brush':
-        dpt.drawWithBrush(cellIndex, palette.colors[palette.selectedIndex]);
+      case 'pencil':
+        dpt.drawWithPencil(cellIndex, palette.colors[palette.selectedIndex]);
+        dpt.changePaletteColor(palette.colors[palette.selectedIndex], true);
         return;
       case 'bucket':
         dpt.drawWithBucket(cellIndex, palette.colors[palette.selectedIndex]);
+        dpt.changePaletteColor(palette.colors[palette.selectedIndex], true);
         return;
-      case 'picker':
+      case 'eyedrop':
         const colorIndex = palette.colors.indexOf(cellColor);
-        dpt.selectPaletteColor(colorIndex);
+        if (colorIndex >= 0) {
+          dpt.selectPaletteColor(colorIndex);
+        } else {
+          dpt.changePaletteColor(cellColor, false);
+        }
         return;
       case 'eraser':
         dpt.drawWithEraser(cellIndex);
@@ -118,18 +118,20 @@ const CreatePage = (props) => {
     }
   };
 
-  const clickUpload = () => {
-    if (wallet.address) {
-      setModalState([true, 'upload']);
-    } else {
-      alert('please connect to wallet first');
-    }
-  };
-
   const onSubmitItem = async () => {
-    const singleFrameId = isPreviewStatic ? frames.activeId : null;
+    const frames = tabType === 'mint' ? mintedFrames : frames;
+    if (!wallet.address) {
+      alert('Please connect to wallet first');
+      return;
+    }
     const { title, description, supply } = submitItem;
-    const tags = submitItem.tags.split(',').map(v => v.trim());
+    const tags = submitItem.tags ? submitItem.tags.split(',').map(v => v.trim()) : [];
+    if (!title) {
+      alert('Title cannot be empty');
+      return;
+    }
+
+    const collection = collections.length > 0 ? collections.filter(clt => clt.selected)[0] : {};
 
     // validate supply
     const supplyNumber = parseFloat(supply);
@@ -141,7 +143,7 @@ const CreatePage = (props) => {
       return;
     }
 
-    const colors = convertFramesToString(frames, singleFrameId);
+    const colors = convertFramesToString(frames);
     
     // get hash id
     const hashCmd = mkReq({'to_hash': colors})
@@ -150,7 +152,7 @@ const CreatePage = (props) => {
     const rows = frames.height;
     const cols = frames.width;
     const frameCnt = isPreviewStatic ? 1 : frames.frameIds.length;
-    const intervals = convertFramesToIntervals(frames, singleFrameId);
+    const intervals = convertFramesToIntervals(frames);
     const account = wallet.address;
     const cmd = {
       code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-msg "supply") (read-keyset "accountKeyset"))`,
@@ -188,9 +190,32 @@ const CreatePage = (props) => {
         }
       }
     };
+    if (onSale) {
+      // if item is directly posted into market, then add release action
+      const { price, saleAmount } = submitItem;
+      const releaseCmd = {
+        code: `(${contractModules.colorblockMarket}.release (read-msg "id") (read-msg "account") (read-msg "price") (read-msg "amount"))`,
+        caps: [{
+          role: 'Transfer',
+          description: 'Transfer item to market pool',
+          cap: {
+            name: `${contractModules.colorblock}.TRANSFER`,
+            args: [id, account, contractModules.marketPoolAccount, saleAmount]
+          }
+        }],
+        data: {
+          price,
+          amount: saleAmount
+        }
+      };
+      cmd.code += releaseCmd.code;
+      cmd.caps = [...cmd.caps, ...releaseCmd.caps];
+      cmd.data = {...cmd.data, ...releaseCmd.data};
+    }
     const postData = {
       tags,
-      description
+      description,
+      collection
     };
     const signedCmd = await getSignedCmd(cmd, postData);
 
@@ -215,6 +240,139 @@ const CreatePage = (props) => {
       }
     };
     // todo: send to server
+  };
+
+  const newCollection = () => {
+    return {
+      id: randomId(collectionConfig.lengthOfId),
+      title: 'Input Your Collection Title',
+      user_id: wallet.address,
+      collectibles: [],
+      isNew: true,
+      hasModified: false
+    };
+  };
+
+  const getCollectionTitle = () => {
+    const selectedTitles = collections.filter(clt => clt.selected === true).map(clt => clt.title);
+    return selectedTitles.length > 0 ? selectedTitles[0] : 'No Collection';
+  };
+
+  const syncCollections = async () => {
+    const postData = collections;
+    const url = `${serverUrl}/collection`;
+    const result = await fetch(url, mkReq(postData)).then(res => res.json());
+    if (result.status === 'success') {
+      alert('sync successfully');
+    } else {
+      alert(result.data);
+    }
+  };
+
+  const getItemSettingBoard = () => {
+    return (
+      <div data-role='item settings' className='pl-6 w-full flex flex-col bg-white border-l text-sm'>
+        <div>
+          <input 
+            placeholder='Input title here...'
+            className='border-b pb-1'
+            onChange={ (e) => setSubmitItem({...submitItem, title: e.target.value}) } 
+          />
+        </div>
+        <div className='mt-4 text-xs'>
+          <p className='my-2'>Collection</p>
+          <div data-role='collection select' className='relative h-8'>
+            <select 
+              className='w-full h-full px-10 border rounded-lg cursor-pointer'
+              onChange={(e) => setCollections(collections.map((clt, index) => index === e.target.selectedIndex ? {
+                  ...clt,
+                  selected: true
+                } : {
+                  ...clt,
+                  selected: false
+                }
+              ))}
+            >
+              {
+                collections.length > 0 ?
+                collections.map(collection => (
+                  <option 
+                    className='text-center mx-auto'
+                    selected={collection.selected === true}
+                  >
+                    {collection.title}
+                  </option>
+                )) :
+                <option className='text-center mx-auto'>{getCollectionTitle()}</option>
+              }
+            </select>
+            <div className='absolute top-0 right-6 mx-2 text-gray-300 h-full flex items-center'>
+              <FontAwesomeIcon icon={fa.faCaretDown} />
+            </div>
+          </div>
+        </div>
+        <div className='mt-4 text-xs'>
+          <div className='flex justify-between items-end'>
+            <span className='my-2'>Description</span>
+            <span className='my-2 text-gray-400'>300 characters max</span>
+          </div>
+          <textarea 
+            rows='4' 
+            className='w-full border rounded-lg p-2'
+            onChange={ (e) => setSubmitItem({...submitItem, description: e.target.value}) } 
+          >
+          </textarea>
+        </div>
+        <div className='border-b my-5'></div>
+        <div>
+          <input 
+            type='number'
+            pattern='[0-9]{1,}'
+            placeholder='Total supply:' 
+            className='w-full border rounded p-2'
+            onChange={ (e) => setSubmitItem({...submitItem, supply: e.target.value}) }
+          />
+        </div>
+        <div className='text-xs flex items-center my-5'>
+          <span className='mr-5'>For Sale</span>
+          <label className='switch relative'>
+            <input type='checkbox' onChange={ () => setOnSale(!onSale) } />
+            <span className='slider round'></span>
+          </label>
+        </div>
+        {
+          onSale &&
+          <div className='text-xs'>
+            <div className='relative mb-4'>
+              <input 
+                type='number'
+                placeholder='Listing price:' 
+                className='w-full h-8 border rounded p-2'
+                onChange={ (e) => setSubmitItem({...submitItem, price: parseFloat(e.target.value)}) } 
+              />
+              <div className='absolute h-8 top-0 right-3 flex items-center'>
+                KDA
+              </div>
+            </div>
+            <input 
+              type='number'
+              pattern='[0-9]{1,}'
+              placeholder='Listing quantity:' 
+              className='w-full border rounded p-2'
+              onChange={ (e) => setSubmitItem({...submitItem, saleAmount: parseFloat(e.target.value)}) }
+            />
+          </div>
+        }
+        <div className='flex justify-between'>
+          <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded'>
+            Save
+          </button>
+          <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded' onClick={ () => onSubmitItem() }>
+            Deploy
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // load pickr after DOM loaded
@@ -243,7 +401,7 @@ const CreatePage = (props) => {
     newPickr.on('save', (colorData) => {
       if (colorData) {
         const color = colorData.toRGBA().toString(0);
-        dpt.changePaletteColor(color);
+        dpt.changePaletteColor(color, false);
       }
     });
     newPickr.on('show', currenctPickr => {
@@ -273,121 +431,228 @@ const CreatePage = (props) => {
       }
     };
 
+    const fetchCollections = async () => {
+      if (wallet.address) {
+        const url = `${serverUrl}/collection/owned-by/${wallet.address}`;
+        const collections = await fetch(url).then(res => res.json());
+        setCollections(collections);
+      }
+    };
+
     setPickr(newPickr);
-    fetchProjects()
+    fetchProjects();
+    fetchCollections();
   }, [dpt]);
 
   return (
     <div>
-      <div data-role='creator body' className='w-11/12 mx-auto'>
-        <div data-role='frame list container' className='flex h-20 mb-6'>
-          <div data-role='button to append frame'>
-            <button className='h-full bg-gray-800 text-white w-7 border-b-4 border-gray-400 rounded' onClick={ () => dpt.addFrame() }>
-              +
-            </button>
-          </div>
-          <div className='ml-3 w-full bg-gray-200 flex'>
-            {
-              frames.frameIds.map((frameId) => (
-                <div data-role='preview box with buttons' className='w-16 mr-4 mt-1.5' key={frameId}>
-                  <div data-role='top part of preview box' className={'flex justify-between bg-gray-100 border '.concat(frameId === frames.activeId ? 'border-red-500' : 'border-black')} onClick={ () => dpt.setActiveFrameId(frameId) }>
-                    <div style={{ height: `${previewSizeXS.height}rem`, width: `${previewSizeXS.width}rem` }}>
-                      <Preview
-                        task={{
-                          type: 'single',
-                          frames,
-                          frameId
-                        }} 
-                      />
-                    </div>
-                    <div>
-                      <button className='block w-5 h-5 text-white m-0 bg-gray-400' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
-                        <div className='flex justify-items-center'>
-                          <FontAwesomeIcon icon={fa.faTrashAlt} size='xs' />
-                        </div>
-                      </button>
-                      <button className='block w-5 h-5 text-white mt-2 bg-gray-400' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
-                        <div className='flex justify-items-center'>
-                          <FontAwesomeIcon icon={fa.faCopy} size='xs' />
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                  <div data-role='bottom part of preview box'>
-                    <input 
-                      type='number' 
-                      step='1' 
-                      value={ frames.frameList[frameId].interval } 
-                      onChange={ (e) => onSetFrameInterval(e, frameId) } 
-                      className={'w-full h-5 bg-gray-400 text-center align-top py-0.5 text-white border border-t-0 '.concat(frameId === frames.activeId ? 'border-red-500' : 'border-black')}
-                      disabled={frameId === frames.frameIds.length - 1}
-                    />
-                  </div>
-                </div>
-              ))
-            }
-          </div>
+      <div data-role='creator body' className='bg-cb-gray'>
+        <div data-role='tabs at top' className='h-10 border-b flex items-end space-x-10 text-sm mb-5'>
+          <button className={`ml-16 px-3 py-2 ${tabType === 'collection' ? 'selected' : ''}`} onClick={ () => setTabType('collection') }>Collection</button>
+          <button className={`px-3 py-2 ${tabType === 'design' ? 'selected' : ''}`} onClick={ () => setTabType('design') }>Design</button>
+          <button className={`px-3 py-2 ${tabType === 'mint' ? 'selected' : ''}`} onClick={ () => setTabType('mint') }>Mint</button>
         </div>
-        <div data-role='creator tools and grids' className='flex'>
-          <div data-role='creator primary tools on the left side' className='w-48'>
-            <div>
-              <button 
-                className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'
-                onClick={ () => dpt.newProject() }
-              >
-                NEW
-              </button>
+        <div data-role='collection tab' className={`flex flex-col items-center justify-center w-1/3 mx-auto text-sm ${tabType === 'collection' ? '' : 'hidden'}`}>
+          <p className='text-lg'>Select Collection</p>
+          <div 
+            className='w-full my-3 relative text-gray-300 hover-pink hover:text-pink-500 cursor-pointer'
+            onClick={ () => setTabType('design') }
+          >
+            <input 
+              value={getCollectionTitle()}
+              disabled
+              className='w-full py-2 text-center bg-white text-gray-500 border rounded cursor-pointer'
+            />
+            <div className='absolute top-0 left-1/2 ml-24 h-full flex items-center'>
+              <FontAwesomeIcon icon={fa.faCaretRight} />
             </div>
-            <div className='flex justify-between mt-1'>
-              <div className='w-1/2 pr-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded' onClick={ () => setModalState([true, 'tool']) }>LOAD</button>
-              </div>
-              <div className='w-1/2 pl-1'>
-                <button 
-                  className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'
-                  onClick={ () => saveProject() } 
-                >
-                  SAVE
-                </button>
-              </div>
-            </div>
-            <div className='flex justify-between mt-4'>
-              <div className='w-1/2 pr-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded' onClick={ () => dpt.undo() }>
-                  <FontAwesomeIcon icon={fa.faUndo} />
-                </button>
-              </div>
-              <div className='w-1/2 pl-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded' onClick={ () => dpt.redo() }>
-                  <FontAwesomeIcon icon={fa.faRedo} />
-                </button>
-              </div>
-            </div>
-            <div data-role='color pickr' className='relative'>
+          </div>
+          <div className='w-4/5 mx-auto border-b my-2'></div>
+          <div className='text-sm my-2'>
+            Your Collections
+          </div>
+          {
+            collections.map((collection, index) => (
               <div 
-                className='block absolute left-5 top-5' 
-                style={{ 
-                  paddingLeft: '100%', 
-                  zIndex: pickr ? pickr.zIndex : 0, 
-                  display: pickr && pickr.isShown ? 'block' : 'none'
-                }}
+                className='w-full relative'
+                onClick={ () => setCollections(collections.map((clt, _index) => _index === index ? {
+                    ...clt,
+                    selected: true
+                  } : {
+                    ...clt,
+                    selected: false
+                  }
+                ))}
               >
-                <div className='pickr'></div>
+                <input 
+                  value={collection.isNew && !collection.hasModified ? '' : collection.title}
+                  placeholder={collection.isNew ? collection.title : ''}
+                  disabled={collection.isNew ? false : true}
+                  className='w-full py-3 text-left px-4 my-2 bg-white border rounded hover-pink'
+                  onChange={ (e) => setCollections(collections.map((clt, _index) => _index === index ? {
+                      ...clt,
+                      title: e.target.value,
+                      hasModified: true,
+                      selected: true
+                    } : {
+                      ...clt,
+                      selected: false
+                    }
+                  ))}
+                />
+                <div className='absolute top-0 right-4 ml-16 text-gray-300 h-full flex items-center'>
+                  {collection.collectibles.length} Colletibles
+                </div>
+                <div 
+                  className='absolute top-0 -right-8 text-gray-300 h-full flex items-center hover:text-pink-500 cursor-pointer'
+                  onClick={ () => setCollections(collections.filter((clt, _index) => _index !== index)) }
+                >
+                  <FontAwesomeIcon icon={fa.faTimes} />
+                </div>
+              </div>
+            ))
+          }
+          <button 
+            className='w-full my-4 rounded bg-gray-100 py-3'
+            onClick={ () => setCollections([...collections, newCollection()]) }
+          >
+            New Collections +
+          </button>
+          <button 
+            className='w-full my-4 rounded bg-cb-pink text-white py-3'
+            onClick={ () => syncCollections() }
+          >
+            Update collection onto Server
+          </button>
+        </div>
+        <div data-role='create tab' className={`flex ${tabType === 'design' ? '' : 'hidden'}`}>
+          <div data-role='creator primary tools on the left side' className='w-48 ml-12'>
+            <div data-role='painting tools' className='flex flex-col py-4 space-y-3 border rounded bg-white text-gray-500'>
+              <div data-role='color pickr' className='relative'>
+                <div 
+                  className='block absolute left-5 top-5' 
+                  style={{ 
+                    paddingLeft: '100%', 
+                    zIndex: pickr ? pickr.zIndex : 0, 
+                    display: pickr && pickr.isShown ? 'block' : 'none'
+                  }}
+                >
+                  <div className='pickr'></div>
+                </div>
+              </div>
+              <div className='flex justify-between space-x-3 px-5'>
+                <div 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'pencil' ? 'selected' : ''}`} 
+                  onClick={ () => clickPaletteTool('pencil') }
+                >
+                  <img src='/img/tool_pencil.svg' alt='pencil' className='w-10 h-10' />
+                </div>
+                <div 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'eraser' ? 'selected' : ''}`} 
+                  onClick={ () => clickPaletteTool('eraser') }
+                >
+                  <img src='/img/tool_eraser.svg' alt='eraser' className='w-10 h-10' />
+                </div>
+                <div 
+                  className={`w-10 h-10 flex justify-center items-center ${palette.toolType === 'bucket' ? 'selected' : ''}`} 
+                  onClick={ () => clickPaletteTool('bucket') }
+                >
+                  <img src='/img/tool_bucket.svg' alt='bucket' className='w-10 h-10' />
+                </div>
+              </div>
+              <div className='flex justify-between space-x-3 px-5'>
+                <div 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${pickr && pickr.isShown ? 'selected' : ''}`} 
+                  onClick={ () => clickPaletteTool('brush') }
+                >
+                  <img src='/img/tool_brush.svg' alt='brush' className='w-10 h-10' />
+                </div>
+                <div 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'eyedrop' ? 'selected' : ''}`} 
+                  onClick={ () => clickPaletteTool('eyedrop') }
+                >
+                  <img src='/img/tool_eyedrop.svg' alt='eyedrop' className='w-10 h-10' />
+                </div>
+                <div 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'move' ? 'selected' : ''}`} 
+                  onClick={ () => clickPaletteTool('move') }
+                >
+                  <img src='/img/tool_move.svg' alt='move' className='w-10 h-10' />
+                </div>
               </div>
             </div>
-            <div data-role='painting tools' className='flex flex-wrap mt-5 text-xl'>
-              <div className={'w-1/3 text-center py-1 mb-1 '.concat(palette.toolType === 'bucket' ? 'selected' : '')} onClick={ () => clickPaletteTool('bucket') }><FontAwesomeIcon icon={fa.faFillDrip} /></div>
-              <div className={'w-1/3 text-center py-1 mb-1 '.concat(palette.toolType === 'picker' ? 'selected' : '')} onClick={ () => clickPaletteTool('picker') }><FontAwesomeIcon icon={fa.faEyeDropper} /></div>
-              <div className={'w-1/3 text-center py-1 mb-1 '.concat(pickr && pickr.isShown ? 'selected' : '')} onClick={ () => clickPaletteTool('brush') }><FontAwesomeIcon icon={fa.faPaintBrush} /></div>
-              <div className={'w-1/3 text-center py-1 mb-1 '.concat(palette.toolType === 'eraser' ? 'selected' : '')} onClick={ () => clickPaletteTool('eraser') }><FontAwesomeIcon icon={fa.faEraser} /></div>
-              <div className={'w-1/3 text-center py-1 mb-1 '.concat(palette.toolType === 'move' ? 'selected' : '')} onClick={ () => clickPaletteTool('move') }><FontAwesomeIcon icon={fa.faArrowsAlt} /></div>
+            <div data-role='palette' className='pt-5 pb-2 px-4 mt-6 border rounded bg-white'>
+              <div className='flex flex-wrap justify-between'>
+                {
+                  palette.colors.map((color, index) => (
+                    index < 30 ? 
+                    <div
+                      className='mx-1 my-0.5'
+                      onClick={ () => clickPaletteColor(index) }
+                      key={index}
+                    >
+                      <button 
+                        className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
+                        style={{ backgroundColor: color }}
+                      ></button>
+                    </div> : <></>
+                  ))
+                }
+              </div>
+              <p className='mt-1 mb-2 border-t bg-gray-400'></p>
+              <div className='flex flex-wrap justify-between'>
+                {
+                  palette.colors.map((color, index) => (
+                    index >= 30 && index < 42 ? 
+                    <div
+                      className='mx-1 my-0.5'
+                      onClick={ () => clickPaletteColor(index) }
+                      key={index}
+                    >
+                      <button 
+                        className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
+                        style={{ backgroundColor: color }}
+                      ></button>
+                    </div> : <></>
+                  ))
+                }
+              </div>
+              <input 
+                value={palette.selectedIndex >= 0 ? convertRgbaToHex(palette.colors[palette.selectedIndex]) : '#FFFFFF'}
+                className='w-full text-xs py-1 border-0 rounded bg-gray-200 px-3 tracking-wide my-2'
+              />
+              <p className='text-gray-500 text-xs mb-1'>Recent</p>
+              <div className='flex flex-wrap justify-between'>
+                {
+                  palette.colors.map((color, index) => (
+                    index >= 42 ? 
+                    <div
+                      className='mx-1 my-0.5'
+                      onClick={ () => clickPaletteColor(index) }
+                      key={index}
+                    >
+                      <button 
+                        className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
+                        style={{ backgroundColor: color }}
+                      ></button>
+                    </div> : <></>
+                  ))
+                }
+              </div>
             </div>
-            <div data-role='palette' className='flex flex-wrap h-40 mt-5 leading-none'>
+          </div>
+
+          <div data-role='painting grids of one frame' className='mx-12'>
+            <div className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' style={{ cursor: 'cell' }}>
               {
-                palette.colors.map((color, index) => (
+                frames.frameList[frames.activeId].cells.map((color, index) => (
                   <div 
-                    className={'w-1/6 px-0.5 pt-0.5 '.concat(index === palette.selectedIndex ? 'border-4 border-gray-500' : '')}
-                    onClick={ () => clickPaletteColor(index) }
+                    className='border border-gray-100' 
+                    style={{ 
+                      width: widthPct
+                    }}  
+                    onMouseOver={ () => dpt.setHoveredIndex(index) }
+                    onClick={ () => clickGridCell(index, color) }
                     key={index}
                   >
                     <div className='w-full square' style={{ backgroundColor: color }}></div>
@@ -395,223 +660,110 @@ const CreatePage = (props) => {
                 ))
               }
             </div>
-            <div className='mt-2'>
-              <button className='w-full bg-gray-400 border-b-4 border-gray-100 py-2 rounded' onClick={ () => clickUpload() }>UPLOAD</button>
-            </div>
-            <div className='mt-2'>
-              <button className='w-full bg-red-800 text-white border-b-4 border-red-400 py-1 rounded'><FontAwesomeIcon icon={fa.faDownload} /></button>
-            </div>
-            <div className='flex justify-between mt-2'>
-              <div className='w-1/2 pr-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'><FontAwesomeIcon icon={fa.faQuestion} /></button>
-              </div>
-              <div className='w-1/2 pl-1'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'><FontAwesomeIcon icon={fa.faKeyboard} /></button>
-              </div>
-            </div>
-          </div>
-          <div data-role='grids showing the selected frame at center' className='w-1/2 mx-auto'>
-            <div className='w-3/4 mx-auto'>
-              <div className='flex flex-wrap mx-auto' style={{ width: totalWidth, cursor: 'cell' }}>
-                {
-                  frames.frameList[frames.activeId].cells.map((color, index) => (
-                    <div 
-                      className='pl-0.5 pt-0.5' 
-                      style={{ 
-                        width: widthPct
-                      }}  
-                      onMouseOver={ () => dpt.setHoveredIndex(index) }
-                      onClick={ () => clickGridCell(index, color) }
-                      key={index}
-                    >
-                      <div className='w-full square' style={{ backgroundColor: color }}></div>
-                    </div>
-                  ))
-                }
+            <div className='relative flex justify-center space-x-10 pt-4'>
+              <button data-role='undo button' className='w-6 h-6' onClick={ () => dpt.undo() }>
+                <img src='/img/undo.svg' alt='undo' className='w-full h-full' />
+              </button>
+              <button data-role='redo button' className='w-6 h-6' onClick={ () => dpt.redo() }>
+                <img src='/img/redo.svg' alt='redo' className='w-full h-full' />
+              </button>
+              <div className='absolute top-3 right-0'>
+                <input 
+                  disabled 
+                  value={`${frames.width} x ${frames.height}`}
+                  className='border rounded w-24 py-0.5 text-center text-sm text-gray-500' 
+                />
               </div>
             </div>
           </div>
-          <div data-role='preview-box and config tools at right side' className='w-48'>
-            <div className='flex w-3/5 px-2 mx-auto'>
-              <div className='w-1/3 mx-0.5'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 rounded' onClick={ () => setIsPreviewStatic(!isPreviewStatic) }>
-                  <div className='relative -top-0.5'>
-                    <FontAwesomeIcon icon={ isPreviewStatic ? fa.faPlay : fa.faPause } size='xs' />
-                  </div>
+
+          <div data-role='frame list'>
+            <div data-role='preview box' className='relative w-20 h-20 border rounded'>
+              {
+                isPreviewStatic ? 
+                <Preview
+                  task={{
+                    type: 'single',
+                    frames,
+                    frameId: frames.activeId
+                  }} 
+                /> :
+                <Preview 
+                  task={{
+                    type: 'animation',
+                    frames: frames
+                  }} 
+                />
+              }
+              <div className='absolute top-0 left-20 pl-2 w-20 rounded flex flex-col space-y-1'>
+                <button onClick={ () => setIsPreviewStatic(!isPreviewStatic) }>
+                  <img src='/img/play.svg' alt='play' className='w-6 h-6' />
+                </button>
+                <button>
+                  <img src='/img/settings.svg' alt='settings' className='w-6 h-6' />
+                </button>
+                <button onClick={ () => dpt.addFrame() }>
+                  <img src='/img/add.svg' alt='add' className='w-6 h-6' />
                 </button>
               </div>
-              <div className='w-1/3 mx-0.5'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 rounded' onClick={ () => setIsPreviewLarge(!isPreviewLarge) }>
-                  <div className='relative -top-0.5'>
-                    <FontAwesomeIcon icon={fa.faCompress} size='xs' />
-                  </div>
-                </button>
-              </div>
-              <div className='w-1/3 mx-0.5'>
-                <button className='w-full bg-gray-800 text-white border-b-4 border-gray-400 rounded' onClick={ () => setModalState([true, 'display']) }>
-                  <div className='relative -top-0.5'>
-                    <FontAwesomeIcon icon={fa.faPhotoVideo} size='xs' />
-                  </div>
-                </button>
-              </div>
             </div>
-            <div className={`my-5 bg-gray-100 h-${isPreviewLarge ? 24 : 12}`}>
-              <div 
-                className='mx-auto'
-                style={{ 
-                  width: `${isPreviewLarge ? previewSizeLG.width : previewSizeSM.width}rem`,
-                  height: `${isPreviewLarge ? previewSizeLG.height : previewSizeSM.height}rem`
-                }}
-              >
-                {
-                  isPreviewStatic ? 
-                  <Preview
-                    task={{
-                      type: 'single',
-                      frames,
-                      frameId: frames.activeId
-                    }} 
-                  /> :
-                  <Preview 
-                    task={{
-                      type: 'animation',
-                      frames: frames
-                    }} 
-                  />
-                }
-              </div>
-            </div>
-            <div>
-              <button onClick={ () => dpt.resetFrame(frames.activeId) } className='w-full bg-gray-800 text-white border-b-4 border-gray-400 py-1 rounded'>RESET</button>
-            </div>
-            <div className='flex mt-5'>
-              <div className='w-1/3 text-4xl text-center pr-1 py-1'>
-                <FontAwesomeIcon icon={fa.faArrowsAltH} />
-              </div>
-              <div className='w-2/3 flex border-2 border-gray-400'>
-                <input value={frames.width} className='w-1/2 text-center' onChange={()=>{}} disabled />
-                <div className='w-1/2'>
-                  <button className='block w-full text-center bg-gray-800 text-white border-b border-gray-400' onClick={ () => dpt.appendCol() }>
-                    +
-                  </button>
-                  <button className='block w-full text-center bg-gray-800 text-white' onClick={ () => dpt.deleteCol() }>
-                    -
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className='flex mt-5'>
-              <div className='w-1/3 text-4xl text-center pr-1 py-1'>
-                <FontAwesomeIcon icon={fa.faArrowsAltV} />
-              </div>
-              <div className='w-2/3 flex border-2 border-gray-400'>
-                <input value={frames.height} className='w-1/2 text-center' onChange={()=>{}} disabled />
-                <div className='w-1/2'>
-                  <button className='block w-full text-center bg-gray-800 text-white border-b border-gray-400' onClick={ () => dpt.appendRow() }>
-                    +
-                  </button>
-                  <button className='block w-full text-center bg-gray-800 text-white' onClick={ () => dpt.deleteRow() }>
-                    -
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className='mt-5 border-2 border-gray-400'>
-              <label className='block text-center w-full bg-gray-800 text-white'>Duration</label>
-              <input type='number' step='0.01' value={frames.duration} onChange={ (e) => dpt.setDuration(e.target.value) } className='block text-center w-full bg-gray-600 text-white' />
-            </div>
-            { frames.hoveredIndex && 
-            <div className='mt-5 text-center'>
-                {Math.floor(frames.hoveredIndex / frames.width) + 1},{frames.hoveredIndex % frames.width + 1} 
-            </div>
-            }
-          </div>
-        </div>
-      </div>
-      { modalState[0] && modalState[1] === 'upload' && 
-        <div data-role='creator modal' className='fixed top-0 left-0 w-full min-h-full bg-white bg-opacity-90'>
-          <div className='relative mt-20 w-5/6 pb-20 mx-auto border border-red-500 bg-white'>
-            <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => setModalState([false, '']) }>
-              <FontAwesomeIcon icon={fa.faTimes} />
-            </button>
-            <div data-role='upload subpage'>
-              <div data-role='image type selection' className='w-1/4 mx-auto mt-20 flex text-lg space-x-5 content-center'>
-                <label className={'px-4 py-2 '.concat(isPreviewStatic ? 'selected' : '')} onClick={ () => setIsPreviewStatic(true) }>single</label>
-                <label className={'px-4 py-2 '.concat(isPreviewStatic ? '' : 'selected')} onClick={ () => setIsPreviewStatic(false) }>animation</label>
-              </div>
-              <div data-role='item submit board' className='mt-10 flex'>
-                <div data-role='preview' className='w-1/2'>
+            <div className='border-b border-gray-400 my-2'></div>
+            <div data-role='all single frames' className='flex flex-col'>
+              {
+                frames.frameIds.map((frameId) => (
                   <div 
-                    className='mx-auto'
-                    style={{ 
-                      width: `${previewSizeXL.width}rem`,
-                      height: `${previewSizeXL.height}rem`
-                    }}
+                    data-role='preview box with buttons' 
+                    className={`relative w-20 h-20 mb-4 border rounded ${frameId === frames.activeId ? 'bd-cb-pink' : 'border-gray-400'}`} 
+                    key={frameId}
+                    onClick={ () => dpt.setActiveFrameId(frameId) }
                   >
-                  {
-                    isPreviewStatic ? 
                     <Preview
                       task={{
                         type: 'single',
                         frames,
-                        frameId: frames.activeId
-                      }} 
-                    /> :
-                    <Preview 
-                      task={{
-                        type: 'animation',
-                        frames: frames
+                        frameId
                       }} 
                     />
-                  }
+                    <div className='absolute bottom-0 right-0.5 flex justify-between items-center space-x-1 py-1'>
+                      <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
+                        <img src='/img/duplicate.svg' alt='duplicate' className='w-full h-full' />
+                      </button>
+                      <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
+                      <img src='/img/trash.svg' alt='trash' className='w-full h-full' />
+                      </button>
+                    </div>
+                    <input 
+                      type='number' 
+                      step='1' 
+                      value={ frames.frameList[frameId].interval } 
+                      onChange={ (e) => onSetFrameInterval(e, frameId) } 
+                      className='absolute bottom-1 left-1 w-6 text-center text-xs text-gray-700 bg-white rounded'
+                      disabled={frameId === frames.frameIds.length - 1}
+                    />
                   </div>
-                </div>
-                <div data-role='item submit' className='w-1/3' onSubmit={ (e) => submitItem(e) }>
-                  <label className='my-1 w-full'>Title</label>
-                  <input 
-                    type='text' 
-                    className='border border-black w-full' 
-                    onChange={ (e) => setSubmitItem({...submitItem, title: e.target.value}) } 
-                  />
-                  <label className='my-1 w-full'>Description</label>
-                  <input 
-                    type='text' 
-                    className='border border-black w-full' 
-                    onChange={ (e) => setSubmitItem({...submitItem, description: e.target.value}) } 
-                  />
-                  <label className='my-1 w-full'>Tags - separated by comma</label>
-                  <input 
-                    type='text' 
-                    className='border border-black w-full' 
-                    onChange={ (e) => setSubmitItem({...submitItem, tags: e.target.value}) } 
-                  />
-                  <label className='my-1 w-full'>Supply - totol amount of tokens</label>
-                  <input 
-                    type='number'
-                    min='1'
-                    pattern='[0-9]{1,}'
-                    className='border border-black w-full' 
-                    onChange={ (e) => setSubmitItem({...submitItem, supply: e.target.value}) } 
-                  />
-                  <button className='mt-8 bg-red-500 text-white w-2/3 py-1 px-3' onClick={ () => onSubmitItem() }>
-                    Get signed from wallet
-                  </button>
-                </div>
-              </div>
+                ))
+              }
             </div>
           </div>
+          <div className='pl-16 w-full'>
+            {getItemSettingBoard()}
+          </div>
+            
         </div>
-      }
-      { modalState[0] && modalState[1] === 'tool' &&
-        <div data-role='creator modal' className='fixed top-0 left-0 w-full min-h-full bg-white bg-opacity-90'>
-          <div className='relative mt-20 w-5/6 pb-20 mx-auto border border-red-500 bg-white'>
-            <button data-role='modal exit' className='absolute right-4 top-3' onClick={ () => setModalState([false, '']) }>
-              <FontAwesomeIcon icon={fa.faTimes} />
-            </button>
-            <PixelTool closeModal={ () => setModalState([false, '']) }/>
+
+        <div data-role='mint tab' className={`flex ${tabType === 'mint' ? '' : 'hidden'}`}>
+          <div className='w-3/4'>
+            <PixelTool 
+              closeTab={ () => setTabType('design') }
+              saveFrames={ (frames) => setMintedFrames(frames) } 
+            />
+          </div>
+          <div className='w-1/4'>
+            {getItemSettingBoard()}
           </div>
         </div>
-      }
+
+      </div>
     </div>
   );
 };

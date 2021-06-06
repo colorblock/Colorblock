@@ -60,7 +60,7 @@ export const convertFramesToBase64 = (frames, singleFrameId=null) => {
   return url;
 };
 
-const convertRgbaToHex = (rgbaStr) => {
+export const convertRgbaToHex = (rgbaStr) => {
   // rgba(255, 255, 255, 1) to #FFFFFF
   const componentToHex = (c) => {
     var hex = c.toString(16);
@@ -107,38 +107,46 @@ export const convertFramesToIntervals = (frames, singleFrameId=null) => {
 
 export const createFramesFromImage = async (imageBlob) => {
 
-  const config = { 
-    url: URL.createObjectURL(imageBlob), 
-    frames: 'all',
-    outputType: 'canvas',
-    cumulative: true
-  };
+  const imageUrl = URL.createObjectURL(imageBlob);
+  const imageType = imageBlob.type;
+  
   const canvasList = [];
   const delaysRaw = [];
-  await gifFrames(config).then((frameData) => {
-    frameData.forEach(frame => {
-      canvasList.push(frame.getImage());
-      delaysRaw.push(frame.frameInfo.delay);
+  if (imageType.includes('gif')) {
+    // generate canvas list from gif
+    const config = { 
+      url: imageUrl, 
+      frames: 'all',
+      outputType: 'canvas',
+      cumulative: true
+    };
+    await gifFrames(config).then((frameData) => {
+      frameData.forEach(frame => {
+        canvasList.push(frame.getImage());
+        delaysRaw.push(frame.frameInfo.delay);
+      });
     });
-  });
+  } else {
+    // handle static image
+    const canvas = await new Promise(resolve => {
+      // load image into canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.fillStyle = defaultColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas);
+      }
+      img.src = URL.createObjectURL(imageBlob);
+    });
+    canvasList.push(canvas);
+    delaysRaw.push(1000);
+  }
 
-  /*
-  const canvas = await new Promise(resolve => {
-    // load image into canvas
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.fillStyle = defaultColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas);
-    }
-    img.src = URL.createObjectURL(imageBlob);
-  });
-  */
 
   const width = canvasList[0].width;
   const height = canvasList[0].height;

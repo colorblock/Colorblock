@@ -1,5 +1,5 @@
 import Pact from 'pact-lang-api';
-import { walletUrl } from '../config';
+import { signConfig, walletUrl } from '../config';
 
 const NETWORKID = 'mainnet01';
 const chainId = '0';
@@ -41,8 +41,8 @@ export const getWalletAccounts = async () => {
 export const getSignedCmd = async (inputCmd, postData={}) => {
   // set cmd correctly
   const fixedCmd = {
-    gasPrice: 0.000000000001,
-    gasLimit: 150000,
+    gasPrice: signConfig.gasPrice,
+    gasLimit: signConfig.gasLimit,
     chainId: chainId,
     ttl: 600,
     networkId: NETWORKID,

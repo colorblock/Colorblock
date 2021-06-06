@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="57" height="56.331" viewBox="0 0 57 56.331">
+  <g id="pencil_button" transform="translate(0.441)">
+    <g id="Group_349" data-name="Group 349">
+      <g id="Rectangle_458" data-name="Rectangle 458" transform="translate(-0.441 0.327)" fill="#f9f8fd" stroke="#a19cb4" stroke-width="1" opacity="0.74">
+        <rect width="57" height="56" rx="8" stroke="none"/>
+        <rect x="0.5" y="0.5" width="56" height="55" rx="7.5" fill="none"/>
+      </g>
+    </g>
+    <path id="Icon_awesome-pencil-alt" data-name="Icon awesome-pencil-alt" d="M22.761,6.5,20.654,8.6a.549.549,0,0,1-.777,0L14.8,3.531a.549.549,0,0,1,0-.777L16.91.646a2.2,2.2,0,0,1,3.1,0l2.747,2.747A2.191,2.191,0,0,1,22.761,6.5ZM12.992,4.564l-12,12L.019,22.122A1.1,1.1,0,0,0,1.29,23.393l5.554-.974,12-12a.549.549,0,0,0,0-.777L13.774,4.564a.555.555,0,0,0-.782,0ZM4.023,19.384H6.218v1.659L1.29,22.122h0L2.364,17.19H4.023Z" transform="translate(15.762 16.09)" fill="#b9b5c7"/>
+  </g>
+</svg>

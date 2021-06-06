@@ -8,4 +8,5 @@ Pillow==8.2.0
 flask-msearch==0.2.9.1
 whoosh==2.7.4
 blinker==1.4
-#install manually: git+https://github.com/sedthh/pyxelate.git
+imutils==0.5.4
+opencv-python==4.5.2.52

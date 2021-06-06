@@ -2,6 +2,8 @@ from flask import Blueprint, request, session, current_app as app, jsonify
 import json
 
 from app import db
+from app.models.collectible import Collectible
+from app.models.collection import Collection
 from app.models.item import Item
 from app.models.ledger import Ledger
 
@@ -64,10 +66,37 @@ def submit_item():
         
     if result['status'] == 'success':
         item_id = item_data['id']
-        update_item(item_id)
+        item_info = {
+            'tags': post_data['tags'],
+            'description': post_data['description'],
+        }
+        update_item(item_id, item_info)
         ledger_id = '{}:{}'.format(item_data['id'], item_data['account'])
         update_ledger(ledger_id)
+        
+        if 'collection' in post_data:
+            # update collectible
+            collection = post_data['collection']
+            collection_id = collection['id']
+            collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
+            collectible = Collectible(
+                id=collectible_id,
+                item_id=item_id,
+                collection_id=collection_id
+            )
+            db.session.add(collectible)
+            db.session.commit()
 
+            collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
+            if not collection_db:
+                collection = Collection(
+                    id=collection_id,
+                    title=collection['title'],
+                    user_id=collection['user_id'],
+                )
+                db.session.add(collection)
+                db.session.commit()
+            
     return result
 
 def validate_item(item):

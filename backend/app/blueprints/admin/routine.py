@@ -83,7 +83,8 @@ def sync_block(chain_id):
             if payload['height'] < start_height:
                 continue
 
-            db_block = db.session.query(Block).filter(Block.hash == payload['hash']).first()
+            matched_blocks = [v for v in fetched_blocks if v.hash == payload['hash']]
+            db_block = matched_blocks[0] if len(matched_blocks) > 0 else None
             if db_block and db_block.verified:
                 app.logger.debug('block {} is verified, skip'.format(payload['height']))
                 continue
@@ -259,7 +260,7 @@ def update_deal(deal_id):
         db.session.commit()
     app.logger.debug('after modification, deal = {}'.format(deal))
 
-def update_item(item_id):        
+def update_item(item_id, item_info={}):        
     item = db.session.query(Item).filter(Item.id == item_id).first()
     if item:
         return
@@ -284,6 +285,8 @@ def update_item(item_id):
         id=item_id,
         title=item_data['title'],
         type=item_type,
+        tags=item_info.get('tags', None),
+        description=item_info.get('description', None),
         creator=item_data['creator'],
         supply=item_data['supply']
     )

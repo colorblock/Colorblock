@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="57" height="56.331" viewBox="0 0 57 56.331">
+  <g id="eraser_button" transform="translate(0 0.327)">
+    <g id="Group_350" data-name="Group 350" transform="translate(0.441 -0.327)">
+      <g id="Rectangle_458" data-name="Rectangle 458" fill="#faf9fd" stroke="#b9b5c7" stroke-width="1" opacity="0.74">
+        <rect width="56.331" height="56.331" rx="8" stroke="none"/>
+        <rect x="0.5" y="0.5" width="55.331" height="55.331" rx="7.5" fill="none"/>
+      </g>
+    </g>
+    <path id="Icon_awesome-eraser" data-name="Icon awesome-eraser" d="M22.681,13.27a2.186,2.186,0,0,0,0-3.092L15.393,2.89a2.186,2.186,0,0,0-3.092,0L.64,14.551a2.186,2.186,0,0,0,0,3.092l4.373,4.373a2.187,2.187,0,0,0,1.546.64h6.1c.832-.276,1.9-1.533,3.556-2.915l6.471-6.471ZM8.033,9.458l7.983,7.848-3.58,3.371H6.559L1.806,15.726,8.033,9.458Z" transform="translate(16.519 14.652)" fill="#b9b5c7"/>
+  </g>
+</svg>

@@ -7,37 +7,57 @@ export const defaultColor = 'rgba(255, 255, 255, 1)';
 export const defaultWidth = 16;
 export const defaultHeight = 16;
 export const defaultDuration = 1;
-export const defaultPaletteColors = [    
+export const fixedPaletteColorsCnt = 30;
+export const variablePaletteColorsCnt = 12;
+export const defaultPaletteColors = [
   'rgba(0, 0, 0, 1)',
-  'rgba(255, 0, 0, 1)',
-  'rgba(233, 30, 99, 1)',
-  'rgba(156, 39, 176, 1)',
-  'rgba(103, 58, 183, 1)',
-  'rgba(63, 81, 181, 1)',
-  'rgba(33, 150, 243, 1)',
-  'rgba(3, 169, 244, 1)',
-  'rgba(0, 188, 212, 1)',
-  'rgba(0, 150, 136, 1)',
-  'rgba(76, 175, 80, 1)',
-  'rgba(139, 195, 74, 1)',
-  'rgba(205, 220, 57, 1)',
-  'rgba(158, 224, 122, 1)',
-  'rgba(255, 235, 59, 1)',
-  'rgba(255, 193, 7, 1)',
-  'rgba(255, 152, 0, 1)',
-  'rgba(255, 205, 210, 1)',
-  'rgba(255, 87, 34, 1)',
-  'rgba(121, 85, 72, 1)',
-  'rgba(158, 158, 158, 1)',
-  'rgba(96, 125, 139, 1)',
-  'rgba(48, 63, 70, 1)',
+  'rgba(51, 51, 51, 1)',
+  'rgba(102, 102, 102, 1)',
+  'rgba(153, 153, 153, 1)',
+  'rgba(204, 204, 204, 1)',
   'rgba(255, 255, 255, 1)',
-  'rgba(56, 53, 53, 1)',
-  'rgba(56, 53, 53, 1)',
-  'rgba(56, 53, 53, 1)',
-  'rgba(56, 53, 53, 1)',
-  'rgba(56, 53, 53, 1)',
-  'rgba(56, 53, 53, 1)'
+  'rgba(255, 1, 0, 1)',
+  'rgba(255, 151, 52, 1)',
+  'rgba(80, 187, 42, 1)',
+  'rgba(1, 110, 248, 1)',
+  'rgba(128, 38, 255, 1)',
+  'rgba(244, 32, 154, 1)',
+  'rgba(255, 99, 99, 1)',
+  'rgba(158, 179, 106, 1)',
+  'rgba(131, 238, 93, 1)',
+  'rgba(70, 151, 255, 1)',
+  'rgba(169, 107, 255, 1)',
+  'rgba(255, 104, 191, 1)',
+  'rgba(255, 138, 138, 1)',
+  'rgba(255, 205, 158, 1)',
+  'rgba(169, 255, 139, 1)',
+  'rgba(135, 188, 255, 1)',
+  'rgba(191, 146, 255, 1)',
+  'rgba(255, 177, 222, 1)',
+  'rgba(255, 204, 204, 1)',
+  'rgba(255, 224, 194, 1)',
+  'rgba(199, 255, 180, 1)',
+  'rgba(186, 216, 255, 1)',
+  'rgba(203, 169, 251, 1)',
+  'rgba(248, 201, 228, 1)',
+  'rgba(112, 243, 116, 1)',
+  'rgba(255, 93, 185, 1)',
+  'rgba(42, 166, 117, 1)',
+  'rgba(1, 110, 248, 1)',
+  'rgba(184, 31, 128, 1)',
+  'rgba(244, 32, 154, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)',
+  'rgba(0, 0, 0, 1)'
 ];
 
 const initFrames = () => {
@@ -218,8 +238,21 @@ const selectPaletteColor = (palette, colorIndex) => {
   return palette;
 };
 
-const changePaletteColor = (palette, color) => {
-  palette.colors[palette.selectedIndex] = color;
+const changePaletteColor = (palette, color, isRecent) => {
+  const firstRecentIndex = fixedPaletteColorsCnt + variablePaletteColorsCnt;
+  if (isRecent) {
+    const recentColors = palette.colors.slice(firstRecentIndex);
+    if (recentColors.indexOf(color) === -1) {
+      recentColors.push(color);
+      palette.colors = [...palette.colors.slice(0, firstRecentIndex), ...recentColors.slice(1)];
+    }
+  } else {
+    if (palette.selectedIndex <= fixedPaletteColorsCnt || palette.selectedIndex >= firstRecentIndex) {
+      palette.colors[firstRecentIndex - 1] = color;
+    } else {
+      palette.colors[palette.selectedIndex] = color;
+    }
+  }
   return palette;
 };
 
@@ -228,7 +261,7 @@ const changeToolType = (palette, toolType) => {
   return palette;
 };
 
-const drawWithBrush = (frames, cellIndex, color) => {
+const drawWithPencil = (frames, cellIndex, color) => {
   const cells = frames.frameList[frames.activeId].cells;
   cells[cellIndex] = color;
   return frames;
@@ -326,8 +359,8 @@ const frames = produce((frames, action) => {
       return deleteCol(frames);
     case types.SET_HOVERED_INDEX:
       return setHoveredIndex(frames, action.index);
-    case types.DRAW_WITH_BRUSH:
-      return drawWithBrush(frames, action.cellIndex, action.color);
+    case types.DRAW_WITH_PENCIL:
+      return drawWithPencil(frames, action.cellIndex, action.color);
     case types.DRAW_WITH_BUCKET:
       return drawWithBucket(frames, action.cellIndex, action.color);
     case types.DRAW_WITH_ERASER:
@@ -342,7 +375,7 @@ const palette = produce((palette, action) => {
     case types.SELECT_PALETTE_COLOR:
       return selectPaletteColor(palette, action.colorIndex);
     case types.CHANGE_PALETTE_COLOR:
-      return changePaletteColor(palette, action.color);
+      return changePaletteColor(palette, action.color, action.isRecent);
     case types.CHANGE_TOOL_TYPE:
       return changeToolType(palette, action.toolType);
     default:

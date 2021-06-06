@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32.116" height="32" viewBox="0 0 32.116 32">
+  <g id="undo_button" transform="translate(0.116)">
+    <path id="Icon_awesome-undo" data-name="Icon awesome-undo" d="M6.594,6.966H.373A.373.373,0,0,1,0,6.594V.373A.373.373,0,0,1,.373,0H1.863a.373.373,0,0,1,.373.373V2.8a7.7,7.7,0,1,1,.553,10.859.373.373,0,0,1-.015-.541L3.83,12.061a.372.372,0,0,1,.509-.016,5.466,5.466,0,1,0-.8-7.314H6.594a.373.373,0,0,1,.373.373V6.594a.373.373,0,0,1-.373.373Z" transform="translate(8 8)" fill="#a4a4a4"/>
+    <rect id="Rectangle_469" data-name="Rectangle 469" width="32" height="32" rx="6" transform="translate(-0.116)" fill="none"/>
+  </g>
+</svg>

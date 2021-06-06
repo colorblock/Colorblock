@@ -6,6 +6,9 @@
   .w-120 { 
     width: 30rem; 
   }
+  .h-120 { 
+    height: 30rem; 
+  }
   .text-xxs {
     font-size: 10px;
     -webkit-transform-origin: top left;
@@ -46,6 +49,9 @@
   
   .bg-cb-pink {
     background-color: rgb(254, 94, 174);
+  }  
+  .bd-cb-pink {
+    border-color: rgb(254, 94, 174);
   }
   .text-cb-pink {
     color: rgb(254, 94, 174);
@@ -69,6 +75,16 @@
   /* Focus */
   button:focus, input:focus, select:focus {
     outline: none;
+  }
+  textarea {
+    overflow: auto;
+    outline: none;
+
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+
+    resize: none;
   }
 
   /* Input remove default */
@@ -104,7 +120,7 @@
   }
 
   div[data-role='painting tools'] div.selected {
-    @apply bg-gray-500;
+    @apply bg-gray-200;
   }
   div[data-role='image type selection'] label {
     @apply border border-black;
@@ -114,5 +130,77 @@
   }
   div[data-role='item submit'] * {
     @apply block mx-auto;
+  }
+  div[data-role='tabs at top'] button.selected {
+    @apply border-b bd-cb-pink;
+  }
+  button[data-role='undo button']:hover {
+    @apply border rounded border-gray-300;
+  }
+  button[data-role='redo button']:hover {
+    @apply border rounded border-gray-300;
+  }
+
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+  }
+  
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  input:checked + .slider {
+    background-color: rgb(254, 94, 174);
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px rgb(254, 94, 174);
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+  }
+
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
   }
 }

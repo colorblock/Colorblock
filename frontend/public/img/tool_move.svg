@@ -1,0 +1,9 @@
+<svg id="move_button" xmlns="http://www.w3.org/2000/svg" width="56.331" height="56.331" viewBox="0 0 56.331 56.331">
+  <g id="Group_352" data-name="Group 352">
+    <g id="Rectangle_458" data-name="Rectangle 458" fill="#fbfafd" stroke="#b9b5c7" stroke-width="1" opacity="0.74">
+      <rect width="56.331" height="56.331" rx="8" stroke="none"/>
+      <rect x="0.5" y="0.5" width="55.331" height="55.331" rx="7.5" fill="none"/>
+    </g>
+  </g>
+  <path id="Icon_ionic-md-move" data-name="Icon ionic-md-move" d="M23.487,12.868,18.936,8.318v3.034H14.385V6.8h3.034L12.868,2.25,8.318,6.8h3.034v4.551H6.8V8.318L2.25,12.868,6.8,17.419V14.385h4.551v4.551H8.318l4.551,4.551,4.551-4.551H14.385V14.385h4.551v3.034Z" transform="translate(15.326 14.994)" fill="#b9b5c7"/>
+</svg>

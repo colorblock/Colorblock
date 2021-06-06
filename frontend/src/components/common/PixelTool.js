@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
-import { serverUrl } from '../../config';
+import { creatorConfig, serverUrl } from '../../config';
 import { createFramesFromImage } from '../../utils/render';
 import { loadProject } from '../../store/actions/actionCreator';
 
 export const PixelTool = (props) => {
 
-  const { loadProject, closeModal } = props;
+  const { loadProject, closeTab, saveFrames } = props;
   const [maxWidth, setMaxWidth] = useState(null);
   const [images, setImages] = useState({
     origin: null,
@@ -32,7 +32,7 @@ export const PixelTool = (props) => {
     
     // update preview
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       setImages({
         ...images,
         compressed: imageBlob
@@ -42,6 +42,9 @@ export const PixelTool = (props) => {
         ...imagePreviewUrls,
         compressed: imageUrl
       });
+      // generate frames
+      const frames = await createFramesFromImage(imageBlob);
+      saveFrames(frames);
     };
     reader.readAsDataURL(imageBlob);
   };
@@ -67,46 +70,60 @@ export const PixelTool = (props) => {
   const onSaveImage = async () => {
     // generate frames
     const frames = await createFramesFromImage(images.compressed);
-    console.log(frames);
-    loadProject(frames);
-    closeModal();
+    const maxWidth = creatorConfig.maxWidth;
+    const maxHeight = creatorConfig.maxHeight;
+    if (frames.width <= maxWidth && frames.height <= maxHeight) {
+      loadProject(frames);
+      closeTab();
+    } else {
+      alert(`Design tool only support image with <=${maxWidth}px width and <=${maxHeight}px height, please mint this token directly.`);
+    }
   };
 
   return (
-    <div data-role='pixel tool container' className='flex'>
-      <div data-role='upload left part' className='w-1/2 flex flex-col items-center mt-10 border-r'>
-        <label className='mx-auto bg-pink-500 border rounded px-3 py-2 my-3 text-xs text-white'>
-          <input 
-            type='file'
-            onChange={ (e) => onImageChange(e) } 
-          />
-          Choose your image
-        </label>
-        { imagePreviewUrls.origin && 
-          <img 
-            src={imagePreviewUrls.origin} 
-            className='w-40 my-3'
-            alt='Origin Image Preview' 
-          />
-        }
-        <div className='flex justify-center space-x-5'>
-          <span>Max-width</span>
-          <input 
-            type='number' 
-            className='w-16 border rouned' 
-            onChange={ (e) => setMaxWidth(parseInt(e.target.value)) } 
-          />
+    <div data-role='pixel tool container text-base'>
+      <p className='text-center font-semibold text-lg mt-5'>Mint a token from existing image</p>
+      <div className='flex mt-5'>
+        <div data-role='upload left part' className='w-1/2 flex flex-col items-center border-r-2'>
+          <label className='mx-auto bg-pink-500 border rounded px-5 py-2 my-3 text-white cursor-pointer'>
+            <input 
+              type='file'
+              onChange={ (e) => onImageChange(e) } 
+            />
+            Choose your image
+          </label>
+          { imagePreviewUrls.origin && 
+            <div className='flex flex-col items-center '>
+              <img 
+                src={imagePreviewUrls.origin} 
+                className='w-40 my-3'
+                alt='Origin Image Preview' 
+              />
+              <div className='my-5 flex flex-col justify-center items-center text-sm'>
+                <span>Set output width:</span>
+                <div className='w-full relative'>
+                  <input 
+                    type='number' 
+                    className='w-full py-1 px-2 my-2 border rounded' 
+                    onChange={ (e) => setMaxWidth(parseInt(e.target.value)) } 
+                  />
+                  <div className='absolute top-0 right-4 ml-16 text-gray-500 h-full flex items-center'>
+                     px
+                  </div>
+                </div>
+              </div>
+              <button 
+                className='w-full bg-gray-500 border rounded px-5 py-2 my-3 text-white'
+                onClick={ () => onUploadImage() }
+              >
+                Upload Image
+              </button>
+            </div>
+          }
         </div>
-        <button 
-          className='mx-auto bg-pink-500 border rounded px-6 py-2 my-3 text-xs text-white'
-          onClick={ () => onUploadImage() }
-        >
-          Upload Image
-        </button>
-      </div>
         { imagePreviewUrls.compressed &&
-          <div data-role='download right part' className='w-1/2 flex flex-col items-center mt-10'>
-            <label className='mx-auto px-3 py-2 my-3 text-xs border-b text-pink-500'>
+          <div data-role='download right part' className='w-1/2 flex flex-col items-center'>
+            <label className='mx-auto px-3 py-2 my-3 text-lg font-semibold border-b text-gray-500'>
               After compressed
             </label>
             <img 
@@ -115,13 +132,15 @@ export const PixelTool = (props) => {
               alt='Compressed Image Preview' 
             />
             <button 
-              className='mx-auto bg-pink-500 border rounded px-6 py-2 my-3 text-xs text-white'
+              className='wx-full bg-pink-500 border rounded px-6 py-2 my-5 text-white'
               onClick={ () => onSaveImage() }
             >
-              Load into frames
+              Edit in design tools
             </button>
           </div>
         }
+      </div>
+      
     </div>
   );
 };

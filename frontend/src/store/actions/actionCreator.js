@@ -100,16 +100,17 @@ export const selectPaletteColor = (colorIndex) => {
   };
 };
 
-export const changePaletteColor = (color) => {
+export const changePaletteColor = (color, isRecent) => {
   return {
     type: types.CHANGE_PALETTE_COLOR,
-    color
+    color,
+    isRecent
   };
 };
 
-export const drawWithBrush = (cellIndex, color) => {
+export const drawWithPencil = (cellIndex, color) => {
   return {
-    type: types.DRAW_WITH_BRUSH,
+    type: types.DRAW_WITH_PENCIL,
     cellIndex,
     color
   };

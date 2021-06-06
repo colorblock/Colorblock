@@ -49,16 +49,7 @@ const Header = (props) => {
             </div>
           </div>
           <div data-role='right flex part' className='flex items-center space-x-8'>
-            <div className='relative'>
-              <img src='/img/profile_picture.svg' className='w-7 h-7' alt='profile' onClick={ () => setIsUserPopupOpen(!isUserPopupOpen) } />
-              <div 
-                data-role='account popup' 
-                className='absolute top-12 -left-10 w-32 h-32 mt-2 bg-white border border-gray-300 rounded'
-                hidden={!isUserPopupOpen}  
-              >
-                <button className='w-full rounded py-2 border-b'>Login</button>
-              </div>
-            </div>
+            <img src='/img/profile_picture.svg' className='w-7 h-7' alt='profile' onClick={ () => setIsUserPopupOpen(!isUserPopupOpen) } />
             <button
               className='py-2 px-4 bg-cb-pink border rounded-lg border-white text-white'
               onClick={ () => switchWalletModal() }

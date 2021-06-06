@@ -1,0 +1,9 @@
+<svg id="eyedrop_icon" xmlns="http://www.w3.org/2000/svg" width="56.331" height="56.331" viewBox="0 0 56.331 56.331">
+  <g id="Group_353" data-name="Group 353">
+    <g id="Rectangle_458" data-name="Rectangle 458" fill="#fbfafd" stroke="#b9b5c7" stroke-width="1" opacity="0.74">
+      <rect width="56.331" height="56.331" rx="8" stroke="none"/>
+      <rect x="0.5" y="0.5" width="55.331" height="55.331" rx="7.5" fill="none"/>
+    </g>
+  </g>
+  <path id="Icon_metro-eyedropper" data-name="Icon metro-eyedropper" d="M23.283,2.715a2.687,2.687,0,0,0-3.8,0L15.868,6.329,13.32,3.781l-2.85,2.85L12.7,8.865,2.792,18.778a.754.754,0,0,0-.216.618H2.571v3.359a.672.672,0,0,0,.672.672H6.686a.754.754,0,0,0,.534-.221l9.912-9.912,2.234,2.234,2.85-2.85-2.548-2.548,3.614-3.614a2.687,2.687,0,0,0,0-3.8ZM6.2,22.083H3.914v-2.29l9.859-9.859,2.29,2.29Z" transform="translate(14.673 15.316)" fill="#b9b5c7"/>
+</svg>
