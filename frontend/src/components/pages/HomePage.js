@@ -6,6 +6,7 @@ import { serverUrl } from '../../config';
 const HomePage = (props) => {
 
   const [items, setItems] = useState([]);
+  const [latestHeight, setLatestHeight] = useState(null);
 
   const collections = Array(12).fill({
     id: 'c246a25c421f7eb1',
@@ -31,7 +32,14 @@ const HomePage = (props) => {
       setItems(itemsData);
     };
 
+    const fetchLatestHeight = async () => {
+      const url = `${serverUrl}/tool/latest_height`;
+      const data = await fetch(url).then(res => res.json());
+      setLatestHeight(data.height);
+    };
+
     fetchAllItems();
+    fetchLatestHeight();
   }, []);
 
   return (
@@ -47,7 +55,10 @@ const HomePage = (props) => {
         }}
       >
         <span data-role='block height' className='absolute top-3 right-6 text-xs text-gray-400'>
-          164487
+          {latestHeight}
+        </span>
+        <span data-role='block height' className='absolute top-3 left-6 text-xs text-gray-400'>
+          {latestHeight-1}
         </span>
         <div data-role='top banner title' className='text-center'>
           <p className='tracking-wider text-lg font-medium'>On-chain Pixel NFTs on <span className='text-cb-pink font-bold'>Kadena</span></p>

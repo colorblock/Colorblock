@@ -1,6 +1,7 @@
 from flask import Blueprint, config, request, current_app as app, send_file
 import os
 
+from app.utils.chainweb import fetch_latest_block
 from app.utils.crypto import hash_id, random
 from app.utils.render import generate_pixels_from_image
 
@@ -30,3 +31,7 @@ def get_pixel():
         file.save(file_path)
         save_path = generate_pixels_from_image(file_path, max_width=max_width)
         return send_file(save_path, mimetype='image/{}'.format(file_type))
+
+@tool_blueprint.route('/latest_height')
+def get_latest_block_height():
+    return fetch_latest_block(0)

@@ -4,10 +4,12 @@ import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
+import { serverUrl } from '../../config';
+import { mkReq } from '../../utils/sign';
 import { switchWalletModal, setAccountAddress } from '../../store/actions/actionCreator';
 
 const Header = (props) => {
-  const { wallet, switchWalletModal } = props;
+  const { wallet, switchWalletModal, setAccountAddress } = props;
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
 
   const onSearch = (e) => {
@@ -16,6 +18,17 @@ const Header = (props) => {
       // if enter pressed and value is not blank, turn to search page
       const url = '/search/' + value;
       document.location.href = url;
+    }
+  };
+
+  const logout = async () => {
+    setAccountAddress('');
+    const url = `${serverUrl}/logout`;
+    const result = await fetch(url, mkReq()).then(res => res.json());
+    if (result.status === 'success') {
+      alert('logout successfully');
+    } else {
+      alert(result.data);
     }
   };
 
@@ -48,17 +61,25 @@ const Header = (props) => {
               </ul>
             </div>
           </div>
-          <div data-role='right flex part' className='flex items-center space-x-8'>
-            <img src='/img/profile_picture.svg' className='w-7 h-7' alt='profile' onClick={ () => setIsUserPopupOpen(!isUserPopupOpen) } />
-            <button
-              className='py-2 px-4 bg-cb-pink border rounded-lg border-white text-white'
-              onClick={ () => switchWalletModal() }
-            >
-              { wallet.address ?
-                `${wallet.address.slice(0, 3)}**${wallet.address.slice(-4)}` :
-                'Connect'
+          <div data-role='right flex part' className='flex items-center'>
+            <div className='relative w-24'>
+              <button
+                className='w-full py-2 bg-cb-pink border rounded-lg border-white text-white'
+                onClick={ () => wallet.address ? setIsUserPopupOpen(!isUserPopupOpen) : switchWalletModal() }
+              >
+                { wallet.address ?
+                  `${wallet.address.slice(0, 3)}**${wallet.address.slice(-4)}` :
+                  'Connect'
+                }
+              </button>
+              {
+                isUserPopupOpen && 
+                <div className='absolute top-10 left-0 w-24 flex flex-col border rounded bg-white'>
+                  <button className='w-full py-2 border-b' onClick={ () => document.location.href = '/user' }>My Profile</button>
+                  <button className='w-full py-2' onClick={ () => logout() }>logout</button>
+                </div>
               }
-            </button>
+            </div>
           </div>
         </div>
       </div>

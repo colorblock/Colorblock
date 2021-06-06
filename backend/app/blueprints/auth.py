@@ -1,14 +1,12 @@
 from flask import Blueprint, request, session, current_app as app
 import json
 
-from flask.helpers import url_for
-
 from app import db
 from app.models.user import User
 from app.utils.response import get_error_response, get_success_response
 from app.utils.pact import local_req, get_module_names
 from app.utils.crypto import random
-from app.utils.security import admin_required
+from app.utils.security import admin_required, login_required
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -58,6 +56,13 @@ def signup(account):
     except Exception as e:
         app.logger.exception(e)
         return get_error_response('db error: {}'.format(e))
+
+@auth_blueprint.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    session['account'] = None
+    session['logged_in'] = False
+    return get_success_response('logout successfully')
 
 @auth_blueprint.route('/login_admin/<seed>', methods=['GET'])
 def login_admin(seed):
