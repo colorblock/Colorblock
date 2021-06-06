@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 import { shortAddress } from '../../utils/polish';
 import { withCors } from '../../utils/sign';
@@ -19,6 +21,7 @@ const UserPage = (props) => {
     cols: 5
   };
 
+  const { wallet } = props;
   useEffect(() => {
     const fetchUser = async (userId) => {
       let userData;
@@ -37,16 +40,19 @@ const UserPage = (props) => {
       userData.avatar = userData.avatar || '/img/colorblock_logo.svg';
       userData.uname = userData.uname || shortAddress(userData.address);
       setUser(userData);
+    };
 
+    const fetchAssets = async (userId) => {
       // fetch assets
-      const assetsUrl = `${serverUrl}/asset/owned-by/${userId}`;
+      const assetsUrl = `${serverUrl}/asset/owned-by/${userId || wallet.address }`;
       const assetsData = await fetch(assetsUrl).then(res => res.json());
       console.log(assetsData);
       setAssets(assetsData);
     };
 
     fetchUser(userId);
-  }, [userId]);
+    fetchAssets(userId)
+  }, [userId, wallet]);
 
   return user ? (
     <div>
@@ -74,4 +80,15 @@ const UserPage = (props) => {
   ) : <></>;
 };
 
-export default UserPage;
+UserPage.propTypes = {
+};
+
+const mapStateToProps = state => ({
+  wallet: state.wallet
+});
+
+const mapDispatchToProps = dispatch => ({
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(UserPage);
+

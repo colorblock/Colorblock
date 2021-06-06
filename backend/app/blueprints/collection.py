@@ -1,6 +1,7 @@
 from flask import Blueprint, request, session, current_app as app, jsonify
 
 from app import db
+from app.models.item import Item
 from app.models.collection import Collection
 from app.models.collectible import Collectible
 from app.utils.response import get_success_response
@@ -32,7 +33,32 @@ def get_collections_owned_by_user(user_id):
             collectibles = jsonify_data(collectibles)
             collection['collectibles'] = collectibles
     return jsonify(collections)
-    
+
+@collection_blueprint.route('/latest')
+def get_latest_collections():
+    collections = db.session.query(Collection).order_by(Collection.created_at.desc()).limit(50).all()
+    count = 0
+    filted_collections = []
+    if collections:
+        collections = jsonify_data(collections)
+        for collection in collections:
+            collection_id = collection['id']
+            collectible = db.session.query(Collectible).filter(Collectible.collection_id == collection_id).first()
+            if collectible:
+                collectible = jsonify_data(collectible)
+                item_id = collectible['item_id']
+                item = db.session.query(Item).filter(Item.id == item_id).first()
+                if item:
+                    item = jsonify_data(item)
+                    collection['collectible'] = collectible
+                    collection['item'] = item
+                    filted_collections.append(collection)
+                    count += 1
+                    if count >= 20:
+                        break
+
+    return jsonify(filted_collections)
+
 @collection_blueprint.route('/', methods=['POST'])
 @login_required
 def post_collections():

@@ -31,8 +31,8 @@ const ItemList = (props) => {
                   <p>{`${item.creator.slice(0, 4)}....${item.creator.slice(-4)}`}</p>
                 </div>
                 <div className='text-right'>
-                  <p className='text-xxs-r text-gray-500'>Price</p>
-                  <p className='text-cb-pink'>{item.price ? `${item.price.toFixed(1)} KDA` : 'Not on sale' }</p>
+                  <p className='text-xxs-r text-gray-500'>Height</p>
+                  <p className='text-cb-pink'>{item.mint.block_height}</p>
                 </div>
               </div>
             </li>

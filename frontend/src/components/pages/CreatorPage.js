@@ -125,7 +125,7 @@ const CreatePage = (props) => {
       return;
     }
     const { title, description, supply } = submitItem;
-    const tags = submitItem.tags ? submitItem.tags.split(',').map(v => v.trim()) : [];
+    const tags = submitItem.tags ? submitItem.tags.split(',').map(v => v.trim()) : '';
     if (!title) {
       alert('Title cannot be empty');
       return;
@@ -151,7 +151,7 @@ const CreatePage = (props) => {
 
     const rows = frames.height;
     const cols = frames.width;
-    const frameCnt = isPreviewStatic ? 1 : frames.frameIds.length;
+    const frameCnt = frames.frameIds.length;
     const intervals = convertFramesToIntervals(frames);
     const account = wallet.address;
     const cmd = {

@@ -32,7 +32,7 @@ const AssetList = (props) => {
                 </div>
                 <div className='text-right'>
                   <p className='text-xxs-r text-gray-500'>Price</p>
-                  <p className='text-cb-pink'>{asset.price ? `${asset.price.toFixed(1)} KDA` : 'Not on sale' }</p>
+                  <p className='text-cb-pink'>{asset.deal ? `${asset.deal.price.toFixed(4)} KDA` : 'Not on sale' }</p>
                 </div>
               </div>
             </li>

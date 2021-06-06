@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import CollectionList from '../common/CollectionList';
 import ItemList from '../common/ItemList';
+import AssetList from '../common/AssetList';
 import { serverUrl } from '../../config';
 
 const HomePage = (props) => {
 
   const [items, setItems] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [latestHeight, setLatestHeight] = useState(null);
 
-  const collections = Array(12).fill({
-    id: 'c246a25c421f7eb1',
-    name: 'Example Collection',
-    count: 120
-  });
   const collectionListConfig = {
     type: 'collection',
     flow: 'flex',
     cols: 4
   };
   const itemListConfig = {
+    type: 'item',
+    flow: 'flex',
+    cols: 5
+  };
+  const assetListConfig = {
     type: 'item',
     flow: 'flex',
     cols: 5
@@ -32,6 +35,20 @@ const HomePage = (props) => {
       setItems(itemsData);
     };
 
+    const fetchLatestAssets = async () => {
+      const assetsUrl = `${serverUrl}/asset/latest`;
+      const assetsData = await fetch(assetsUrl).then(res => res.json());
+      console.log(assetsData);
+      setAssets(assetsData);
+    };
+
+    const fetchLatestCollections = async () => {
+      const collectionsUrl = `${serverUrl}/collection/latest`;
+      const collectionsData = await fetch(collectionsUrl).then(res => res.json());
+      console.log(collectionsData);
+      setCollections(collectionsData);
+    };
+
     const fetchLatestHeight = async () => {
       const url = `${serverUrl}/tool/latest_height`;
       const data = await fetch(url).then(res => res.json());
@@ -39,8 +56,8 @@ const HomePage = (props) => {
     };
 
     fetchLatestItems();
-    //fetchBatchAssets();
-    //fetchBatchCollections();
+    fetchLatestAssets();
+    fetchLatestCollections();
     fetchLatestHeight();
   }, []);
 
@@ -92,7 +109,7 @@ const HomePage = (props) => {
             View More
           </div>
         </div>
-        <ItemList items={items} config={itemListConfig} />
+        <AssetList assets={assets} config={assetListConfig} />
       </div>
       {
         items.length > 0 &&

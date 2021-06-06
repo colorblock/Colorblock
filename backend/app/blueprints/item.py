@@ -6,11 +6,13 @@ from app.models.collectible import Collectible
 from app.models.collection import Collection
 from app.models.item import Item
 from app.models.ledger import Ledger
+from app.models.mint import Mint
 
 from app.blueprints.admin.routine import update_item, update_ledger
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash, hash_id
 from app.utils.pact import send_req
+from app.utils.tools import jsonify_data
 from app.utils.response import get_error_response, get_success_response
 from app.utils.security import login_required, validate_account
 
@@ -29,6 +31,15 @@ def get_items_created_by_user(user_id):
 @item_blueprint.route('/latest')
 def get_latest_items():
     items = db.session.query(Item).order_by(Item.created_at.desc()).limit(20).all()
+    if len(items) > 0:
+        items = jsonify_data(items)
+        for item in items:
+            item_id = item['id']
+            mint = db.session.query(Mint).filter(Mint.item_id == item_id).first()
+            if mint:
+                mint = jsonify_data(mint)
+                item['mint'] = mint
+
     return jsonify(items)
 
 @item_blueprint.route('/count')

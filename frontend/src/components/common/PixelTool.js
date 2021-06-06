@@ -10,6 +10,7 @@ export const PixelTool = (props) => {
 
   const { loadProject, closeTab, saveFrames } = props;
   const [maxWidth, setMaxWidth] = useState(null);
+  const [mintedFrames, setMintedFrames] = useState({});
   const [images, setImages] = useState({
     origin: null,
     compressed: null
@@ -44,6 +45,7 @@ export const PixelTool = (props) => {
       });
       // generate frames
       const frames = await createFramesFromImage(imageBlob);
+      setMintedFrames(frames);
       saveFrames(frames);
     };
     reader.readAsDataURL(imageBlob);
@@ -131,6 +133,14 @@ export const PixelTool = (props) => {
               className='w-40 my-3'
               alt='Compressed Image Preview' 
             />
+            {
+              mintedFrames.width && 
+              <div className='flex flex-col items-center text-gray-500'>
+                <span>Width: {mintedFrames.width}</span>
+                <span>Height: {mintedFrames.height}</span>
+                <span>Frames: {mintedFrames.frameIds.length}</span>
+              </div>
+            }
             <button 
               className='wx-full bg-pink-500 border rounded px-6 py-2 my-5 text-white'
               onClick={ () => onSaveImage() }

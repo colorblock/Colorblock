@@ -6,6 +6,7 @@ from app.blueprints.admin.routine import update_deal, update_ledger
 from app.models.deal import Deal
 from app.models.item import Item
 from app.models.ledger import Ledger
+from app.models.purchase import Purchase
 from app.utils.response import get_error_response
 from app.utils.security import login_required
 from app.utils.tools import jsonify_data
@@ -35,15 +36,43 @@ def get_assets_owned_by_user(user_id):
         item_ids = [v['item_id'] for v in assets]
         items = db.session.query(Item).filter(Item.id.in_(item_ids)).all()
         for asset in assets:
+            ledger_id = asset['id']
             item_id = asset['item_id']
             item = [v for v in items if v.id == item_id][0]
             item = jsonify_data(item)
+            deal = db.session.query(Deal).filter(Deal.id == ledger_id).first()
             asset['item'] = item
+            if deal:
+                asset['deal'] = deal
     return jsonify(assets)
 
-@asset_blueprint.route('/all', methods=['GET'])
-def get_all_asset():
-    assets = Ledger.query.all()
+@asset_blueprint.route('/latest')
+def get_latest_assets():
+    purchases = db.session.query(Purchase).order_by(Purchase.created_at.desc()).limit(50).all()
+    assets = []
+    item_ids = []
+    count = 0
+    for purchase in purchases:
+        item_id = purchase.item_id
+        seller = purchase.seller
+        ledger_id = '{}:{}'.format(item_id, seller)
+        asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+        deal = db.session.query(Deal).filter(Deal.id == ledger_id).first()
+        if asset and deal and deal.remain > 0:
+            asset = jsonify_data(asset)
+            item = db.session.query(Item).filter(Item.id == asset['item_id']).first()
+            item = jsonify_data(item)
+            deal = jsonify_data(deal)
+            if item['id'] not in item_ids:
+                # avoid duplication
+                asset['item'] = item
+                asset['deal'] = deal
+                assets.append(asset)
+                item_ids.append(item['id'])
+                count += 1
+                if count >= 20:
+                    break
+
     return jsonify(assets)
 
 @asset_blueprint.route('/release', methods=['POST'])
