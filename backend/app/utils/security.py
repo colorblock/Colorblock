@@ -11,6 +11,9 @@ def login_required(function):
             return get_error_response('not logged')
     return wrapper
 
+def get_current_user():
+    return session['account']
+
 def admin_required(function):
     @wraps(function)
     def wrapper(*args, **kwargs):

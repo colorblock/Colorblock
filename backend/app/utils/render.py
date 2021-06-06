@@ -56,27 +56,29 @@ def hex_to_rgba(hex):
 def rgba_to_hex(rgba):
     return '#' + ''.join(f'{i:02X}' for i in rgba[:3])
 
-def generate_pixels_from_image(file_path):
+def generate_pixels_from_image(file_path, max_width=64):
     save_path = os.path.abspath(file_path)
     img_obj = Image.open(file_path)
     compressed = []
     frames = img_obj.n_frames
+    static = frames == 1
     intervals = []
     for i in range(frames):
         img_obj.seek(i)
-        intervals.append(img_obj.info['duration'])
+        if not static:
+            intervals.append(img_obj.info['duration'])
         image = np.array(img_obj)
         image_width = image.shape[1]
-        if image_width < 64:
+        if image_width < max_width:
             compressed.append(copy.copy(img_obj))
         else:
             rgb_img = img_obj.convert('RGB')
             rgb_img_data = np.array(rgb_img)
             app.logger.debug('rgb_img_data: {}'.format(rgb_img_data[1]))
 
-            palette = 16
+            palette = 8
             # 1) Instantiate Pyx transformer
-            pyx = Pyx(width=64, palette=palette)
+            pyx = Pyx(width=max_width, palette=palette)
             # 2) fit an image, allow Pyxelate to learn the color palette
             pyx.fit(rgb_img_data)
             # 3) transform image to pixel art using the learned color palette

@@ -10,13 +10,14 @@ export const withCors = {
   credentials: 'include'
 };
 
-export const mkReq = (cmd, cors=true) => {
+export const mkReq = (cmd=null, cors=true) => {
+  const body = JSON.stringify(cmd || '');
   let req = {
     headers: {
       'Content-Type': 'application/json'
     },
     method: 'POST',
-    body: JSON.stringify(cmd)
+    body
   }
   if (cors) {
     req = {

@@ -14,6 +14,9 @@ def get_hash():
 
 @tool_blueprint.route('/pixel', methods=['POST'])
 def get_pixel():
+    form_data = request.form
+    max_width = int(form_data['max_width'])
+
     image_id = random()
     file = request.files['image']
     file_type = file.filename.split('.')[-1].lower()
@@ -22,5 +25,5 @@ def get_pixel():
     else:
         file_path = 'app/static/img/tmp/{}.{}'.format(image_id, file_type)
         file.save(file_path)
-        save_path = generate_pixels_from_image(file_path)
+        save_path = generate_pixels_from_image(file_path, max_width=max_width)
         return send_file(save_path, mimetype='image/{}'.format(file_type))
