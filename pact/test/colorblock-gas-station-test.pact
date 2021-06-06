@@ -23,7 +23,7 @@
       price:decimal
     )
     (enforce (= "exec" (at "tx-type" (read-msg))) "Inside an exec")
-    (enforce (<= 2 (length (at "exec-code" (read-msg)))) "Tx of only one or two pact functions")
+    (enforce (>= 2 (length (at "exec-code" (read-msg)))) "Tx of only one or two pact functions")
     (enforce 
       ( or
         (= "(free.colorblock-test." (take 22 (at 0 (at "exec-code" (read-msg)))))
