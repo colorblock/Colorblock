@@ -139,7 +139,7 @@ def sync_block(chain_id):
                                 update_release(item_id, seller, price, amount)
                             elif event_name == 'RECALL':
                                 (item_id, seller) = event['params']
-                                update_recall(item_id)
+                                update_recall(item_id, seller)
                             elif event_name == 'PURCHASE':
                                 (item_id, buyer, sender, price, amount) = event['params']
                                 update_purchase(item_id, buyer, sender, price, amount)

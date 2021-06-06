@@ -203,4 +203,11 @@
   .slider.round:before {
     border-radius: 50%;
   }
+
+  div[data-role='footer social links'] svg {
+    @apply w-full h-full;
+  }
+  div[data-role='footer social links'] svg:hover {
+    fill: rgba(30, 162, 243, 1);
+  }
 }

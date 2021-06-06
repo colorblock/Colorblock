@@ -31,6 +31,14 @@ def get_all_items():
     items = Item.query.all()
     return jsonify(items)
 
+@item_blueprint.route('/count')
+def get_items_count():
+    count = db.session.query(Item).count()
+    data = {
+        'count': count
+    }
+    return data
+
 @item_blueprint.route('/', methods=['POST'])
 @login_required
 def submit_item():

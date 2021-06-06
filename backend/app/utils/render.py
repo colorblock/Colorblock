@@ -3,10 +3,7 @@ import os
 import copy
 import numpy as np
 from PIL import Image, ImageDraw
-import imutils
-import pyguetzli
 import tinify
-import requests
 
 def generate_image_from_item(item_data):
     colors = item_data['colors']
@@ -86,20 +83,8 @@ def generate_pixels_from_image(file_path, max_width=64):
                 width=max_width
             )
             resized.to_file(optimized_path)
-            #new_img.convert('RGB').save(path, optimize = True, quality=30, progressive=True)
-            #new_jpg = Image.open(path)
-            ##app.logger.debug(new_jpg.width)
-            #app.logger.debug(new_jpg.height)
-            #new_img = pyguetzli.process_pil_image(new_img)
-            #max_height = int(max_width / image_width * image_height)
-            #optimized = new_jpg.resize((max_width, max_height))
-            
-            #app.logger.debug(optimized.width)
-            #app.logger.debug(optimized.height)
             new_img = Image.open(optimized_path)
             compressed.append(new_img)
-
-        break
             
     if frames == 1:
         compressed[0].save(file_path)
