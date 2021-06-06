@@ -112,6 +112,59 @@ create table if not exists mint (
     primary key (`id`)
 );
 
+create table if not exists `release` (
+    `id` varchar(64),
+    `chain_id` integer,
+    `block_height` integer,
+    `block_hash` varchar(64),
+    `block_time` DATETIME,
+    `tx_id` integer,
+    `tx_hash` varchar(64),
+    `tx_status` varchar(64),
+    `item_id` varchar(64),
+    `seller` varchar(64),
+    `price` decimal(20, 12),
+    `amount` integer,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`id`)
+);
+
+create table if not exists recall (
+    `id` varchar(64),
+    `chain_id` integer,
+    `block_height` integer,
+    `block_hash` varchar(64),
+    `block_time` DATETIME,
+    `tx_id` integer,
+    `tx_hash` varchar(64),
+    `tx_status` varchar(64),
+    `item_id` varchar(64),
+    `seller` varchar(64),
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`id`)
+);
+
+create table if not exists purchase (
+    `id` varchar(64),
+    `chain_id` integer,
+    `block_height` integer,
+    `block_hash` varchar(64),
+    `block_time` DATETIME,
+    `tx_id` integer,
+    `tx_hash` varchar(64),
+    `tx_status` varchar(64),
+    `item_id` varchar(64),
+    `buyer` varchar(64),
+    `seller` varchar(64),
+    `price` decimal(20, 12),
+    `amount` integer,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`id`)
+);
+
 create table if not exists project (
     `id` varchar(64),
     `user_id` varchar(64),

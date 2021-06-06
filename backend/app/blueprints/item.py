@@ -26,9 +26,9 @@ def get_items_created_by_user(user_id):
     items = db.session.query(Item).filter(Item.creator == user_id).all()
     return jsonify(items)
 
-@item_blueprint.route('/all')
-def get_all_items():
-    items = Item.query.all()
+@item_blueprint.route('/latest')
+def get_latest_items():
+    items = db.session.query(Item).order_by(Item.created_at.desc()).limit(20).all()
     return jsonify(items)
 
 @item_blueprint.route('/count')

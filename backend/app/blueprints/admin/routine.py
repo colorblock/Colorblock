@@ -7,11 +7,14 @@ import os
 
 from app import db, search
 from app.models.item import Item
+from app.models.purchase import Purchase
 from app.models.user import User
 from app.models.ledger import Ledger
 from app.models.deal import Deal
 from app.models.transfer import Transfer
 from app.models.mint import Mint
+from app.models.release import Release
+from app.models.recall import Recall
 from app.models.block import Block
 from app.utils.crypto import hash_id
 from app.utils.render import generate_image_from_item
@@ -135,14 +138,11 @@ def sync_block(chain_id):
                                 if tx_status == 'success':
                                     update_item(item_id)
                             elif event_name == 'RELEASE':
-                                (item_id, seller, price, amount) = event['params']
-                                update_release(item_id, seller, price, amount)
+                                update_release(meta_data, event)
                             elif event_name == 'RECALL':
-                                (item_id, seller) = event['params']
-                                update_recall(item_id, seller)
+                                update_recall(meta_data, event)
                             elif event_name == 'PURCHASE':
-                                (item_id, buyer, sender, price, amount) = event['params']
-                                update_purchase(item_id, buyer, sender, price, amount)
+                                update_purchase(meta_data, event)
                         
                             time.sleep(1)
                     
@@ -347,14 +347,78 @@ def update_mint(meta_data, event):
         db.session.add(mint)
         db.session.commit()
 
-def update_release(item_id, seller, price, amount):
-    pass
+def update_release(meta_data, event):
+    app.logger.debug('now update release, {}, {}'.format(meta_data, event))
+    (item_id, seller, price, amount) = event['params']
+    amount = int(amount)
+    release_id = event['event_id']
+    
+    release = db.session.query(Release).filter(Release.id == release_id).first()
+    if not release:
+        release = Release(
+            id=release_id,
+            chain_id=meta_data['chain_id'],
+            block_hash=meta_data['block_hash'],
+            block_height=meta_data['block_height'],
+            block_time=meta_data['block_time'],
+            tx_id=meta_data['tx_id'],
+            tx_hash=meta_data['tx_hash'],
+            tx_status=meta_data['tx_status'],
+            item_id=item_id,
+            seller=seller,
+            price=price,
+            amount=amount
+        )
+        db.session.add(release)
+        db.session.commit()
 
-def update_recall(item_id, seller):
-    pass
+def update_recall(meta_data, event):
+    app.logger.debug('now update recall, {}, {}'.format(meta_data, event))
+    (item_id, seller) = event['params']
+    recall_id = event['event_id']
+    
+    recall = db.session.query(Recall).filter(Recall.id == recall_id).first()
+    if not recall:
+        recall = Recall(
+            id=recall_id,
+            chain_id=meta_data['chain_id'],
+            block_hash=meta_data['block_hash'],
+            block_height=meta_data['block_height'],
+            block_time=meta_data['block_time'],
+            tx_id=meta_data['tx_id'],
+            tx_hash=meta_data['tx_hash'],
+            tx_status=meta_data['tx_status'],
+            item_id=item_id,
+            seller=seller
+        )
+        db.session.add(recall)
+        db.session.commit()
 
-def update_purchase(item_id, buyer, seller, price, amount):
-    pass
+def update_purchase(meta_data, event):
+    app.logger.debug('now update purchase, {}, {}'.format(meta_data, event))
+    (item_id, buyer, seller, price, amount) = event['params']
+    amount = int(amount)
+    purchase_id = event['event_id']
+    
+    purchase = db.session.query(Purchase).filter(Purchase.id == purchase_id).first()
+    if not purchase:
+        purchase = Purchase(
+            id=purchase_id,
+            chain_id=meta_data['chain_id'],
+            block_hash=meta_data['block_hash'],
+            block_height=meta_data['block_height'],
+            block_time=meta_data['block_time'],
+            tx_id=meta_data['tx_id'],
+            tx_hash=meta_data['tx_hash'],
+            tx_status=meta_data['tx_status'],
+            item_id=item_id,
+            buyer=buyer,
+            seller=seller,
+            price=price,
+            amount=amount
+        )
+        db.session.add(purchase)
+        db.session.commit()
 
 
 

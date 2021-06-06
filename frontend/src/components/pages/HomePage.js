@@ -25,8 +25,8 @@ const HomePage = (props) => {
   };
 
   useEffect(() => {
-    const fetchAllItems = async () => {
-      const itemsUrl = `${serverUrl}/item/all`;
+    const fetchLatestItems = async () => {
+      const itemsUrl = `${serverUrl}/item/latest`;
       const itemsData = await fetch(itemsUrl).then(res => res.json());
       console.log(itemsData);
       setItems(itemsData);
@@ -38,7 +38,9 @@ const HomePage = (props) => {
       setLatestHeight(data.height);
     };
 
-    fetchAllItems();
+    fetchLatestItems();
+    //fetchBatchAssets();
+    //fetchBatchCollections();
     fetchLatestHeight();
   }, []);
 

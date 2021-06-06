@@ -4,7 +4,7 @@ from sqlalchemy.schema import FetchedValue
 from app import db
 
 @dataclass
-class Transfer(db.Model):
+class Recall(db.Model):
 
     id: int
     chain_id: int
@@ -15,9 +15,7 @@ class Transfer(db.Model):
     tx_hash: str
     tx_status: str
     item_id: str
-    sender: str
-    receiver: str
-    amount: int
+    seller: str
     created_at: str
     updated_at: str
 
@@ -30,11 +28,9 @@ class Transfer(db.Model):
     tx_hash = db.Column(db.String)
     tx_status = db.Column(db.String)
     item_id = db.Column(db.String)
-    sender = db.Column(db.String)
-    receiver = db.Column(db.String)
-    amount = db.Column(db.Integer)
+    seller = db.Column(db.String)
     created_at = db.Column(db.DateTime, server_default=FetchedValue())
     updated_at = db.Column(db.DateTime, server_default=FetchedValue())
 
     def __repr__(self):
-        return '<Transfer {}>'.format(self.id)
+        return '<Recall {}>'.format(self.id)
