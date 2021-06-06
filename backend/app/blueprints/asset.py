@@ -49,13 +49,14 @@ def get_assets_owned_by_user(user_id):
 @asset_blueprint.route('/latest')
 def get_latest_assets():
     purchases = db.session.query(Purchase).order_by(Purchase.created_at.desc()).limit(50).all()
+    deals = db.session.query(Deal).order_by(Deal.created_at.desc()).limit(50).all()
+    purchase_ids = ['{}:{}'.format(v.item_id, v.seller) for v in purchases]
+    deal_ids = ['{}:{}'.format(v.item_id, v.user_id) for v in deals]
+    ledger_ids = purchase_ids + deal_ids
     assets = []
     item_ids = []
     count = 0
-    for purchase in purchases:
-        item_id = purchase.item_id
-        seller = purchase.seller
-        ledger_id = '{}:{}'.format(item_id, seller)
+    for ledger_id in ledger_ids:
         asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
         deal = db.session.query(Deal).filter(Deal.id == ledger_id).first()
         if asset and deal and deal.remain > 0:
@@ -72,6 +73,32 @@ def get_latest_assets():
                 count += 1
                 if count >= 20:
                     break
+
+    return jsonify(assets)
+
+@asset_blueprint.route('/on_sale/<item_id>')
+def get_on_sale_assets(item_id):
+    item = db.session.query(Item).filter(Item.id == item_id).first()
+    assets = []
+    count = 0
+    if item:
+        item = jsonify_data(item)
+        deals = db.session.query(Deal).filter(Deal.item_id == item_id, Deal.open == True).limit(10).all()
+        for deal in deals:
+            if deal.remain > 0:
+                user_id = deal.user_id
+                ledger_id = '{}:{}'.format(item_id, user_id)
+                asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+                if asset:
+                    asset = jsonify_data(asset)
+                    deal = jsonify_data(deal)
+                    # avoid duplication
+                    asset['item'] = item
+                    asset['deal'] = deal
+                    assets.append(asset)
+                    count += 1
+                    if count >= 20:
+                        break
 
     return jsonify(assets)
 

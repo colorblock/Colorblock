@@ -54,10 +54,10 @@ const Header = (props) => {
             </div>
             <div data-role='nav bar' className='ml-7'>
               <ul className='h-full flex items-center space-x-7'>
-                <li><a href='/market'>Market</a></li>
-                <li><a href='/market'>Collections</a></li>
+                <li><a href='/market/assets'>Market</a></li>
+                <li><a href='/market/collections'>Collections</a></li>
                 <li><a href='/create'>Create</a></li>
-                <li><a href='/market'>Token</a></li>
+                <li><a href='/market/items'>Token</a></li>
               </ul>
             </div>
           </div>

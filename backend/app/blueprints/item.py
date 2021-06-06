@@ -7,6 +7,9 @@ from app.models.collection import Collection
 from app.models.item import Item
 from app.models.ledger import Ledger
 from app.models.mint import Mint
+from app.models.release import Release
+from app.models.recall import Recall
+from app.models.purchase import Purchase
 
 from app.blueprints.admin.routine import update_item, update_ledger
 from app.utils.render import generate_image_from_item
@@ -50,18 +53,30 @@ def get_items_count():
     }
     return data
 
+@item_blueprint.route('/<item_id>/log', methods=['GET'])
+def get_item_log(item_id):
+    log = {}
+    mint = db.session.query(Mint).filter(Mint.item_id == item_id).first()
+    log['mint'] = jsonify_data(mint)
+    releases = db.session.query(Release).filter(Release.item_id == item_id).all()
+    log['releases'] = jsonify_data(releases)
+    recalls = db.session.query(Recall).filter(Recall.item_id == item_id).all()
+    log['recalls'] = jsonify_data(recalls)
+    purchases = db.session.query(Purchase).filter(Purchase.item_id == item_id).all()
+    log['purchases'] = jsonify_data(purchases)
+    return jsonify(log)
+
 @item_blueprint.route('/', methods=['POST'])
 @login_required
 def submit_item():
     post_data = request.json
-    app.logger.debug('post_data: {}'.format(post_data))
 
     # add item type, strip supply
     cmd = json.loads(post_data['cmds'][0]['cmd'])
     item_data = cmd['payload']['exec']['data']
     item_data['type'] = 0 if item_data['frames'] == 1 else 1  # just 1 frame -> static -> type 0
     item_data['supply'] = int(item_data['supply'])
-    app.logger.debug('item_data: {}'.format(item_data))
+    app.logger.debug('item_data: {}'.format([v for k, v in item_data.items() if k != 'colors']))
 
     # validate account
     user_valid_result = validate_account(item_data['account'])

@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 
 import { getSignedCmd } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
+import { shortAddress } from '../../utils/polish';
 
 const AssetPage = (props) => {
   const { assetId } = useParams();
@@ -202,7 +203,7 @@ const AssetPage = (props) => {
   };
 
   useEffect(() => {
-    const fetchItem = async (assetId) => {
+    const fetchAsset = async (assetId) => {
       const url = `${serverUrl}/asset/${assetId}`;
       const assetData = await fetch(url).then(res => res.json());
       assetData.url = `${serverUrl}/static/img/${assetData.item.id}.${assetData.item.type === 0 ? 'png' : 'gif'}`;
@@ -210,23 +211,31 @@ const AssetPage = (props) => {
       setItem(assetData);
     };
 
-    fetchItem(assetId);
+    fetchAsset(assetId);
   }, [assetId]);
 
-  return asset ? (
-    <div>
-      <p>Asset ID: {assetId}</p>
-      <p>Item ID: {asset.item.id}</p>
-      <p>Item title: {asset.item.title}</p>
-      <p>Item tags: {asset.item.tags}</p>
-      <p>Item description: {asset.item.description}</p>
-      <p>Item creator: <a href={`/user/${asset.item.creator}`}>{asset.item.creator}</a></p>
-      <p>Item owner: <a href={`/user/${asset.user_id}`}>{asset.user_id}</a></p>
-      <div>
-        <img src={asset.url} className='w-40' alt={asset.item.title} />
-      </div>
+  return (
+    <div data-role='asset page'>
+      <div data-role='asset info' className='flex my-10'>
       {
-        asset.user_id === wallet.address && asset.dealOpen === false &&
+        asset &&
+        <div className='w-1/3 border-r-2 flex flex-col items-center justify-center'>
+          <p>Asset ID: {assetId}</p>
+          <p>Item ID: {asset.item.id}</p>
+          <p>Item title: {asset.item.title}</p>
+          <p>{asset.item.tags ? `Item tags: ${asset.item.tags}` : ''}</p>
+          <p>{asset.item.description ? `Item description: ${asset.item.description}` : ''}</p>
+          <p>Item creator: <a href={`/user/${asset.item.creator}`}>{shortAddress(asset.item.creator)}</a></p>
+          <p>Item owner: <a href={`/user/${asset.user_id}`}>{shortAddress(asset.user_id)}</a></p>
+          <div className='my-3'>
+            <img src={asset.url} className='w-40' alt={asset.item.title} />
+          </div>
+        </div>
+      }
+      </div>
+      <div data-role='deal info' className='bg-white border-t-2 my-10 py-6'>
+      {
+        asset && asset.user_id === wallet.address && asset.dealOpen === false &&
         <div data-role='market board' className='flex space-x-3 items-center'>
           <span>Price</span>
           <input 
@@ -249,9 +258,9 @@ const AssetPage = (props) => {
         </div>
       }
       {
-        asset.user_id === wallet.address && asset.dealOpen === true &&
-        <div data-role='market board' className='flex flex-col space-y-3 items-center'>
-          <p>Deal seller: {asset.deal.user_id}</p>
+        asset && asset.user_id === wallet.address && asset.dealOpen === true &&
+        <div data-role='market board' className='flex flex-col space-y-2 items-center'>
+          <p>Deal seller: {shortAddress(asset.deal.user_id)}</p>
           <p>Deal price: {asset.deal.price}</p>
           <p>Deal total amount: {asset.deal.total}</p>
           <p>Deal remain amount: {asset.deal.remain}</p>
@@ -264,7 +273,7 @@ const AssetPage = (props) => {
         </div>
       }
       {
-        asset.user_id !== wallet.address && asset.dealOpen === true &&
+        asset && asset.user_id !== wallet.address && asset.dealOpen === true &&
         <div data-role='market board' className='flex flex-col space-y-3 items-center'>
           <p>Deal seller: {asset.deal.user_id}</p>
           <p>Deal price: {asset.deal.price}</p>
@@ -284,8 +293,9 @@ const AssetPage = (props) => {
           </button>
         </div>
       }
+      </div>
     </div>
-  ) : <></>;
+  );
 };
 
 AssetPage.propTypes = {

@@ -10,6 +10,7 @@ import MarketPage from './pages/MarketPage';
 import SearchPage from './pages/SearchPage';
 import ItemPage from './pages/ItemPage';
 import AssetPage from './pages/AssetPage';
+import CollectionPage from './pages/CollectionPage';
 import UserPage from './pages/UserPage';
 import Wallet from './common/Wallet';
 
@@ -26,7 +27,7 @@ const App = (props) => {
         <Route path='/create'>
           <CreatorPage />
         </Route>
-        <Route path='/market'>
+        <Route path='/market/:type'>
           <MarketPage />
         </Route>
         <Route path='/search/:keyword'>
@@ -37,6 +38,9 @@ const App = (props) => {
         </Route>
         <Route path='/asset/:assetId'>
           <AssetPage />
+        </Route>
+        <Route path='/collection/:collectionId'>
+          <CollectionPage />
         </Route>
         <Route path='/user' exact>
           <UserPage />

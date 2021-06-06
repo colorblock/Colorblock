@@ -1,31 +1,77 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import ItemList from '../common/ItemList';
+import AssetList from '../common/AssetList';
+import CollectionList from '../common/CollectionList';
 import { serverUrl } from '../../config';
 
 export const MarketPage = (props) => {
   
   const [items, setItems] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const { type } = useParams();
 
   const itemListConfig = {
     type: 'item',
     flow: 'grid',
     cols: 5
   };
+  const assetListConfig = {
+    type: 'item',
+    flow: 'grid',
+    cols: 5
+  };
+  const collectionListConfig = {
+    type: 'collection',
+    flow: 'grid',
+    cols: 4
+  };
 
   useEffect(() => {
-    const fetchAllItems = async () => {
-      const itemsUrl = `${serverUrl}/item/all`;
+    const fetchLatestData = async () => {
+      switch (type) {
+        case 'items':
+          await fetchLatestItems();
+          return;
+        case 'assets':
+          await fetchLatestAssets();
+          return;
+        case 'collections':
+          await fetchLatestCollections();
+          return;
+        default:
+          return;
+      }
+    };
+
+    const fetchLatestItems = async () => {
+      const itemsUrl = `${serverUrl}/item/latest`;
       const itemsData = await fetch(itemsUrl).then(res => res.json());
       console.log(itemsData);
       setItems(itemsData);
     };
 
-    fetchAllItems();
+    const fetchLatestAssets = async () => {
+      const assetsUrl = `${serverUrl}/asset/latest`;
+      const assetsData = await fetch(assetsUrl).then(res => res.json());
+      console.log(assetsData);
+      setAssets(assetsData);
+    };
+
+    const fetchLatestCollections = async () => {
+      const collectionsUrl = `${serverUrl}/collection/latest`;
+      const collectionsData = await fetch(collectionsUrl).then(res => res.json());
+      console.log(collectionsData);
+      setCollections(collectionsData);
+    };
+
+    fetchLatestData();
   }, []);
 
   return (
@@ -46,9 +92,24 @@ export const MarketPage = (props) => {
           </div>
         </div>
       </div>
-      <div data-role='item list' className='w-5/6 mx-auto'>
-        <ItemList items={items} config={itemListConfig} />
-      </div>
+      {
+        type === 'items' &&
+        <div data-role='items list' className='w-5/6 mx-auto'>
+          <ItemList items={items} config={itemListConfig} />
+        </div>
+      }
+      {
+        type === 'assets' &&
+        <div data-role='assets list' className='w-5/6 mx-auto'>
+          <AssetList assets={assets} config={assetListConfig} />
+        </div>
+      }
+      {
+        type === 'collections' &&
+        <div data-role='collections list' className='w-5/6 mx-auto'>
+          <CollectionList collections={collections} config={collectionListConfig} />
+        </div>
+      }
     </div>
   );
 };

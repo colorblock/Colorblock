@@ -269,7 +269,6 @@ def update_item(item_id, item_info={}):
     pact_code = '({}.item-details "{}")'.format(get_module_names()['colorblock'], item_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
-    app.logger.debug(result)
     if result['status'] != 'success':
         return result
     

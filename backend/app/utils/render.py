@@ -55,13 +55,14 @@ def hex_to_rgba(hex):
 def rgba_to_hex(rgba):
     return '#' + ''.join(f'{i:02X}' for i in rgba[:3])
 
-def generate_pixels_from_image(file_path, max_width=64):
+def generate_pixels_from_image(file_path, max_width=64, image_id=''):
     save_path = os.path.abspath(file_path)
     img_obj = Image.open(file_path)
     compressed = []
     frames = img_obj.n_frames
     static = frames == 1
     intervals = []
+    paths = []
     for i in range(frames):
         img_obj.seek(i)
         if not static:
@@ -73,11 +74,11 @@ def generate_pixels_from_image(file_path, max_width=64):
             compressed.append(copy.copy(img_obj))
         else:
             new_img = copy.copy(img_obj)
-            path = 'app/static/img/tmp/test{}.png'.format(i)
+            path = 'app/static/img/tmp/{}-{}.png'.format(image_id, i)
             new_img.save(path)
             tinify.key = app.config['TINIFY_KEY']
             source = tinify.from_file(path)
-            optimized_path = 'app/static/img/tmp/optimized{}.png'.format(i)
+            optimized_path = 'app/static/img/tmp/optimized-{}-{}.png'.format(image_id, i)
             resized = source.resize(
                 method='scale',
                 width=max_width
@@ -85,10 +86,18 @@ def generate_pixels_from_image(file_path, max_width=64):
             resized.to_file(optimized_path)
             new_img = Image.open(optimized_path)
             compressed.append(new_img)
+            paths.append(path)
+            paths.append(optimized_path)
             
     if frames == 1:
         compressed[0].save(file_path)
     else:
         compressed[0].save(file_path, save_all=True, append_images=compressed[1:], duration=intervals, loop=0)
 
+    for img in compressed:
+        img.close()
+    for path in paths:
+        # remove tmp files
+        os.remove(path)
+        
     return save_path

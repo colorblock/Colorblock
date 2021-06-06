@@ -94,9 +94,9 @@ const HomePage = (props) => {
             Featured Collections
             <span className='ml-5 text-cb-pink text-sm'>Get Featured</span>
           </div>
-          <div className='text-gray-400'>
+          <a className='text-gray-400' href='/market/collections'>
             View More
-          </div>
+          </a>
         </div>
         <CollectionList collections={collections} config={collectionListConfig} />
       </div>
@@ -105,9 +105,9 @@ const HomePage = (props) => {
           <div className='text-base'>
             Trending
           </div>
-          <div className='text-gray-400'>
+          <a className='text-gray-400' href='/market/assets'>
             View More
-          </div>
+          </a>
         </div>
         <AssetList assets={assets} config={assetListConfig} />
       </div>
@@ -118,15 +118,15 @@ const HomePage = (props) => {
             <div className='text-base'>
               Recently Minted
             </div>
-            <div className='text-gray-400'>
+            <a className='text-gray-400' href='/market/items'>
               View More
-            </div>
+            </a>
           </div>
           <ItemList items={items} config={itemListConfig} />
         </div>
       }
       <div data-role='view more' className='w-5/6 mx-auto my-20'>
-        <button className='w-full py-3 border rounded-xl shadow hover-gray'>View More</button>
+        <a href='/market/items'><button className='w-full py-3 border rounded-xl shadow hover-gray'>View More</button></a>
       </div>
       <div data-role='project highlight' className='w-5/6 mx-auto mt-40 flex justify-center text-center'>
         <div className='w-1/3 px-10 leading-6'>

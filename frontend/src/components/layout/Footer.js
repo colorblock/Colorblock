@@ -24,7 +24,7 @@ export const Footer = (props) => {
     <div data-role='footer container' className='text-sm'>
       <div data-role='footer nav' className='w-5/6 mx-auto mt-40 flex justify-between'>
         <ul className='space-y-3 text-gray-500'>
-          <li className='hover:text-black'><a href='/market'>Explore</a></li>
+          <li className='hover:text-black'><a href='/market/items'>Explore</a></li>
           <li className='hover:text-black'><a href='/create'>Create</a></li>
           <li className='hover:text-black'><a href='/user'>My Account</a></li>
         </ul>

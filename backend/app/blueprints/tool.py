@@ -29,7 +29,7 @@ def get_pixel():
         file_path = 'app/static/img/tmp/{}.{}'.format(image_id, file_type)
         app.logger.debug(os.path.basename(file_path))
         file.save(file_path)
-        save_path = generate_pixels_from_image(file_path, max_width=max_width)
+        save_path = generate_pixels_from_image(file_path, max_width=max_width, image_id=image_id)
         return send_file(save_path, mimetype='image/{}'.format(file_type))
 
 @tool_blueprint.route('/latest_height')
