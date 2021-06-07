@@ -45,6 +45,10 @@ def generate_image_from_item(item_data):
     if frames == 1:
         first_img.save('app/static/img/{}.png'.format(id))
     else:
+        app.logger.debug(intervals)
+        for index, v in enumerate(intervals):
+            if type(v) == dict:
+                intervals[index] = float(v['decimal'])
         intervals = [v * 1000 for v in intervals]
         first_img.save('app/static/img/{}.gif'.format(id), save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
 

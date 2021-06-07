@@ -260,9 +260,9 @@ def update_deal(deal_id):
         db.session.commit()
     app.logger.debug('after modification, deal = {}'.format(deal))
 
-def update_item(item_id, item_info={}):        
+def update_item(item_id, item_info={}, add_image=False):        
     item = db.session.query(Item).filter(Item.id == item_id).first()
-    if item:
+    if item and add_image == False:
         return
 
     app.logger.debug('now update item: {}'.format(item_id))
@@ -279,18 +279,19 @@ def update_item(item_id, item_info={}):
     item_data['id'] = item_id
     item_type = 1 if item_data['frames'] > 1 else 0
 
-    # add into db
-    item = Item(
-        id=item_id,
-        title=item_data['title'],
-        type=item_type,
-        tags=item_info.get('tags', None),
-        description=item_info.get('description', None),
-        creator=item_data['creator'],
-        supply=item_data['supply']
-    )
-    db.session.add(item)
-    db.session.commit()
+    if not item:
+        # add into db
+        item = Item(
+            id=item_id,
+            title=item_data['title'],
+            type=item_type,
+            tags=item_info.get('tags', None),
+            description=item_info.get('description', None),
+            creator=item_data['creator'],
+            supply=item_data['supply']
+        )
+        db.session.add(item)
+        db.session.commit()
 
     # save image
     file_type = 'gif' if item.type == 1 else 'png'
@@ -419,6 +420,40 @@ def update_purchase(meta_data, event):
         db.session.add(purchase)
         db.session.commit()
 
+
+@routine_blueprint.route('/generate_images', methods=['POST'])
+@admin_required
+def generate_images():
+    # constants
+    module_name_dict = get_module_names()
+    module_name_list = list(module_name_dict.values())
+
+    blocks = db.session.query(Block).filter(Block.relevant == True).all()
+    for block in blocks:
+        previous_blocks = fetch_previous_blocks(block.hash, limit=1)
+        # fetch previous txs
+        for block in previous_blocks:
+            block['payload_hash'] = block['payloadHash']
+        time.sleep(1)
+        payloads = fetch_payloads(previous_blocks)
+        time.sleep(1)
+
+        # loop over payloads and verify each payload
+        for payload in payloads:
+            # handle events
+            for index, output in enumerate(payload['outputs']):
+                events = output.get('events', [])
+                tx_status = output['result']['status']
+                for event in events:
+                    module_name = '{}.{}'.format(event['module']['namespace'], event['module']['name'])
+                    # check whether tx contains colorblock
+                    if module_name in module_name_list:
+                        item_id = event['params'][0]
+                        event_name = event['name']
+                        if event_name == 'MINT' and tx_status == 'success':
+                            update_item(item_id, item_info={}, add_image=True)
+
+    return 'finished'
 
 
 # use this task to update existing data

@@ -3,7 +3,7 @@ export const inProd = devMode === 'production';
 const getServerUrl = (devMode) => {
   switch (devMode) {
     case 'development':
-      return 'http://colorblockart.com:5000';
+      return 'http://api.colorblockart.com';
     case 'production':
       return 'https://colorblock.art:5000';
     default:

@@ -19,10 +19,11 @@ search = Search()
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.url_map.strict_slashes = False
+    print('12312')
 
     try:
         app.config.from_object('instance.config')
-    except:
+    except Exception as e:
         app.config.from_object('config')
     app.config['mode'] = 'prod' if app.config['ENV'] == 'production' else 'dev'
 
@@ -30,7 +31,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
         db_config['USERNAME'], 
         db_config['PASSWORD'], 
-        db_config['HOSTNAME'], 
+        db_config['HOSTNAME'][app.config['mode']], 
         db_config['PORT'],
         db_config['DATABASE']
     )

@@ -41,11 +41,21 @@ class TaskBot:
 
             time.sleep(60)
 
+    def generate_images(self):
+        url = 'http://localhost:5000/routine/generate_images'
+        res = self.s.post(url)
+        print(res.text)
+
     def mint(self):
         url = 'http://localhost:5000/mint'
         res = self.s.post(url)
         print(res.text)
-            
+
+    def index(self):
+        url = 'http://localhost:5000/routine/msearch/update/item'
+        res = self.s.post(url)
+        print(res.text)
+
 
 if __name__ == '__main__':
     bot = TaskBot()
@@ -54,5 +64,7 @@ if __name__ == '__main__':
         bot.login_as_admin()
     else:
         print('admin logged successfully')
-    bot.run()
+    #bot.run()
     #bot.mint()
+    #bot.index()
+    bot.generate_images()
