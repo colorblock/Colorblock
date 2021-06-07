@@ -63,7 +63,10 @@ def generate_pixels_from_image(file_path, max_width=64, image_id=''):
     save_path = os.path.abspath(file_path)
     img_obj = Image.open(file_path)
     compressed = []
-    frames = img_obj.n_frames
+    try:
+        frames = img_obj.n_frames
+    except:
+        frames = 1
     static = frames == 1
     intervals = []
     paths = []

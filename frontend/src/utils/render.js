@@ -107,6 +107,7 @@ export const convertFramesToIntervals = (frames, singleFrameId=null) => {
 
 export const createFramesFromImage = async (imageBlob) => {
 
+  console.log('12312');
   const imageUrl = URL.createObjectURL(imageBlob);
   const imageType = imageBlob.type;
   
@@ -144,15 +145,16 @@ export const createFramesFromImage = async (imageBlob) => {
       img.src = URL.createObjectURL(imageBlob);
     });
     canvasList.push(canvas);
-    delaysRaw.push(1000);
+    delaysRaw.push(100);
   }
 
 
+  console.log(delaysRaw);
   const width = canvasList[0].width;
   const height = canvasList[0].height;
   const delays = delaysRaw.map(delay => delay / 100);
   const duration = delays.reduce((a, b) => a + b, 0);
-  const intervals = []
+  const intervals = [];
   delays.forEach((_, index) => {
     const accuDelay = delays.slice(0, index + 1).reduce((a, b) => a + b, 0);
     const interval = Math.floor(accuDelay * 100 / duration);

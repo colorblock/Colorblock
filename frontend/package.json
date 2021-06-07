@@ -31,7 +31,7 @@
     "local": "NODE_ENV=local craco start",
     "local-win": "set NODE_ENV=local && craco start",
     "start": "craco start",
-    "build": "cracos build",
+    "build": "craco build",
     "test": "jest",
     "eject": "react-scripts eject"
   },

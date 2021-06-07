@@ -64,7 +64,7 @@ if __name__ == '__main__':
         bot.login_as_admin()
     else:
         print('admin logged successfully')
-    #bot.run()
+    bot.run()
     #bot.mint()
     #bot.index()
-    bot.generate_images()
+    #bot.generate_images()
