@@ -131,15 +131,15 @@ const HomePage = (props) => {
       <div data-role='project highlight' className='w-5/6 mx-auto mt-40 flex justify-center text-center'>
         <div className='w-1/3 px-10 leading-6'>
           <p className='font-bold text-cb-pink mb-6 text-lg'>On-Chain</p>
-          <p>All artwork associated with NFTs are located on chain. All NFTs are deployed on to Kadena's braided multi-chain proof of work network. A feature unique to ColorBlock.</p>
+          <p>All artwork associated with each NFT is stored and located on chain. All NFTs are deployed onto Kadena's braided multi-chain proof of work network.</p>
         </div>
         <div className='w-1/3 px-10 leading-6'>
-          <p className='font-bold text-cb-pink mb-6 text-lg'>Low Fees</p>
-          <p>Kadena's scalable multi chain network allows users to mint NFTs with very low fees.</p>
+          <p className='font-bold text-cb-pink mb-6 text-lg'>No Fees</p>
+          <p>Kadena's Gas Station feature allows ColorBlock to subsidize gas fees for users allowing for feeless minting! Never has it been easier to get started with NFTs on ColorBlock.</p>
         </div>
         <div className='w-1/3 px-10 leading-6'>
-          <p className='font-bold text-cb-pink mb-6 text-lg'>Secure</p>
-          <p>All NFTs are deployed on chain to Kadena's braided multi-chain proof of work network. All artwork associated with NFTs are located on chain. A feature unique to ColorBlock.</p>
+          <p className='font-bold text-cb-pink mb-6 text-lg'>Polyfungible</p>
+          <p>ColorBlock adopts KIP-0011, giving users the option of fractional ownership and custody of NFTs. Customize your NFT in our Creator!</p>
         </div>
       </div>
     </div>
