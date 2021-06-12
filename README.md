@@ -21,7 +21,7 @@ Kadena's Gas Station feature allows ColorBlock to subsidize gas fees for users a
 
 ### Polyfungible
 
-GColorBlock adopts KIP-0011, giving users the option of fractional ownership and custody of NFTs. Customize your NFT in our Creator!
+ColorBlock adopts KIP-0011, giving users the option of fractional ownership and custody of NFTs. Customize your NFT in our Creator!
 
 ## Built with
 
