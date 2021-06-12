@@ -31,7 +31,7 @@
     "local": "NODE_ENV=local craco start",
     "local-win": "set NODE_ENV=local && craco start",
     "start": "craco start",
-    "build": "craco build",
+    "build": "craco build && rsync -av --delete build/ server",
     "test": "jest",
     "eject": "react-scripts eject"
   },
