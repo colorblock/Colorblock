@@ -5,6 +5,7 @@ import hashlib
 import json
 import yaml
 import time
+import os
 
 from app.utils.response import get_error_response, get_success_response
 from app.utils.crypto import hex_to_base64_url
@@ -143,11 +144,13 @@ def build_local_cmd(pact_code, pact_data={}):
     return result
 
 def get_module_names():
-    mode = app.config['mode']
+    in_test = os.environ.get('PACT_MODULE_TEST')
+    module_type = 'dev' if in_test else 'prod'
     modules = app.config['MODULES']
-    return modules[mode]
+    return modules[module_type]
 
 def get_accounts():
-    mode = app.config['mode']
+    in_test = os.environ.get('PACT_MODULE_TEST')
+    module_type = 'dev' if in_test else 'prod'
     accounts = app.config['ACCOUNTS']
-    return accounts[mode]
+    return accounts[module_type]
