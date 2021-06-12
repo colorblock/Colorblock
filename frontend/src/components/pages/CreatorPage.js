@@ -15,7 +15,7 @@ import { convertFramesToString, convertFramesToIntervals, convertRgbaToHex } fro
 import { getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl, itemConfig, contractModules, collectionConfig } from '../../config';
 import exampleFrames from '../../assets/exampleFrames';
-import { randomId } from '../../utils/tool';
+import { randomId, toAmountPrecision, toPricePrecision } from '../../utils/tool';
 
 const CreatePage = (props) => {
   const { frames, palette, dpt, wallet } = props;  // dpt means dispatch
@@ -124,7 +124,7 @@ const CreatePage = (props) => {
       alert('Please connect to wallet first');
       return;
     }
-    const { title, description, supply } = submitItem;
+    const { title, description } = submitItem;
     const tags = submitItem.tags ? submitItem.tags.split(',').map(v => v.trim()) : '';
     if (!title) {
       alert('Title cannot be empty');
@@ -134,11 +134,11 @@ const CreatePage = (props) => {
     const collection = collections.length > 0 ? collections.filter(clt => clt.selected)[0] : {};
 
     // validate supply
-    const supplyNumber = parseFloat(supply);
-    if (isNaN(supplyNumber) || supplyNumber < itemConfig.minSupply || supplyNumber > itemConfig.maxSupply) {
+    const supply = toAmountPrecision(submitItem.supply);
+    if (isNaN(supply) || supply < itemConfig.minSupply || supply > itemConfig.maxSupply) {
       alert(`supply must in ${itemConfig.minSupply} ~ ${itemConfig.maxSupply}`);
       return;
-    } else if (supplyNumber !== Math.floor(supplyNumber)) {
+    } else if (supply !== Math.floor(supply)) {
       alert('supply must be integer');
       return;
     }
@@ -155,13 +155,13 @@ const CreatePage = (props) => {
     const intervals = convertFramesToIntervals(frames);
     const account = wallet.address;
     const cmd = {
-      code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-msg "supply") (read-keyset "accountKeyset"))`,
+      code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-decimal "supply") (read-keyset "accountKeyset"))`,
       caps: [{
         role: 'Identity Verification',
         description: 'Identity Verification',
         cap: {
           name: `${contractModules.colorblock}.MINT`,
-          args: [id, account, supplyNumber]
+          args: [id, account, supply]
         }
       }, {
         role: 'Pay Gas',
@@ -182,7 +182,7 @@ const CreatePage = (props) => {
         cols,
         frames: frameCnt,
         intervals,
-        supply: supplyNumber,
+        supply,
         account,
         accountKeyset: { 
           keys: [account],
@@ -192,9 +192,10 @@ const CreatePage = (props) => {
     };
     if (onSale) {
       // if item is directly posted into market, then add release action
-      const { price, saleAmount } = submitItem;
+      const price = toPricePrecision(submitItem.price);
+      const saleAmount = toAmountPrecision(submitItem.saleAmount);
       const releaseCmd = {
-        code: `(${contractModules.colorblockMarket}.release (read-msg "id") (read-msg "account") (read-msg "price") (read-msg "amount"))`,
+        code: `(${contractModules.colorblockMarket}.release (read-msg "id") (read-msg "account") (read-decimal "price") (read-decimal "amount"))`,
         caps: [{
           role: 'Transfer',
           description: 'Transfer item to market pool',

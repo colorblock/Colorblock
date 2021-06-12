@@ -11,22 +11,6 @@ const HomePage = (props) => {
   const [collections, setCollections] = useState([]);
   const [latestHeight, setLatestHeight] = useState(null);
 
-  const collectionListConfig = {
-    type: 'collection',
-    flow: 'flex',
-    cols: 4
-  };
-  const itemListConfig = {
-    type: 'item',
-    flow: 'flex',
-    cols: 5
-  };
-  const assetListConfig = {
-    type: 'item',
-    flow: 'flex',
-    cols: 5
-  };
-
   useEffect(() => {
     const fetchLatestItems = async () => {
       const itemsUrl = `${serverUrl}/item/latest`;
@@ -98,7 +82,7 @@ const HomePage = (props) => {
             View More
           </a>
         </div>
-        <CollectionList collections={collections} config={collectionListConfig} />
+        <CollectionList collections={collections} display='flex' />
       </div>
       <div data-role='trending' className='w-5/6 mx-auto my-12'>
         <div data-role='info' className='flex justify-between my-5 tracking-wider'>
@@ -109,7 +93,7 @@ const HomePage = (props) => {
             View More
           </a>
         </div>
-        <AssetList assets={assets} config={assetListConfig} />
+        <AssetList assets={assets} display='flex' />
       </div>
       {
         items.length > 0 &&
@@ -122,7 +106,7 @@ const HomePage = (props) => {
               View More
             </a>
           </div>
-          <ItemList items={items} config={itemListConfig} />
+          <ItemList items={items} display='flex' />
         </div>
       }
       <div data-role='view more' className='w-5/6 mx-auto my-20'>

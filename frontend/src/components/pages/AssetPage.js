@@ -23,6 +23,7 @@ const AssetPage = (props) => {
     const amount = toAmountPrecision(releaseData.amount);
     if (amount > asset.balance) {
       alert(`Balance ${asset.balance} is not sufficient for this ${amount}`);
+      return;
     }
     
     // post release request
@@ -126,6 +127,7 @@ const AssetPage = (props) => {
     const amount = toAmountPrecision(purchaseAmount);
     if (amount > asset.deal.remain) {
       alert(`Purchase amount must not exceed deal's remained amount`);
+      return;
     }
 
     const ownershipResult = await fetch(`${serverUrl}/item/${itemId}/is-owned-by/${buyer}`).then(res => res.json());

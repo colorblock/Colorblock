@@ -17,22 +17,6 @@ export const MarketPage = (props) => {
   const [collections, setCollections] = useState([]);
   const { type } = useParams();
 
-  const itemListConfig = {
-    type: 'item',
-    flow: 'grid',
-    cols: 5
-  };
-  const assetListConfig = {
-    type: 'item',
-    flow: 'grid',
-    cols: 5
-  };
-  const collectionListConfig = {
-    type: 'collection',
-    flow: 'grid',
-    cols: 4
-  };
-
   useEffect(() => {
     const fetchLatestData = async () => {
       switch (type) {
@@ -95,19 +79,19 @@ export const MarketPage = (props) => {
       {
         type === 'items' &&
         <div data-role='items list' className='w-5/6 mx-auto'>
-          <ItemList items={items} config={itemListConfig} />
+          <ItemList items={items} display='grid' />
         </div>
       }
       {
         type === 'assets' &&
         <div data-role='assets list' className='w-5/6 mx-auto'>
-          <AssetList assets={assets} config={assetListConfig} />
+          <AssetList assets={assets} display='grid' />
         </div>
       }
       {
         type === 'collections' &&
         <div data-role='collections list' className='w-5/6 mx-auto'>
-          <CollectionList collections={collections} config={collectionListConfig} />
+          <CollectionList collections={collections} display='grid' />
         </div>
       }
     </div>

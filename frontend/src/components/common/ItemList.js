@@ -4,9 +4,9 @@ import { serverUrl } from '../../config';
 
 const ItemList = (props) => {
 
-  const { items, config } = props;
-  const flow = config.flow === 'flex' ? 'flex overflow-x-auto space-x-4' : `grid grid-cols-${config.cols} gap-x-4 gap-y-10`;
-  const width = config.flow === 'flex' ? `w-1/${config.cols} my-2 mx-1` : ''
+  const { items, display } = props;
+  const flow = display === 'flex' ? 'flex overflow-x-auto space-x-4' : `grid grid-cols-5 gap-x-4 gap-y-10`;
+  const width = display === 'flex' ? `w-1/5 my-2 mx-1` : '';
 
   return (
     <div>
@@ -39,6 +39,7 @@ const ItemList = (props) => {
           ))
         }
       </ul>
+      <div className='grid-cols-5'></div>
     </div>
   );
 };
