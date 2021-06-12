@@ -145,12 +145,12 @@ def build_local_cmd(pact_code, pact_data={}):
 
 def get_module_names():
     in_test = os.environ.get('PACT_MODULE_TEST')
-    module_type = 'dev' if in_test else 'prod'
+    module_type = 'test' if in_test else 'prod'
     modules = app.config['MODULES']
     return modules[module_type]
 
 def get_accounts():
     in_test = os.environ.get('PACT_MODULE_TEST')
-    module_type = 'dev' if in_test else 'prod'
+    module_type = 'test' if in_test else 'prod'
     accounts = app.config['ACCOUNTS']
     return accounts[module_type]

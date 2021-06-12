@@ -84,7 +84,7 @@ const HomePage = (props) => {
           <p className='my-6 leading-6'>Explore, Mint or Create your own pixel non fungible tokens<br />with ColorBlock</p>
           <div className='flex justify-center space-x-6'>
             <a href='/create'><button className='px-7 py-2 text-white bg-cb-pink border rounded-lg shadow'>Create</button></a>
-            <a href='/market'><button className='px-7 py-2 bg-white border border-gray-300 rounded-lg shadow'>Market</button></a>
+            <a href='/market/items'><button className='px-7 py-2 bg-white border border-gray-300 rounded-lg shadow'>Market</button></a>
           </div>
         </div>
       </div>

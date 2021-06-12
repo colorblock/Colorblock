@@ -45,6 +45,15 @@ def get_latest_items():
 
     return jsonify(items)
 
+@item_blueprint.route('/<item_id>/is-owned-by/<user_id>', methods=['GET'])
+def get_item_is_owned_by(item_id, user_id):
+    ledger_id = '{}:{}'.format(item_id, user_id)
+    asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+    result = {
+        'result': True if asset else False
+    }
+    return jsonify(result)
+
 @item_blueprint.route('/count')
 def get_items_count():
     count = db.session.query(Item).count()

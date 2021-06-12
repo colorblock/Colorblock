@@ -15,7 +15,9 @@ export const Wallet = (props) => {
 
   const clickFetchAccounts = async () => {
     const accounts = await getWalletAccounts();
-    setPublicKeyList(accounts);
+    if (Array.isArray(accounts)) {
+      setPublicKeyList(accounts);
+    }
   };
 
   const clickConfirmAccount = async () => {

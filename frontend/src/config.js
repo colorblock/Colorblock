@@ -31,6 +31,11 @@ export const contractModules = moduleInTest ? {
   gasPayerAccount: 'colorblock-gas-payer'
 };
 
+export const precisionConfig = {
+  priceUnit: 12,
+  amountUnit: 0
+};
+
 export const signConfig = {
   gasPrice: 0.000000000001,
   gasLimit: 150000

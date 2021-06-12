@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { getSignedCmd } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
 import { shortAddress } from '../../utils/polish';
+import { toPricePrecision, toAmountPrecision } from '../../utils/tool';
 
 const AssetPage = (props) => {
   const { assetId } = useParams();
@@ -18,7 +19,8 @@ const AssetPage = (props) => {
   const [purchaseAmount, setPurchaseAmount] = useState(null);
 
   const onRelease = async () => {
-    const { price, amount } = releaseData;
+    const price = toPricePrecision(releaseData.price);
+    const amount = toAmountPrecision(releaseData.amount);
     if (amount > asset.balance) {
       alert(`Balance ${asset.balance} is not sufficient for this ${amount}`);
     }
@@ -27,7 +29,7 @@ const AssetPage = (props) => {
     const itemId = asset.item.id;
     const seller = wallet.address;
     const cmd = {
-      code: `(${contractModules.colorblockMarket}.release (read-msg "token") (read-msg "seller") (read-msg "price") (read-msg "amount"))`,
+      code: `(${contractModules.colorblockMarket}.release (read-msg "token") (read-msg "seller") (read-decimal "price") (read-decimal "amount"))`,
       caps: [{
         role: 'Transfer',
         description: 'Transfer item to market pool',
@@ -120,28 +122,29 @@ const AssetPage = (props) => {
     const itemId = asset.item.id;
     const buyer = wallet.address;
     const seller = asset.deal.user_id;
-    const price = asset.deal.price;
-    const amount = purchaseAmount;
+    const price = toPricePrecision(asset.deal.price);
+    const amount = toAmountPrecision(purchaseAmount);
     if (amount > asset.deal.remain) {
       alert(`Purchase amount must not exceed deal's remained amount`);
     }
 
-    const ownershipResult = await fetch(`${serverUrl}/asset/owned-by/${buyer}`).then(res => res.json());
+    const ownershipResult = await fetch(`${serverUrl}/item/${itemId}/is-owned-by/${buyer}`).then(res => res.json());
     let code;
     const preparedData = {};
-    if (ownershipResult.length === 0) {
+    if (ownershipResult.result === true) {
+      code = `(${contractModules.colorblockMarket}.purchase (read-msg "token") (read-msg "buyer") (read-msg "seller") (read-decimal "price") (read-decimal "amount"))`
+    } else {
       // if buyer has no matched asset, then use purchase-new-account
-      code = `(${contractModules.colorblockMarket}.purchase-new-account (read-msg "token") (read-msg "buyer") (read-msg "seller") (read-msg "price") (read-msg "amount") (read-keyset "buyerKeyset"))`
+      code = `(${contractModules.colorblockMarket}.purchase-new-account (read-msg "token") (read-msg "buyer") (read-msg "seller") (read-decimal "price") (read-decimal "amount") (read-keyset "buyerKeyset"))`
       preparedData.buyerKeyset = { 
         keys: [buyer],
         pred: 'keys-all'
       };
-    } else {
-      code = `(${contractModules.colorblockMarket}.purchase (read-msg "token") (read-msg "buyer") (read-msg "seller") (read-msg "price") (read-msg "amount"))`
     }
 
-    const paidToSeller = amount * price;
-    const paidToPool = paidToSeller * marketConfig.fees;
+    const paidToSeller = toPricePrecision(amount * price);
+    const paidToPool = toPricePrecision(paidToSeller * marketConfig.fees);
+    console.log(paidToSeller, paidToPool, marketConfig.fees);
     const cmd = {
       code,
       caps: [{
@@ -194,7 +197,7 @@ const AssetPage = (props) => {
     const result = await fetch(`${serverUrl}/asset/purchase`, signedCmd).then(res => res.json());
     console.log('get result', result);
     if (result.status === 'success') {
-      alert('release successfully');
+      alert('purchase successfully');
       const newAssetId = result.data.assetId;
       document.location.href = `/asset/${newAssetId}`;
     } else {
