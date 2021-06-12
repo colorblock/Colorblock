@@ -16,17 +16,6 @@ export const SearchPage = (props) => {
   const [users, setUsers] = useState([]);
   const [tabType, setTabType] = useState('item');
 
-  const itemListConfig = {
-    type: 'item',
-    flow: 'grid',
-    cols: 5
-  };
-  const userListConfig = {
-    type: 'item',
-    flow: 'grid',
-    cols: 5
-  };
-
   useEffect(() => {
     const fetchSearchResults = async () => {
       const url = `${serverUrl}/search/${keyword}`;
@@ -51,7 +40,7 @@ export const SearchPage = (props) => {
           tabType === 'item' && (
             <div data-role='items container' className=''>
               {
-                items.length > 0 ? <ItemList items={items} config={itemListConfig} /> : <>No items</>
+                items.length > 0 ? <ItemList items={items} display='grid' /> : <>No items</>
               }
             </div>
           )
@@ -60,7 +49,7 @@ export const SearchPage = (props) => {
           tabType === 'user' && (
             <div data-role='users container' className=''>
               {
-                users.length > 0 ? <UserList users={users} config={userListConfig} /> : <>No users</>
+                users.length > 0 ? <UserList users={users} display='grid' /> : <>No users</>
               }
             </div>
           )
