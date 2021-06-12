@@ -19,26 +19,6 @@
     -webkit-transform-origin: top right;
     -webkit-transform: scale(0.83);
   }
-  @font-face {
-    font-family: Work Sans;
-    font-weight: 400;
-    src: url(../assets/fonts/WorkSans-Regular.ttf) format("truetype");
-  }
-  @font-face {
-    font-family: Work Sans;
-    font-weight: 500;
-    src: url(../assets/fonts/WorkSans-Medium.ttf) format("truetype");
-  }
-  @font-face {
-    font-family: Work Sans;
-    font-weight: 600;
-    src: url(../assets/fonts/WorkSans-SemiBold.ttf) format("truetype");
-  }
-  @font-face {
-    font-family: Work Sans;
-    font-weight: 700;
-    src: url(../assets/fonts/WorkSans-Bold.ttf) format("truetype");
-  }
   .font-work {
     @apply font-sans;
     font-family: "Work Sans";
