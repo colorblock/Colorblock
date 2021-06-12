@@ -10,11 +10,11 @@ const ItemList = (props) => {
 
   return (
     <div>
-      <ul data-role='blocks' className={`${flow} justify-between text-xs`}>
+      <ul data-role='blocks' className={`${flow} text-xs`}>
         {
           items.map((item) => (
-            <li 
-              data-role='block container' 
+            <li
+              data-role='block container'
               className={`${width} h-56 flex-none px-4 py-4 cursor-pointer border rounded-xl border-gray-300 hover-gray`}
               onClick={ () => document.location.href = `/item/${item.id}` }
             >

@@ -10,7 +10,7 @@ import decimal
 import logging
 
 db = SQLAlchemy(engine_options={
-    'pool_recycle': 299, 
+    'pool_recycle': 299,
     'pool_size': 5,
     'pool_pre_ping': True,
 }, session_options={
@@ -28,18 +28,17 @@ def create_app():
         app.config.from_object('config')
     app.config['mode'] = 'prod' if app.config['ENV'] == 'production' else 'dev'
 
-    handler = logging.FileHandler(app.config['LOG_FILE_PATH'])
-    app.logger.addHandler(handler)
-
     db_config = app.config['DATABASE']
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
-        db_config['USERNAME'], 
-        db_config['PASSWORD'], 
-        db_config['HOSTNAME'][app.config['mode']], 
+        db_config['USERNAME'],
+        db_config['PASSWORD'],
+        db_config['HOSTNAME'][app.config['mode']],
         db_config['PORT'],
         db_config['DATABASE']
     )
     db.init_app(app)
+
+    search.init_app(app)
 
     app.secret_key = app.config['SECRET_KEY']
     CORS(app, supports_credentials=True, resources={r'/*': {'origins': app.config['CORS_ORIGINS']}})

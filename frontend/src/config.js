@@ -5,7 +5,7 @@ const getServerUrl = (devMode) => {
     case 'development':
       return 'http://api.colorblockart.com';
     case 'production':
-      return 'https://colorblock.art:5000';
+      return 'https://api.colorblock.art';
     default:
       return 'http://localhost:5000';
   }

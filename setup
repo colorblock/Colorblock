@@ -1,0 +1,8 @@
+cd backend
+mkdir instance
+cd app
+mkdir static
+cd static
+mkdir img
+cd img
+mkdir tmp

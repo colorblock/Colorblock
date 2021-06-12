@@ -36,7 +36,7 @@ def sync_block(chain_id):
     module_name_dict = get_module_names()
     module_name_list = list(module_name_dict.values())
     start_height = app.config['START_HEIGHT']
-    
+
     # loop and verify each previous unverified block
     height_step = 50
     current_block_height = latest_block['height']
@@ -47,7 +47,7 @@ def sync_block(chain_id):
             break
 
         verified_count = db.session.query(Block).filter(
-            Block.block_height <= current_block_height, 
+            Block.block_height <= current_block_height,
             Block.block_height >= start_height,
             Block.verified == True
         ).count()
@@ -74,7 +74,7 @@ def sync_block(chain_id):
         # fetch previous blocks
         time.sleep(1)
         previous_blocks = fetch_previous_blocks(current_block_hash, limit=height_step)
-        
+
         # fetch previous txs
         for block in previous_blocks:
             block['payload_hash'] = block['payloadHash']
@@ -143,9 +143,9 @@ def sync_block(chain_id):
                                 update_recall(meta_data, event)
                             elif event_name == 'PURCHASE':
                                 update_purchase(meta_data, event)
-                        
+
                             time.sleep(1)
-                    
+
                 filtered_tx_ids = []
                 for index, input in enumerate(payload['inputs']):
                     if index in to_varify_input_indexes:
@@ -169,7 +169,7 @@ def sync_block(chain_id):
                             update_ledger(ledger_id)
                         for deal_id in record['deals']:
                             update_deal(deal_id)
-                        
+
                         time.sleep(1)
 
                 hash = payload['hash']
@@ -260,18 +260,18 @@ def update_deal(deal_id):
         db.session.commit()
     app.logger.debug('after modification, deal = {}'.format(deal))
 
-def update_item(item_id, item_info={}, add_image=False):        
+def update_item(item_id, item_info={}, add_image=False):
     item = db.session.query(Item).filter(Item.id == item_id).first()
     if item and add_image == False:
         return
 
-    app.logger.debug('now update item: {}'.format(item_id))
+    app.logger.info('now update item: {}'.format(item_id))
     pact_code = '({}.item-details "{}")'.format(get_module_names()['colorblock'], item_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
     if result['status'] != 'success':
         return result
-    
+
     item_data = result['data']
     item_data['frames'] = item_data['frames']['int']
     item_data['cols'] = item_data['cols']['int']
@@ -303,7 +303,7 @@ def update_transfer(meta_data, event):
     (item_id, sender, receiver, amount) = event['params']
     amount = int(amount)
     transfer_id = event['event_id']
-            
+
     transfer = db.session.query(Transfer).filter(Transfer.id == transfer_id).first()
     if not transfer:
         transfer = Transfer(
@@ -328,7 +328,7 @@ def update_mint(meta_data, event):
     (item_id, user_id, supply) = event['params']
     supply = int(supply)
     mint_id = event['event_id']
-            
+
     mint = db.session.query(Mint).filter(Mint.id == mint_id).first()
     if not mint:
         mint = Mint(
@@ -352,7 +352,7 @@ def update_release(meta_data, event):
     (item_id, seller, price, amount) = event['params']
     amount = int(amount)
     release_id = event['event_id']
-    
+
     release = db.session.query(Release).filter(Release.id == release_id).first()
     if not release:
         release = Release(
@@ -376,7 +376,7 @@ def update_recall(meta_data, event):
     app.logger.debug('now update recall, {}, {}'.format(meta_data, event))
     (item_id, seller) = event['params']
     recall_id = event['event_id']
-    
+
     recall = db.session.query(Recall).filter(Recall.id == recall_id).first()
     if not recall:
         recall = Recall(
@@ -399,7 +399,7 @@ def update_purchase(meta_data, event):
     (item_id, buyer, seller, price, amount) = event['params']
     amount = int(amount)
     purchase_id = event['event_id']
-    
+
     purchase = db.session.query(Purchase).filter(Purchase.id == purchase_id).first()
     if not purchase:
         purchase = Purchase(
@@ -461,8 +461,24 @@ def generate_images():
 @admin_required
 def update_item_index():
     search.create_index(Item, update=True)
+    return 'finished'
 
 @routine_blueprint.route('/msearch/update/user', methods=['POST'])
 @admin_required
 def update_user_index():
     search.create_index(User, update=True)
+    return 'finished'
+
+@routine_blueprint.route('/msearch/create/item', methods=['POST'])
+@admin_required
+def create_item_index():
+    return 'finished'
+    search.create_index(Item)
+    return 'finished'
+
+@routine_blueprint.route('/msearch/create/user', methods=['POST'])
+@admin_required
+def create_user_index():
+    return 'finished'
+    search.create_index(User)
+    return 'finished'
