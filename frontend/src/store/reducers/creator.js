@@ -329,6 +329,45 @@ const drawWithEraser = (frames, cellIndex) => {
   return frames;
 };
 
+const drawWithMove = (frames, startCellIndex, endCellIndex) => {
+  // calc offset and shift
+  const { width, height } = frames;
+  const start = {
+    x: startCellIndex % width,
+    y: Math.floor(startCellIndex / width)
+  };  
+  const end = {
+    x: endCellIndex % width,
+    y: Math.floor(endCellIndex / width)
+  };
+  const diff = {
+    x: end.x - start.x,
+    y: end.y - start.y
+  };
+
+  const frame = frames.frameList[frames.activeId];
+  const cells = frame.cells;
+  if (diff.x !== 0) {
+    // shift each row
+    // 3 -> 4, [a,b,c,d,e,f] -> [b,c,d,e,f,a]
+    // 4 -> 3, [a,b,c,d,e,f] -> [f,a,b,c,d,e]
+    let newCells = [];
+    Array(height).fill(0).forEach((_, index) => {
+      const row = cells.slice(width * index, width * (index + 1));
+      const newRow = row.slice(diff.x).concat(row.slice(0, diff.x));
+      newCells = newCells.concat(newRow);
+    });
+    frame.cells = newCells;
+  }
+
+  if (diff.y !== 0) {
+    // shift each col, no horizontal shift
+    const indexDiff = diff.y * width;
+    frame.cells = cells.slice(indexDiff).concat(cells.slice(0, indexDiff));
+  }
+  return frames;
+};
+
 const frames = produce((frames, action) => {
   switch (action.type) {
     case types.NEW_PROJECT:
@@ -365,6 +404,8 @@ const frames = produce((frames, action) => {
       return drawWithBucket(frames, action.cellIndex, action.color);
     case types.DRAW_WITH_ERASER:
       return drawWithEraser(frames, action.cellIndex);
+    case types.DRAW_WITH_MOVE:
+      return drawWithMove(frames, action.startCellIndex, action.endCellIndex);
     default:
   }
   return frames;

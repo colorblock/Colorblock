@@ -29,6 +29,7 @@ const CreatePage = (props) => {
   const [onSale, setOnSale] = useState(false);
   const [collections, setCollections] = useState([]);
   const [mintedFrames, setMintedFrames] = useState(null);
+  const [moveStartIndex, setMoveStartIndex] = useState(null);
 
   const widthPct = `${100.0 / frames.width}%`;
 
@@ -231,6 +232,19 @@ const CreatePage = (props) => {
     } else {
       alert(result.data);
     }
+  };
+
+  const handleMove = (e, cellIndex) => {
+    // start calc if mouseDown + moveTool
+    if (moveStartIndex && palette.toolType == 'move') {
+      // if same index, skip
+      if (cellIndex !== moveStartIndex) {
+        dpt.drawWithMove(moveStartIndex, cellIndex);
+        // reset start point
+        setMoveStartIndex(cellIndex);
+      }
+    }
+    e.preventDefault();
   };
 
   const saveProject = () => {
@@ -543,19 +557,19 @@ const CreatePage = (props) => {
               </div>
               <div className='flex justify-between space-x-3 px-5'>
                 <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'pencil' ? 'selected' : ''}`} 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'pencil' ? 'selected' : ''}`} 
                   onClick={ () => clickPaletteTool('pencil') }
                 >
                   <img src='/img/tool_pencil.svg' alt='pencil' className='w-10 h-10' />
                 </div>
                 <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'eraser' ? 'selected' : ''}`} 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'eraser' ? 'selected' : ''}`} 
                   onClick={ () => clickPaletteTool('eraser') }
                 >
                   <img src='/img/tool_eraser.svg' alt='eraser' className='w-10 h-10' />
                 </div>
                 <div 
-                  className={`w-10 h-10 flex justify-center items-center ${palette.toolType === 'bucket' ? 'selected' : ''}`} 
+                  className={`w-10 h-10 flex justify-center items-center cursor-pointer ${palette.toolType === 'bucket' ? 'selected' : ''}`} 
                   onClick={ () => clickPaletteTool('bucket') }
                 >
                   <img src='/img/tool_bucket.svg' alt='bucket' className='w-10 h-10' />
@@ -563,19 +577,19 @@ const CreatePage = (props) => {
               </div>
               <div className='flex justify-between space-x-3 px-5'>
                 <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${pickr && pickr.isShown ? 'selected' : ''}`} 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${pickr && pickr.isShown ? 'selected' : ''}`} 
                   onClick={ () => clickPaletteTool('brush') }
                 >
                   <img src='/img/tool_brush.svg' alt='brush' className='w-10 h-10' />
                 </div>
                 <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'eyedrop' ? 'selected' : ''}`} 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'eyedrop' ? 'selected' : ''}`} 
                   onClick={ () => clickPaletteTool('eyedrop') }
                 >
                   <img src='/img/tool_eyedrop.svg' alt='eyedrop' className='w-10 h-10' />
                 </div>
                 <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray ${palette.toolType === 'move' ? 'selected' : ''}`} 
+                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'move' ? 'selected' : ''}`} 
                   onClick={ () => clickPaletteTool('move') }
                 >
                   <img src='/img/tool_move.svg' alt='move' className='w-10 h-10' />
@@ -644,15 +658,22 @@ const CreatePage = (props) => {
           </div>
 
           <div data-role='painting grids of one frame' className='mx-12'>
-            <div className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' style={{ cursor: 'cell' }}>
+            <div 
+              className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' 
+              style={{ cursor: palette.toolType === 'move' ? 'not-allowed' : 'cell' }}
+              onMouseUp={ () => setMoveStartIndex(null) }
+            >
               {
                 frames.frameList[frames.activeId].cells.map((color, index) => (
                   <div 
                     className='border border-gray-100' 
                     style={{ 
-                      width: widthPct
+                      width: widthPct,
+                      cursor: palette.toolType === 'move' ? 'move' : 'cell'
                     }}  
                     onMouseOver={ () => dpt.setHoveredIndex(index) }
+                    onMouseDown={ () => setMoveStartIndex(index) }
+                    onMouseMove={ (e) => handleMove(e, index) }
                     onClick={ () => clickGridCell(index, color) }
                     key={index}
                   >

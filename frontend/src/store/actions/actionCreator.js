@@ -131,6 +131,14 @@ export const drawWithEraser = (cellIndex) => {
   };
 };
 
+export const drawWithMove = (startCellIndex, endCellIndex) => {
+  return {
+    type: types.DRAW_WITH_MOVE,
+    startCellIndex,
+    endCellIndex
+  };
+};
+
 export const changeToolType = (toolType) => {
   return {
     type: types.CHANGE_TOOL_TYPE,
