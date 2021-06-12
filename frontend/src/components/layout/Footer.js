@@ -29,9 +29,9 @@ export const Footer = (props) => {
           <li className='hover:text-black'><a href='/user'>My Account</a></li>
         </ul>
         <ul className='space-y-3 text-gray-500 text-right'>
-          <li className='hover:text-black'>FAQ</li>
-          <li className='hover:text-black'>Help</li>
-          <li className='hover:text-black'>Contact</li>
+          <li className='hover:text-black'><a href='https://colorblock.zendesk.com/hc/en-us/sections/900002116083-FAQ'>FAQ</a></li>
+          <li className='hover:text-black'><a href='https://colorblock.zendesk.com/hc'>Help</a></li>
+          <li className='hover:text-black'><a href='/contact'>Contact</a></li>
         </ul>
       </div>
       <div data-role='footer info' className='w-5/6 mx-auto mt-20 mb-20 flex justify-between items-end'>

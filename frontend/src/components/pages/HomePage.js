@@ -83,8 +83,8 @@ const HomePage = (props) => {
           <p className='tracking-wider text-lg font-medium'>On-chain Pixel NFTs on <span className='text-cb-pink font-bold'>Kadena</span></p>
           <p className='my-6 leading-6'>Explore, Mint or Create your own pixel non fungible tokens<br />with ColorBlock</p>
           <div className='flex justify-center space-x-6'>
-            <button className='px-7 py-2 text-white bg-cb-pink border rounded-lg shadow'><a href='/create'>Create</a></button>
-            <button className='px-7 py-2 bg-white border border-gray-300 rounded-lg shadow'><a href='/market'>Market</a></button>
+            <a href='/create'><button className='px-7 py-2 text-white bg-cb-pink border rounded-lg shadow'>Create</button></a>
+            <a href='/market'><button className='px-7 py-2 bg-white border border-gray-300 rounded-lg shadow'>Market</button></a>
           </div>
         </div>
       </div>

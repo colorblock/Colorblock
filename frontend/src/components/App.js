@@ -13,6 +13,7 @@ import AssetPage from './pages/AssetPage';
 import CollectionPage from './pages/CollectionPage';
 import UserPage from './pages/UserPage';
 import Wallet from './common/Wallet';
+import ContactPage from './pages/ContactPage';
 
 const App = (props) => {
 
@@ -47,6 +48,9 @@ const App = (props) => {
         </Route>
         <Route path='/user/:userId'>
           <UserPage />
+        </Route>
+        <Route path='/contact'>
+          <ContactPage />
         </Route>
         <Footer />
       </Router>
