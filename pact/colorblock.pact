@@ -87,6 +87,12 @@
     (compose-capability (CREDIT token account))
   )
 
+  (defcap ROTATE:bool (account:string)
+    @doc "rotate guard for account"
+    @managed  ;; one-shot
+    true
+  )
+
   (defcap TRANSFER:bool 
     (
       token:string
@@ -119,14 +125,6 @@
       )
       newbal
     )
-  )
-
-  (defcap ROTATE:bool
-    ( token:string account:string )
-    @doc "Controls rotation of ACCOUNT."
-    @managed  ;; one-shot
-    (enforce-valid-account account)
-    (enforce-guard (at 'guard (read ledger (key token account))))
   )
 
 
@@ -456,18 +454,31 @@
     )
     @doc " Update guard after coin's guard get updating \
         \  Command must have the guard of current kda account "
-    (let ((guard-kda (at 'guard (coin.details account))))
-      (enforce 
-        (= new-guard guard-kda) 
-        "Guard must match the same account of KDA"
+    (with-capability (ROTATE account)
+      (let ((guard-kda (at 'guard (coin.details account))))
+        (enforce 
+          (= new-guard guard-kda) 
+          "Guard must match the same account of KDA"
+        )
+        (enforce-guard guard-kda)
+        (map (rotate-one account guard-kda) (select ledger (where 'account (= account))))
+        "success"
       )
-      (enforce-guard guard-kda)
+    )
+  )
+
+  (defun rotate-one:string
+    ( account:string
+      new-guard:guard
+      item:object
+    )
+    (let
+      ((token (at 'token item)))
       (update ledger (key token account) {
         "guard" : new-guard
       })
     )
   )
-
 
 
   ; -------------------------------------------------------

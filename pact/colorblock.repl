@@ -131,21 +131,38 @@
 
 (expect-failure
   "Rotate will fail as user have no sig"
-  "Keyset failure"
+  "Managed capability not installed"
   (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 )
 
 (env-sigs [{"key": "admin", "caps": []}])
-(expect
+(expect-failure
   "Rotate will succeed with sig"
-  "Write succeeded"
+  "Managed capability not installed"
   (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 )
+
+(env-sigs [{"key": "admin", "caps": [(colorblock.ROTATE "admin")]}])
+(expect
+  "Rotate will succeed with sig"
+  "success"
+  (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
+)
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
 (env-sigs [
   {"key": "admin", "caps": []},
   {"key": "admin-copy", "caps": []}
 ])
 (coin.rotate "admin" (read-keyset 'admin-keyset-copy))
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock.ROTATE "admin")]},
+  {"key": "admin-copy", "caps": []}
+])
 (expect-failure
   "Rotate failed when keyset not matched"
   "Guard must match the same account of KDA"
@@ -153,10 +170,23 @@
 )
 (expect
   "Rotate will succeed with sig"
-  "Write succeeded"
+  "success"
   (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset-copy"))
 )
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [
+  {"key": "admin", "caps": []},
+  {"key": "admin-copy", "caps": []}
+])
 (coin.rotate "admin" (read-keyset 'admin-keyset))
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock.ROTATE "admin")]},
+  {"key": "admin-copy", "caps": []}
+])
 (colorblock.rotate "token-id" "admin" (read-keyset "admin-keyset"))
 
 
