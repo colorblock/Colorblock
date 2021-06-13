@@ -730,7 +730,7 @@ const CreatePage = (props) => {
               </div>
             </div>
             <div className='border-b border-gray-400 my-2'></div>
-            <div data-role='all single frames' className='flex flex-col'>
+            <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto'>
               {
                 frames.frameIds.map((frameId) => (
                   <div 
