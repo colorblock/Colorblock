@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { getSignedCmd } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
@@ -22,7 +23,7 @@ const AssetPage = (props) => {
     const price = toPricePrecision(releaseData.price);
     const amount = toAmountPrecision(releaseData.amount);
     if (amount > asset.balance) {
-      alert(`Balance ${asset.balance} is not sufficient for this ${amount}`);
+      toast.error(`Balance ${asset.balance} is not sufficient for this ${amount}`);
       return;
     }
     
@@ -65,10 +66,10 @@ const AssetPage = (props) => {
     const result = await fetch(`${serverUrl}/asset/release`, signedCmd).then(res => res.json());
     console.log('get result', result);
     if (result.status === 'success') {
-      alert('release successfully');
+      toast.success('release successfully');
       document.location.href = document.location.href;
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
 
@@ -111,10 +112,10 @@ const AssetPage = (props) => {
     const result = await fetch(`${serverUrl}/asset/recall`, signedCmd).then(res => res.json());
     console.log('get result', result);
     if (result.status === 'success') {
-      alert('release successfully');
+      toast.success('release successfully');
       document.location.href = document.location.href;
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
 
@@ -126,7 +127,7 @@ const AssetPage = (props) => {
     const price = toPricePrecision(asset.deal.price);
     const amount = toAmountPrecision(purchaseAmount);
     if (amount > asset.deal.remain) {
-      alert(`Purchase amount must not exceed deal's remained amount`);
+      toast.error(`Purchase amount must not exceed deal's remained amount`);
       return;
     }
 
@@ -199,11 +200,11 @@ const AssetPage = (props) => {
     const result = await fetch(`${serverUrl}/asset/purchase`, signedCmd).then(res => res.json());
     console.log('get result', result);
     if (result.status === 'success') {
-      alert('purchase successfully');
+      toast.success('purchase successfully');
       const newAssetId = result.data.assetId;
       document.location.href = `/asset/${newAssetId}`;
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
 

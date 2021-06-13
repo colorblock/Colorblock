@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import { serverUrl } from '../../config';
 import { shortAddress } from '../../utils/polish';
@@ -67,9 +68,9 @@ const ItemPage = (props) => {
     const url = `${serverUrl}/collection/add_item`;
     const result = await fetch(url, mkReq(postData)).then(res => res.json());
     if (result.status === 'success') {
-      alert('sync successfully');
+      toast.success('sync successfully');
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
 
@@ -180,7 +181,7 @@ const ItemPage = (props) => {
             Selling Assets
           </div>
           <div className='text-gray-400'>
-            View More
+            <a href='/market/assets'>View More</a>
           </div>
         </div>
         {

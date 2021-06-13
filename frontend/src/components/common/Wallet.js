@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import * as actions from '../../store/actions/actionCreator';
 import { getSignedCmd, getWalletAccounts } from '../../utils/sign';
@@ -30,7 +31,7 @@ export const Wallet = (props) => {
       if (wallet.keyList && wallet.keyList.length > 0) {
         address = wallet.keyList[0];
       } else {
-        alert('please choose address!');
+        toast.error('please choose address!');
         return;
       }
     }

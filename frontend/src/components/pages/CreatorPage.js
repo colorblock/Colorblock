@@ -7,6 +7,7 @@ import Pickr from '@simonwep/pickr';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import Preview from '../common/Preview';
 import PixelTool from '../common/PixelTool';
@@ -55,7 +56,7 @@ const CreatePage = (props) => {
     if (interval >= 0 && interval <= 100) {
       dpt.setFrameInterval(frameId, interval);
     } else {
-      alert('illegal interval!');
+      toast.error('llegal interval!');
     }
   };
 
@@ -120,40 +121,49 @@ const CreatePage = (props) => {
   };
 
   const onSubmitItem = async () => {
-    const frames = tabType === 'mint' ? mintedFrames : frames;
+    const savedFrames = tabType === 'mint' ? mintedFrames : frames;
     if (!wallet.address) {
-      alert('Please connect to wallet first');
+      toast.error('Please connect to wallet first');
       return;
     }
     const { title, description } = submitItem;
     const tags = submitItem.tags ? submitItem.tags.split(',').map(v => v.trim()) : '';
     if (!title) {
-      alert('Title cannot be empty');
+      toast.error('Title cannot be empty');
+      return;
+    }
+    if (!submitItem.supply) {
+      toast.error('Please input correct supply');
       return;
     }
 
     const collection = collections.length > 0 ? collections.filter(clt => clt.selected)[0] : {};
 
     // validate supply
-    const supply = toAmountPrecision(submitItem.supply);
-    if (isNaN(supply) || supply < itemConfig.minSupply || supply > itemConfig.maxSupply) {
-      alert(`supply must in ${itemConfig.minSupply} ~ ${itemConfig.maxSupply}`);
+    const supplyNumber = parseFloat(submitItem.supply);
+    if (isNaN(supplyNumber)) {
+      toast.error(`supply is expected as a number`);
       return;
-    } else if (supply !== Math.floor(supply)) {
-      alert('supply must be integer');
+    } else if (supplyNumber !== Math.floor(supplyNumber)) {
+      toast.error('supply is expected as an integer');
+      return;
+    }
+    const supply = toAmountPrecision(supplyNumber);
+    if (supply < itemConfig.minSupply || supply > itemConfig.maxSupply) {
+      toast.error(`supply must in ${itemConfig.minSupply} ~ ${itemConfig.maxSupply}`);
       return;
     }
 
-    const colors = convertFramesToString(frames);
+    const colors = convertFramesToString(savedFrames);
     
     // get hash id
     const hashCmd = mkReq({'to_hash': colors})
     const id = await fetch(`${serverUrl}/tool/hash`, hashCmd).then(res => res.text());
 
-    const rows = frames.height;
-    const cols = frames.width;
-    const frameCnt = frames.frameIds.length;
-    const intervals = convertFramesToIntervals(frames);
+    const rows = savedFrames.height;
+    const cols = savedFrames.width;
+    const frameCnt = savedFrames.frameIds.length;
+    const intervals = convertFramesToIntervals(savedFrames);
     const account = wallet.address;
     const cmd = {
       code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-decimal "supply") (read-keyset "accountKeyset"))`,
@@ -193,8 +203,16 @@ const CreatePage = (props) => {
     };
     if (onSale) {
       // if item is directly posted into market, then add release action
-      const price = toPricePrecision(submitItem.price);
-      const saleAmount = toAmountPrecision(submitItem.saleAmount);
+      if (!submitItem.price) {
+        toast.error('Please input correct listing price');
+        return;
+      }
+      if (!submitItem.saleAmount) {
+        toast.error('Please input correct listing quantity');
+        return;
+      }
+      const price = toPricePrecision(parseFloat(submitItem.price));
+      const saleAmount = toAmountPrecision(parseFloat(submitItem.saleAmount));
       const releaseCmd = {
         code: `(${contractModules.colorblockMarket}.release (read-msg "id") (read-msg "account") (read-decimal "price") (read-decimal "amount"))`,
         caps: [{
@@ -230,7 +248,7 @@ const CreatePage = (props) => {
     if (result.status === 'success') {
       document.location.href = '/item/' + id;
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
 
@@ -278,9 +296,9 @@ const CreatePage = (props) => {
     const url = `${serverUrl}/collection`;
     const result = await fetch(url, mkReq(postData)).then(res => res.json());
     if (result.status === 'success') {
-      alert('sync successfully');
+      toast.success('sync successfully');
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import { shortAddress } from '../../utils/polish';
 import { withCors } from '../../utils/sign';
@@ -32,7 +33,7 @@ const UserPage = (props) => {
         const url = `${serverUrl}/user`;
         userData = await fetch(url, withCors).then(res => res.json());
         if (userData.status === 'error') {
-          alert(userData.message);
+          toast.error(userData.message);
           window.history.back();
           return;
         }

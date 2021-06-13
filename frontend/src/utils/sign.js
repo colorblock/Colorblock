@@ -1,4 +1,5 @@
 import Pact from 'pact-lang-api';
+import { toast } from 'react-toastify';
 import { signConfig, walletUrl } from '../config';
 
 const NETWORKID = 'mainnet01';
@@ -53,7 +54,7 @@ export const getSignedCmd = async (inputCmd, postData={}) => {
   console.log('signingCmd', signingCmd);
   const signingResult = await fetch(`${walletUrl}/sign`, signingCmd)
     .then(res => res.json())
-    .catch(() => alert('please open Zelcore server'));
+    .catch(() => toast.error('please open Zelcore server'));
   console.log('signingResult', signingResult);
 
   // send signed cmd

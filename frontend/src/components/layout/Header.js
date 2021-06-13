@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import { serverUrl } from '../../config';
 import { mkReq } from '../../utils/sign';
@@ -26,11 +27,23 @@ const Header = (props) => {
     const url = `${serverUrl}/logout`;
     const result = await fetch(url, mkReq()).then(res => res.json());
     if (result.status === 'success') {
-      alert('logout successfully');
+      toast.success('logout successfully');
     } else {
-      alert(result.data);
+      toast.error(result.data);
     }
   };
+
+  useEffect(() => {
+    const fetchUserLoginStatus = async () => {
+      const url = `${serverUrl}/login_status`;
+      const result = await fetch(url).then(res => res.json());
+      if (result.status !== 'success') {
+        setAccountAddress('');
+      }
+    };
+
+    fetchUserLoginStatus();
+  }, [setAccountAddress]);
 
   return (
     <div data-role='header page'>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import { creatorConfig, serverUrl } from '../../config';
 import { createFramesFromImage } from '../../utils/render';
@@ -78,7 +79,7 @@ export const PixelTool = (props) => {
       loadProject(frames);
       closeTab();
     } else {
-      alert(`Design tool only support image with <=${maxWidth}px width and <=${maxHeight}px height, please mint this token directly.`);
+      toast.error(`Design tool only support image with <=${maxWidth}px width and <=${maxHeight}px height, please mint this token directly.`);
     }
   };
 

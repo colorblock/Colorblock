@@ -23,16 +23,16 @@ const UserList = (props) => {
                 <p className='text-gray-400'>{user.collection}</p>
               </div>
               <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
-                <img className='h-full' src={`${serverUrl}/static/img/${user.id}.${user.type === 0 ? 'png' : 'gif'}`} alt={user.title} />
+                <img className='h-full' src={`${serverUrl}/static/img/${user.id}.${user.avatar === 0 ? 'png' : 'gif'}`} alt={user.uname} />
               </div>
               <div data-role='creator and price' className='h-8 flex users-end justify-between'>
                 <div>
                   <p className='text-xxs text-gray-500'>Creator</p>
-                  <p>{`${user.creator.slice(0, 4)}....${user.creator.slice(-4)}`}</p>
+                  <p>{`${user.address.slice(0, 4)}....${user.address.slice(-4)}`}</p>
                 </div>
                 <div className='text-right'>
-                  <p className='text-xxs-r text-gray-500'>Price</p>
-                  <p className='text-cb-pink'>{user.price ? `${user.price.toFixed(1)} KDA` : 'Not on sale' }</p>
+                  <p className='text-xxs-r text-gray-500'>Balance</p>
+                  <p className='text-cb-pink'>{user.balance}</p>
                 </div>
               </div>
             </li>
