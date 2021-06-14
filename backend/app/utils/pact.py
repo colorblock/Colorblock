@@ -51,20 +51,24 @@ def local_req(local_cmd):
     return_data = {}
 
     # send data to pact url
-    try:
-        res = requests.post(app.config['PACT_LOCAL_URL'], json=local_cmd)
-        app.logger.debug(res.text)
-        result = res.json()
+    for i in range(app.config['RETRY_TIMES']):
+        try:
+            res = requests.post(app.config['PACT_LOCAL_URL'], json=local_cmd)
+            app.logger.debug(res.text)
+            result = res.json()
 
-        # pack return_data
-        if result['result']['status'] == 'success':
-            return_data = get_success_response(result['result']['data']) 
-        else:
-            return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
+            # pack return_data
+            if result['result']['status'] == 'success':
+                return_data = get_success_response(result['result']['data']) 
+            else:
+                return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
 
-    except Exception as e:
-        app.logger.error(e)
-        return_data = get_error_response('network error')
+            break
+
+        except Exception as e:
+            app.logger.error(e)
+            return_data = get_error_response('network error')
+            time.sleep(1)
 
     app.logger.debug('return data: {}'.format(return_data))
     return return_data
