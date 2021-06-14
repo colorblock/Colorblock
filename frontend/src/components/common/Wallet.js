@@ -136,7 +136,7 @@ export const Wallet = (props) => {
                 {walletName} Server turned on.
               </a>
             </p>
-            { wallet.keyList.length === 0 ? (
+            { !wallet.keyList || wallet.keyList.length === 0 ? (
               <div className='w-full px-4 flex flex-col items-center mb-6'>
                 <div className='relative w-full mx-auto'>
                   <input
