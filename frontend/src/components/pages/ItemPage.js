@@ -38,8 +38,16 @@ const ItemPage = (props) => {
   const fetchCollections = async () => {
     if (wallet.address) {
       const url = `${serverUrl}/collection/owned-by/${wallet.address}`;
-      const collections = await fetch(url).then(res => res.json());
-      setCollections(collections);
+      const collections = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (collections) {
+        setCollections(collections);
+      }
     }
   };
 
@@ -56,6 +64,10 @@ const ItemPage = (props) => {
   };
 
   const addIntoCollection = async () => {
+    if (collections.length === 0) {
+      toast.warning('Please create collection first')
+      return;
+    }
     const selectedCollections = collections.filter(clt => clt.selected);
     const collectionId = selectedCollections.length > 0 ? selectedCollections[0].id : collections[0].id;
     const postData = {
@@ -63,11 +75,19 @@ const ItemPage = (props) => {
       itemId
     };
     const url = `${serverUrl}/collection/add_item`;
-    const result = await fetch(url, mkReq(postData)).then(res => res.json());
-    if (result.status === 'success') {
-      toast.success('sync successfully');
-    } else {
-      toast.error(result.data);
+    const result = await fetch(url, mkReq(postData))
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('sync successfully');
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -86,21 +106,45 @@ const ItemPage = (props) => {
 
     const fetchItem = async (itemId) => {
       const url = `${serverUrl}/item/${itemId}`;
-      const itemData = await fetch(url).then(res => res.json());
-      itemData.url = `${serverUrl}/static/img/${itemId}.${itemData.type === 0 ? 'png' : 'gif'}`;
-      setItem(itemData);
+      const itemData = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (itemData) {
+        itemData.url = `${serverUrl}/static/img/${itemId}.${itemData.type === 0 ? 'png' : 'gif'}`;
+        setItem(itemData);
+      }
     };
 
     const fetchItemLog = async (itemId) => {
       const url = `${serverUrl}/item/${itemId}/log`;
-      const itemLog = await fetch(url).then(res => res.json());
-      setItemLog(itemLog);
+      const itemLog = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (itemLog) {
+        setItemLog(itemLog);
+      }
     };
 
     const fetchOnSaleAssets = async (itemId) => {
       const url = `${serverUrl}/asset/on_sale/${itemId}`;
-      const assets = await fetch(url).then(res => res.json());
-      setAssets(assets);
+      const assets = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (assets) {
+        setAssets(assets);
+      }
     };
 
     fetchData(itemId);
@@ -143,6 +187,7 @@ const ItemPage = (props) => {
                     <option 
                       className='text-center mx-auto'
                       selected={collection.selected === true}
+                      key={collection.id}
                     >
                       {collection.title}
                     </option>

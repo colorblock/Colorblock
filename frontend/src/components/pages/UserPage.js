@@ -33,19 +33,33 @@ const UserPage = (props) => {
       let userData;
       if (userId) {
         const url = `${serverUrl}/user/${userId}`;
-        userData = await fetch(url).then(res => res.json());
+        userData = await fetch(url)
+          .then(res => res.json())
+          .catch(error => {
+            console.log(error);
+            toast.error(error.message);
+          });
       } else {
         const url = `${serverUrl}/user`;
-        userData = await fetch(url, withCors).then(res => res.json());
-        if (userData.status === 'error') {
+        userData = await fetch(url, withCors)
+          .then(res => res.json())
+          .catch(error => {
+            console.log(error);
+            toast.error(error.message);
+          });
+
+        if (userData && userData.status === 'error') {
           toast.error('Please login first');
           setTimeout(() => document.location.href = '/', 2000);
           return;
         }
       }
-      userData.avatar = userData.avatar || '/img/colorblock_logo.svg';
-      userData.uname = userData.uname || shortAddress(userData.address);
-      setUser(userData);
+
+      if (userData) {
+        userData.avatar = userData.avatar || '/img/colorblock_logo.svg';
+        userData.uname = userData.uname || shortAddress(userData.address);
+        setUser(userData);
+      }
     };
 
     const fetchAssets = async (userId) => {

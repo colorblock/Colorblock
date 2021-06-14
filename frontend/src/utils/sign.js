@@ -1,11 +1,5 @@
-import Pact from 'pact-lang-api';
 import { toast } from 'react-toastify';
 import { signConfig, walletUrl } from '../config';
-
-const NETWORKID = 'mainnet01';
-const chainId = '0';
-// const network = `https://api.chainweb.com/chainweb/0.0/${NETWORKID}/chain/${chainId}/pact`;
-const network = 'http://api.colorblockart.com';
 
 export const withCors = {
   credentials: 'include'
@@ -32,21 +26,42 @@ export const mkReq = (cmd=null, cors=true) => {
 export const getWalletAccounts = async () => {
   const url = `${walletUrl}/accounts`;
   const cmd = { 
-    asset: 'kadena' 
+    asset: 'kadena'
   };
-  const result = await fetch(url, mkReq(cmd, false)).then(res => res.json());
-  const accounts = result.data;
-  return accounts;
+  const result = await fetch(url, mkReq(cmd, false))
+    .then(res => res.json())
+    .catch(() => {
+      toast.error('Please open your wallet API');
+    });
+
+  if (result) {
+    if (result.status === 'success') {
+      const accounts = result.data;
+      return accounts;
+    } else {
+      // refused by wallet
+      toast.error(result.data);
+      console.log(result.data);
+      return;
+    }
+  }
 }
 
 export const getSignedCmd = async (inputCmd, postData={}) => {
+  // calc gas fees
+  const inputSize = JSON.stringify(inputCmd).length;
+  const gasLimit = Math.floor(Math.min(
+    signConfig.gasLimit,
+    (inputSize + signConfig.minGasLimit) * signConfig.gasLimitRate
+  ));
+  console.log(inputSize, gasLimit);
   // set cmd correctly
   const fixedCmd = {
     gasPrice: signConfig.gasPrice,
-    gasLimit: signConfig.gasLimit,
-    chainId: chainId,
+    gasLimit,
+    chainId: signConfig.chainId,
     ttl: 600,
-    networkId: NETWORKID,
+    networkId: signConfig.networkId,
   };
   const signingCmd = mkReq({...fixedCmd, ...inputCmd}, false);
 
@@ -54,39 +69,26 @@ export const getSignedCmd = async (inputCmd, postData={}) => {
   console.log('signingCmd', signingCmd);
   const signingResult = await fetch(`${walletUrl}/sign`, signingCmd)
     .then(res => res.json())
-    .catch(() => toast.error('please open Zelcore server'));
+    .catch(() => {
+      toast.error('Please follow the instructions to open wallet API');
+    });
   console.log('signingResult', signingResult);
 
   // send signed cmd
   if (signingResult) {
-    const signedCmd = mkReq({
-      ...postData,
-      cmds: [
-        signingResult.body
-      ]
-    });
-    return signedCmd;
-  } else {
-    return null;
+    if (signingResult.status === 'error') {
+      // refused by wallet
+      toast.error(signingResult.data);
+      console.log(signingResult.data);
+      return;
+    } else {
+      const signedCmd = mkReq({
+        ...postData,
+        cmds: [
+          signingResult.body
+        ]
+      });
+      return signedCmd;
+    }
   }
-};
-
-export const getDataFromPactServer = async (code) => {
-  const localCmd = {
-    keyPairs: [],
-    pactCode: code
-  };
-  const {keyPairs, nonce, pactCode, envData, networkId} = localCmd
-  const gasLimit = 3000;
-  const meta = Pact.lang.mkMeta('', chainId, 0, gasLimit, 0, 0, 0);
-  const cmd = Pact.api.prepareExecCmd(keyPairs, nonce, pactCode, envData, meta, networkId);
-
-  console.log(meta);
-  console.log(cmd);
-  
-  const result = await fetch(`${network}/api/v1/local`, mkReq(cmd)).then(res => res.json());
-  const data = result.result.data;
-  console.log(data);
-  return data || {};
-
 };

@@ -18,6 +18,8 @@ export const Wallet = (props) => {
     const accounts = await getWalletAccounts();
     if (Array.isArray(accounts)) {
       setPublicKeyList(accounts);
+    } else if (accounts) {
+      toast.error('Accounts are illegal');
     }
   };
 
@@ -31,7 +33,7 @@ export const Wallet = (props) => {
       if (wallet.keyList && wallet.keyList.length > 0) {
         address = wallet.keyList[0];
       } else {
-        toast.error('please choose address!');
+        toast.error('Please enter accounts first!');
         return;
       }
     }
@@ -51,13 +53,23 @@ export const Wallet = (props) => {
     if (!signedCmd) {
       return;
     }
-    const result = await fetch(`${serverUrl}/login`, signedCmd).then(res => res.json());
+    const result = await fetch(`${serverUrl}/login`, signedCmd)
+      .then(res => res.json())
+      .catch(() => {
+        toast.error('Login failed becasue of network error');
+      });
     console.log(result);
 
-    setAccountAddress(address);  // set address
-    switchWalletModal();  // close modal
-    setSelectedKey('');  // clear selected key
-    toast.success('login successfully');
+    if (result) {
+      if (result.status === 'success') {
+        setAccountAddress(address);  // set address
+        switchWalletModal();  // close modal
+        setSelectedKey('');  // clear selected key
+        toast.success('login successfully');
+      } else {
+        toast.error(result.data, { autoClose: 10000 });
+      }
+    }
   };
 
   return wallet.isModalOpen ? (

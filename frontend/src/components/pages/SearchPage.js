@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import ItemList from '../common/ItemList';
 import UserList from '../common/UserList';
@@ -22,10 +23,18 @@ export const SearchPage = (props) => {
 
       const url = `${serverUrl}/search/${keyword}`;
       console.log(url);
-      const data = await fetch(url).then(res => res.json());
+      const data = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(data);
-      setItems(data.items);
-      setUsers(data.users);
+      if (data) {
+        setItems(data.items);
+        setUsers(data.users);
+      }
 
       hideLoading();
     };

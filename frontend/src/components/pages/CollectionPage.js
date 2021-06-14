@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import ItemList from '../common/ItemList';
 import { serverUrl } from '../../config';
@@ -26,9 +27,17 @@ export const CollectionPage = (props) => {
       showLoading();
 
       const itemsUrl = `${serverUrl}/collection/${collectionId}/items`;
-      const itemsData = await fetch(itemsUrl).then(res => res.json());
+      const itemsData = await fetch(itemsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(itemsData);
-      setItems(itemsData);
+      if (itemsData) {
+        setItems(itemsData);
+      }
 
       hideLoading();
     };

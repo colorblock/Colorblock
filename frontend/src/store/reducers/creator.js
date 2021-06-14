@@ -413,6 +413,11 @@ const frames = produce((frames, action) => {
 
 const palette = produce((palette, action) => {
   switch (action.type) {
+    case types.LOAD_PROJECT:
+      if (action.palette) {
+        return action.palette;
+      }
+      break;
     case types.SELECT_PALETTE_COLOR:
       return selectPaletteColor(palette, action.colorIndex);
     case types.CHANGE_PALETTE_COLOR:

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -30,6 +30,8 @@ const CreatePage = (props) => {
   const [collections, setCollections] = useState([]);
   const [mintedFrames, setMintedFrames] = useState(null);
   const [moveStartIndex, setMoveStartIndex] = useState(null);
+
+  const framePreviewEl = useRef(null);
 
   const widthPct = `${100.0 / frames.width}%`;
 
@@ -103,7 +105,6 @@ const CreatePage = (props) => {
   };
 
   const onSubmitItem = async () => {
-    const savedFrames = tabType === 'mint' ? mintedFrames : frames;
     if (!wallet.address) {
       toast.error('Please connect to wallet first');
       return;
@@ -111,36 +112,70 @@ const CreatePage = (props) => {
     const { title, description } = submitItem;
     const tags = submitItem.tags ? submitItem.tags.split(',').map(v => v.trim()) : '';
     if (!title) {
-      toast.error('Title cannot be empty');
+      toast.error('Please enter the title of item');
+      return;
+    } else if (title.length > itemConfig.maxTitleLength) {
+      toast.error(`The length of title cannot exceed ${itemConfig.maxTitleLength}`);
       return;
     }
-    if (!submitItem.supply) {
-      toast.error('Please input correct supply');
+    if (description && description.length > itemConfig.maxDescriptionLength) {
+      toast.error(`The length of description cannot exceed ${itemConfig.maxDescriptionLength}`);
       return;
     }
 
     const collection = collections.length > 0 ? collections.filter(clt => clt.selected)[0] : {};
 
     // validate supply
-    const supplyNumber = parseFloat(submitItem.supply);
-    if (isNaN(supplyNumber)) {
-      toast.error(`supply is expected as a number`);
-      return;
-    } else if (supplyNumber !== Math.floor(supplyNumber)) {
-      toast.error('supply is expected as an integer');
+    if (!submitItem.supply) {
+      toast.error('Please enter the supply of item in correct format');
       return;
     }
-    const supply = toAmountPrecision(supplyNumber);
+    const supply = toAmountPrecision(submitItem.supply);
+    if (supply !== submitItem.supply) {
+      toast.error('Supply is expected as an integer');
+      return;
+    }
     if (supply < itemConfig.minSupply || supply > itemConfig.maxSupply) {
-      toast.error(`supply must in ${itemConfig.minSupply} ~ ${itemConfig.maxSupply}`);
+      toast.error(`Supply is expected in the range of ${itemConfig.minSupply} ~ ${itemConfig.maxSupply}`);
       return;
     }
 
+    // validate frames
+    const savedFrames = tabType === 'mint' ? mintedFrames : frames;
+    if (savedFrames.width < itemConfig.minFrameWidth) {
+      toast.error(`Frame width must not be less than ${itemConfig.minFrameWidth}`);
+      return;
+    }
+    if (savedFrames.height < itemConfig.minFrameHeight) {
+      toast.error(`Frame height must not be less than ${itemConfig.minFrameHeight}`);
+      return;
+    }
+    if (savedFrames.width > itemConfig.maxFrameWidth) {
+      toast.error(`Frame width must not exceed ${itemConfig.maxFrameWidth}`);
+      return;
+    }
+    if (savedFrames.height > itemConfig.maxFrameHeight) {
+      toast.error(`Frame height must not exceed ${itemConfig.maxFrameHeight}`);
+      return;
+    }
+    if (savedFrames.frameIds.length > itemConfig.maxFrameCount) {
+      toast.error(`Frame count must not exceed ${itemConfig.maxFrameCount}`);
+      return;
+    }
     const colors = convertFramesToString(savedFrames);
     
     // get hash id
     const hashCmd = mkReq({'to_hash': colors})
-    const id = await fetch(`${serverUrl}/tool/hash`, hashCmd).then(res => res.text());
+    const id = await fetch(`${serverUrl}/tool/hash`, hashCmd)
+      .then(res => res.text())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    if (!id) {
+      return;
+    }
 
     const rows = savedFrames.height;
     const cols = savedFrames.width;
@@ -186,15 +221,30 @@ const CreatePage = (props) => {
     if (onSale) {
       // if item is directly posted into market, then add release action
       if (!submitItem.price) {
-        toast.error('Please input correct listing price');
+        toast.error('Please enter correct listing price');
+        return;
+      }
+      const price = toPricePrecision(submitItem.price);
+      if (price <= 0) {
+        toast.error('Please enter correct listing price');
         return;
       }
       if (!submitItem.saleAmount) {
-        toast.error('Please input correct listing quantity');
+        toast.error('Please enter correct listing quantity');
         return;
       }
-      const price = toPricePrecision(parseFloat(submitItem.price));
-      const saleAmount = toAmountPrecision(parseFloat(submitItem.saleAmount));
+      const saleAmount = toAmountPrecision(submitItem.saleAmount);
+      if (saleAmount !== submitItem.saleAmount) {
+        toast.error(`Sale amount is expected as an integer`);
+        return;
+      }
+      if (saleAmount <= 0) {
+        toast.error(`Please enter correct amount`);
+        return;
+      } else if (saleAmount > supply) {
+        toast.error('Listing quantity must not exceed the supply');
+        return;
+      }
       const releaseCmd = {
         code: `(${contractModules.colorblockMarket}.release (read-msg "id") (read-msg "account") (read-decimal "price") (read-decimal "amount"))`,
         caps: [{
@@ -225,12 +275,20 @@ const CreatePage = (props) => {
     if (!signedCmd) {
       return;
     }
-    const result = await fetch(`${serverUrl}/item`, signedCmd).then(res => res.json());
+    const result = await fetch(`${serverUrl}/item`, signedCmd)
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
     console.log('get result', result);
-    if (result.status === 'success') {
-      document.location.href = '/item/' + id;
-    } else {
-      toast.error(result.data);
+    if (result) {
+      if (result.status === 'success') {
+        document.location.href = '/item/' + id;
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -247,6 +305,13 @@ const CreatePage = (props) => {
     e.preventDefault();
   };
 
+  const scrollFramePreview = (frameId) => {
+    // if the last frame is selected, scroll preview to the bottom
+    if (frames.frameIds.indexOf(frameId) === frames.frameIds.length - 1 && frameId === frames.activeId) {
+      framePreviewEl.current.scrollTop = framePreviewEl.current.scrollHeight;
+    } 
+  };
+
   const saveProject = async () => {
     const { title } = submitItem;
     if (!title) {
@@ -258,12 +323,20 @@ const CreatePage = (props) => {
       frames: JSON.stringify(frames),
       palette: JSON.stringify(palette)
     };
-    const url = `${serverUrl}/project/new`;
-    const result = await fetch(url, mkReq(postData)).then(res => res.json());
-    if (result.status === 'success') {
-      toast.success('project is successfully saved');
-    } else {
-      toast.error(result.data);
+    const url = projects ? `${serverUrl}/project/save/${projects[0].id}` : `${serverUrl}/project/new`;
+    const result = await fetch(url, mkReq(postData))
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('Project is saved successfully');
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -286,11 +359,19 @@ const CreatePage = (props) => {
   const syncCollections = async () => {
     const postData = collections;
     const url = `${serverUrl}/collection`;
-    const result = await fetch(url, mkReq(postData)).then(res => res.json());
-    if (result.status === 'success') {
-      toast.success('sync successfully');
-    } else {
-      toast.error(result.data);
+    const result = await fetch(url, mkReq(postData))
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('sync successfully');
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -299,6 +380,7 @@ const CreatePage = (props) => {
       <div data-role='item settings' className='pl-6 w-full flex flex-col bg-white border-l text-sm'>
         <div>
           <input 
+            defaultValue={submitItem.title}
             placeholder='Input title here...'
             className='border-b pb-1'
             onChange={ (e) => setSubmitItem({...submitItem, title: e.target.value}) } 
@@ -356,7 +438,7 @@ const CreatePage = (props) => {
             pattern='[0-9]{1,}'
             placeholder='Total supply:' 
             className='w-full border rounded p-2'
-            onChange={ (e) => setSubmitItem({...submitItem, supply: e.target.value}) }
+            onChange={ (e) => setSubmitItem({...submitItem, supply: parseFloat(e.target.value)}) }
           />
         </div>
         <div className='text-xs flex items-center my-5'>
@@ -463,14 +545,24 @@ const CreatePage = (props) => {
     const fetchProjects = async () => {
       // if there's no project from server, then load examples
       const url = `${serverUrl}/project`;
-      const projects = await fetch(url, mkReq()).then(res => res.json());
-      if (projects.length > 0) {
+      const projects = await fetch(url, mkReq())
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (projects && projects.length > 0) {
         projects.forEach(project => {
           project.frames = JSON.parse(project.frames);
+          project.palette = JSON.parse(project.palette);
         });
-        const frames = projects[0].frames;
-        dpt.loadProject(frames);
+        const project = projects[0];
+        const frames = project.frames;
+        const palette = project.palette;
+        dpt.loadProject(frames, palette);
         setProjects(projects);
+        setSubmitItem(submitItem => ({...submitItem, title: project.title}));
       } else {
         dpt.loadProject(exampleFrames);
       }
@@ -479,8 +571,16 @@ const CreatePage = (props) => {
     const fetchCollections = async () => {
       if (wallet.address) {
         const url = `${serverUrl}/collection/owned-by/${wallet.address}`;
-        const collections = await fetch(url).then(res => res.json());
-        setCollections(collections);
+        const collections = await fetch(url)
+          .then(res => res.json())
+          .catch(error => {
+            console.log(error);
+            toast.error(error.message);
+          });
+
+        if (collections) {
+          setCollections(collections);
+        }
       }
     };
 
@@ -517,25 +617,25 @@ const CreatePage = (props) => {
           collections.map((collection, index) => (
             <div 
               className='w-full relative'
-              onClick={ () => setCollections(collections.map((clt, _index) => _index === index ? {
-                  ...clt,
-                  selected: true
-                } : {
-                  ...clt,
-                  selected: false
-                }
-              ))}
               key={collection.id}
             >
               <input 
                 value={collection.isNew && !collection.hasModified ? '' : collection.title}
                 placeholder={collection.isNew ? collection.title : ''}
-                disabled={collection.isNew ? false : true}
+                readOnly={collection.isNew ? false : true}
                 className='w-full py-3 text-left px-4 my-2 bg-white border rounded hover-pink'
                 onChange={ (e) => setCollections(collections.map((clt, _index) => _index === index ? {
                     ...clt,
                     title: e.target.value,
                     hasModified: true,
+                    selected: true
+                  } : {
+                    ...clt,
+                    selected: false
+                  }
+                ))}
+                onClick={ () => setCollections(collections.map((clt, _index) => _index === index ? {
+                    ...clt,
                     selected: true
                   } : {
                     ...clt,
@@ -548,7 +648,7 @@ const CreatePage = (props) => {
               </div>
               <div 
                 className='absolute top-0 -right-8 text-gray-300 h-full flex items-center hover:text-pink-500 cursor-pointer'
-                onClick={ () => setCollections(collections.filter((clt, _index) => _index !== index)) }
+                onClick={ () => setCollections(collections.filter((_, _index) => _index !== index)) }
               >
                 <FontAwesomeIcon icon={fa.faTimes} />
               </div>
@@ -628,7 +728,7 @@ const CreatePage = (props) => {
             <div className='flex flex-wrap justify-between'>
               {
                 palette.colors.map((color, index) => (
-                  index < 30 ? 
+                  index < 30 &&
                   <div
                     className='mx-1 my-0.5'
                     onClick={ () => clickPaletteColor(index) }
@@ -638,7 +738,7 @@ const CreatePage = (props) => {
                       className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
                       style={{ backgroundColor: color }}
                     ></button>
-                  </div> : <div key={index}></div>
+                  </div>
                 ))
               }
             </div>
@@ -646,7 +746,7 @@ const CreatePage = (props) => {
             <div className='flex flex-wrap justify-between'>
               {
                 palette.colors.map((color, index) => (
-                  index >= 30 && index < 42 ? 
+                  index >= 30 && index < 42 &&
                   <div
                     className='mx-1 my-0.5'
                     onClick={ () => clickPaletteColor(index) }
@@ -656,7 +756,7 @@ const CreatePage = (props) => {
                       className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
                       style={{ backgroundColor: color }}
                     ></button>
-                  </div> : <div key={index}></div>
+                  </div>
                 ))
               }
             </div>
@@ -669,7 +769,7 @@ const CreatePage = (props) => {
             <div className='flex flex-wrap justify-between'>
               {
                 palette.colors.map((color, index) => (
-                  index >= 42 ? 
+                  index >= 42 &&
                   <div
                     className='mx-1 my-0.5'
                     onClick={ () => clickPaletteColor(index) }
@@ -679,7 +779,7 @@ const CreatePage = (props) => {
                       className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
                       style={{ backgroundColor: color }}
                     ></button>
-                  </div> : <div key={index}></div>
+                  </div>
                 ))
               }
             </div>
@@ -759,7 +859,7 @@ const CreatePage = (props) => {
             </div>
           </div>
           <div className='border-b border-gray-400 my-2'></div>
-          <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto'>
+          <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto' ref={framePreviewEl}>
             {
               frames.frameIds.map((frameId) => (
                 <div 
@@ -767,6 +867,7 @@ const CreatePage = (props) => {
                   className={`relative w-20 h-20 mb-4 border rounded ${frameId === frames.activeId ? 'bd-cb-pink' : 'border-gray-400'}`} 
                   key={frameId}
                   onClick={ () => dpt.setActiveFrameId(frameId) }
+                  onLoad={ () => scrollFramePreview(frameId) }
                 >
                   <Preview
                     task={{

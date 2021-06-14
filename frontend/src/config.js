@@ -37,13 +37,24 @@ export const precisionConfig = {
 };
 
 export const signConfig = {
+  networkId: 'mainnet01',
+  chainId: '0',
   gasPrice: 0.000000000001,
-  gasLimit: 150000
+  gasLimit: 150000,
+  minGasLimit: 1000,
+  gasLimitRate: 3.0
 };
 
 export const itemConfig = {
   minSupply: 1,
-  maxSupply: 9999
+  maxSupply: 9999,
+  maxTitleLength: 64,
+  maxDescriptionLength: 300,
+  minFrameWidth: 2,
+  minFrameHeight: 2,
+  maxFrameWidth: 128,
+  maxFrameHeight: 128,
+  maxFrameCount: 16
 };
 
 export const collectionConfig = {

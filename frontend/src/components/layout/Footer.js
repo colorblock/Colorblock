@@ -15,8 +15,15 @@ export const Footer = (props) => {
       const { onLoading, onLoaded } = props;
       onLoading();
       const url = `${serverUrl}/item/count`;
-      const data = await fetch(url).then(res => res.json());
-      setItemCnt(data.count);
+      const data = await fetch(url)
+        .then(res => res.json())
+        .catch(error => console.log(error));
+      
+      if (data) {
+        setItemCnt(data.count);
+      } else {
+        setItemCnt('');
+      }
       onLoaded();
     };
 
@@ -43,7 +50,7 @@ export const Footer = (props) => {
         </div>
         <div className='w-1/3 text-gray-500 text-center flex flex-col justify-center items-center'>
           <img src='/img/colorblock_gray_logo.svg' className='w-12 h-12' alt='logo-gray' />
-          <p className='text-xs'>{('000' + itemCnt).slice(-3)} nfts minted</p>
+          { itemCnt && <p className='text-xs'>{('000' + itemCnt).slice(-3)} nfts minted</p> }
         </div>
         <div data-role='footer social links' className='w-1/3 flex justify-end items-center space-x-3'>
           <a href='https://twitter.com/ColorblockLabs' className='w-5 h-5 flex items-center'><Twitter fill='#8a8787' /></a>

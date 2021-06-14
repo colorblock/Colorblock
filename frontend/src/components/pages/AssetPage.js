@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { useHistory } from 'react-router';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import { getSignedCmd } from '../../utils/sign';
+import { getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
 import { shortAddress } from '../../utils/polish';
 import { toPricePrecision, toAmountPrecision } from '../../utils/tool';
@@ -12,6 +13,7 @@ import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 const AssetPage = (props) => {
   const { assetId } = useParams();
+  const routerHistory = useHistory();
   const { wallet, loading, showLoading, hideLoading } = props;
   const [asset, setItem] = useState(null);
   const [releaseData, setReleaseData] = useState({
@@ -21,10 +23,29 @@ const AssetPage = (props) => {
   const [purchaseAmount, setPurchaseAmount] = useState(null);
 
   const onRelease = async () => {
+    if (!releaseData.price) {
+      toast.error('Please enter correct price');
+      return;
+    }
     const price = toPricePrecision(releaseData.price);
+    if (price <= 0) {
+      toast.error(`Please enter correct price`);
+      return;
+    }
+    if (!releaseData.amount) {
+      toast.error('Please enter correct amount');
+      return;
+    }
     const amount = toAmountPrecision(releaseData.amount);
-    if (amount > asset.balance) {
-      toast.error(`Balance ${asset.balance} is not sufficient for this ${amount}`);
+    if (amount !== releaseData.amount) {
+      toast.error(`Amount is expected as an integer`);
+      return;
+    }
+    if (amount <= 0) {
+      toast.error(`Please enter correct amount`);
+      return;
+    } else if (amount > asset.balance) {
+      toast.error(`Release amount must not exceed balance ${asset.balance}`);
       return;
     }
     
@@ -64,13 +85,22 @@ const AssetPage = (props) => {
     if (!signedCmd) {
       return;
     }
-    const result = await fetch(`${serverUrl}/asset/release`, signedCmd).then(res => res.json());
+    const result = await fetch(`${serverUrl}/asset/release`, signedCmd)
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
     console.log('get result', result);
-    if (result.status === 'success') {
-      toast.success('release successfully');
-      window.location.reload();
-    } else {
-      toast.error(result.data);
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('Release successfully');
+        routerHistory.push('/tmp');
+        routerHistory.goBack();
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -109,13 +139,22 @@ const AssetPage = (props) => {
     if (!signedCmd) {
       return;
     }
-    const result = await fetch(`${serverUrl}/asset/recall`, signedCmd).then(res => res.json());
+    const result = await fetch(`${serverUrl}/asset/recall`, signedCmd)
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
     console.log('get result', result);
-    if (result.status === 'success') {
-      toast.success('release successfully');
-      window.location.reload();
-    } else {
-      toast.error(result.data);
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('release successfully');
+        routerHistory.push('/tmp');
+        routerHistory.goBack();
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -124,14 +163,37 @@ const AssetPage = (props) => {
     const itemId = asset.item.id;
     const buyer = wallet.address;
     const seller = asset.deal.user_id;
+
     const price = toPricePrecision(asset.deal.price);
+
+    if (!purchaseAmount) {
+      toast.error('Please enter correct purchase amount');
+      return;
+    }
     const amount = toAmountPrecision(purchaseAmount);
-    if (amount > asset.deal.remain) {
+    if (amount !== purchaseAmount) {
+      toast.error(`Purchase amount is expected as an integer`);
+      return;
+    }
+    if (amount <= 0) {
+      toast.error(`Please enter correct purchase amount`);
+      return;
+    } else if (amount > asset.deal.remain) {
       toast.error(`Purchase amount must not exceed deal's remained amount`);
       return;
     }
 
-    const ownershipResult = await fetch(`${serverUrl}/item/${itemId}/is-owned-by/${buyer}`).then(res => res.json());
+    const ownershipResult = await fetch(`${serverUrl}/item/${itemId}/is-owned-by/${buyer}`)
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+    
+    if (!ownershipResult) {
+      return;
+    }
+
     let code;
     const preparedData = {};
     if (ownershipResult.result === true) {
@@ -147,7 +209,26 @@ const AssetPage = (props) => {
 
     const paidToSeller = toPricePrecision(amount * price);
     const paidToPool = toPricePrecision(paidToSeller * marketConfig.fees);
-    console.log(paidToSeller, paidToPool, marketConfig.fees);
+    const paidTotal = paidToSeller + paidToPool;
+
+    // check balance
+    const balanceResult = await fetch(`${serverUrl}/user/kda-balance`, mkReq())
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    if (!balanceResult) {
+      return;
+    }
+    const balance = balanceResult.data;
+    if (balance < paidTotal) {
+      toast.error('KDA balance is not sufficient for purchase');
+      return;
+    }
+
+    console.log(paidToSeller, paidToPool, marketConfig.fees, balance);
     const cmd = {
       code,
       caps: [{
@@ -197,14 +278,23 @@ const AssetPage = (props) => {
     if (!signedCmd) {
       return;
     }
-    const result = await fetch(`${serverUrl}/asset/purchase`, signedCmd).then(res => res.json());
+    const result = await fetch(`${serverUrl}/asset/purchase`, signedCmd)
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
     console.log('get result', result);
-    if (result.status === 'success') {
-      toast.success('purchase successfully');
-      const newAssetId = result.data.assetId;
-      document.location.href = `/asset/${newAssetId}`;
-    } else {
-      toast.error(result.data);
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('purchase successfully');
+        const newAssetId = result.data.assetId;
+        const newUrl = `/asset/${newAssetId}`;
+        routerHistory.push(newUrl);
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -213,10 +303,18 @@ const AssetPage = (props) => {
       showLoading();
 
       const url = `${serverUrl}/asset/${assetId}`;
-      const assetData = await fetch(url).then(res => res.json());
-      assetData.url = `${serverUrl}/static/img/${assetData.item.id}.${assetData.item.type === 0 ? 'png' : 'gif'}`;
-      assetData.dealOpen = assetData.deal ? assetData.deal.open : false;
-      setItem(assetData);
+      const assetData = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (assetData) {
+        assetData.url = `${serverUrl}/static/img/${assetData.item.id}.${assetData.item.type === 0 ? 'png' : 'gif'}`;
+        assetData.dealOpen = assetData.deal ? assetData.deal.open : false;
+        setItem(assetData);
+      }
 
       hideLoading();
     };

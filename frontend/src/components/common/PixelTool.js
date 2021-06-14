@@ -30,26 +30,42 @@ export const PixelTool = (props) => {
       method: 'POST',
       body: formData
     }
-    const imageBlob = await fetch(url, postData).then(res => res.blob());
+    const imageBlob = await fetch(url, postData)
+      .then(res => {
+        if (res.ok) {
+          return res;
+        } else {
+          return res.text().then(text => {
+            throw new Error(text);
+          });
+        }
+      })
+      .then(res => res.blob())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
     
-    // update preview
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      setImages({
-        ...images,
-        compressed: imageBlob
-      });
-      const imageUrl = reader.result;
-      setImagePreviewUrls({
-        ...imagePreviewUrls,
-        compressed: imageUrl
-      });
-      // generate frames
-      const frames = await createFramesFromImage(imageBlob);
-      setMintedFrames(frames);
-      saveFrames(frames);
-    };
-    reader.readAsDataURL(imageBlob);
+    if (imageBlob) {
+      // update preview
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        setImages({
+          ...images,
+          compressed: imageBlob
+        });
+        const imageUrl = reader.result;
+        setImagePreviewUrls({
+          ...imagePreviewUrls,
+          compressed: imageUrl
+        });
+        // generate frames
+        const frames = await createFramesFromImage(imageBlob);
+        setMintedFrames(frames);
+        saveFrames(frames);
+      };
+      reader.readAsDataURL(imageBlob);
+    }
   };
 
   const onImageChange = (e) => {

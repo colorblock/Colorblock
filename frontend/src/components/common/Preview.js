@@ -8,7 +8,6 @@ export const Preview = ({ task }) => {
 
   useEffect(() => {
     const convert = async () => {
-      console.log('on convert');
       if (task.type === 'animation') {
         const frames = task.frames;
         const newUrl = await convertFramesToBase64(frames);

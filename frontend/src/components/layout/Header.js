@@ -30,13 +30,22 @@ const Header = (props) => {
 
   const logout = async () => {
     setIsUserPopupOpen(false);
-    setAccountAddress('');
     const url = `${serverUrl}/logout`;
-    const result = await fetch(url, mkReq()).then(res => res.json());
-    if (result.status === 'success') {
-      toast.success('logout successfully');
-    } else {
-      toast.error(result.data);
+    const result = await fetch(url, mkReq())
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    if (result) {
+      if (result.status === 'success') {
+        toast.success('logout successfully');
+        setAccountAddress('');
+        window.location.reload();
+      } else {
+        toast.error(result.data);
+      }
     }
   };
 
@@ -55,13 +64,18 @@ const Header = (props) => {
     const fetchUserLoginStatus = async () => {
       const { onLoading, onLoaded } = props;
       onLoading();
+
       const url = `${serverUrl}/login_status`;
-      const result = await fetch(url, mkReq()).then(res => res.json());
-      if (result.status === 'success') {
+      const result = await fetch(url, mkReq())
+        .then(res => res.json())
+        .catch(error => console.log(error));
+      
+      if (result && result.status === 'success') {
         setAccountAddress(result.data);
       } else {
         setAccountAddress('');
       }
+
       onLoaded();
     };
 

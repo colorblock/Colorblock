@@ -7,10 +7,11 @@ export const newProject = () => {
   };
 };
 
-export const loadProject = (frames) => {
+export const loadProject = (frames, palette=null) => {
   return {
     type: types.LOAD_PROJECT,
-    frames
+    frames,
+    palette
   };
 };
 

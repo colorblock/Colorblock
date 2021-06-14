@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import ItemList from '../common/ItemList';
 import AssetList from '../common/AssetList';
@@ -42,23 +43,47 @@ export const MarketPage = (props) => {
 
     const fetchLatestItems = async () => {
       const itemsUrl = `${serverUrl}/item/latest`;
-      const itemsData = await fetch(itemsUrl).then(res => res.json());
+      const itemsData = await fetch(itemsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(itemsData);
-      setItems(itemsData);
+      if (itemsData) {
+        setItems(itemsData);
+      }
     };
 
     const fetchLatestAssets = async () => {
       const assetsUrl = `${serverUrl}/asset/latest`;
-      const assetsData = await fetch(assetsUrl).then(res => res.json());
+      const assetsData = await fetch(assetsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(assetsData);
-      setAssets(assetsData);
+      if (assetsData) {
+        setAssets(assetsData);
+      }
     };
 
     const fetchLatestCollections = async () => {
       const collectionsUrl = `${serverUrl}/collection/latest`;
-      const collectionsData = await fetch(collectionsUrl).then(res => res.json());
+      const collectionsData = await fetch(collectionsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(collectionsData);
-      setCollections(collectionsData);
+      if (collectionsData) {
+        setCollections(collectionsData);
+      }
     };
 
     fetchLatestData();

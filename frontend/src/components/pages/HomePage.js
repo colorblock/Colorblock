@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import CollectionList from '../common/CollectionList';
 import ItemList from '../common/ItemList';
@@ -33,29 +34,61 @@ const HomePage = (props) => {
 
     const fetchLatestItems = async () => {
       const itemsUrl = `${serverUrl}/item/latest`;
-      const itemsData = await fetch(itemsUrl).then(res => res.json());
+      const itemsData = await fetch(itemsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(itemsData);
-      setItems(itemsData);
+      if (itemsData) {
+        setItems(itemsData);
+      }
     };
 
     const fetchLatestAssets = async () => {
       const assetsUrl = `${serverUrl}/asset/latest`;
-      const assetsData = await fetch(assetsUrl).then(res => res.json());
+      const assetsData = await fetch(assetsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(assetsData);
-      setAssets(assetsData);
+      if (assetsData) {
+        setAssets(assetsData);
+      }
     };
 
     const fetchLatestCollections = async () => {
       const collectionsUrl = `${serverUrl}/collection/latest`;
-      const collectionsData = await fetch(collectionsUrl).then(res => res.json());
+      const collectionsData = await fetch(collectionsUrl)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
       console.log(collectionsData);
-      setCollections(collectionsData);
+      if (collectionsData) {
+        setCollections(collectionsData);
+      }
     };
 
     const fetchLatestHeight = async () => {
       const url = `${serverUrl}/tool/latest_height`;
-      const data = await fetch(url).then(res => res.json());
-      setLatestHeight(data.height);
+      const data = await fetch(url)
+        .then(res => res.json())
+        .catch(error => {
+          console.log(error);
+          toast.error(error.message);
+        });
+
+      if (data) {
+        setLatestHeight(data.height);
+      }
     };
     
     initPage();
@@ -73,12 +106,16 @@ const HomePage = (props) => {
           backgroundRepeat: "no-repeat, no-repeat"
         }}
       >
-        <span data-role='block height' className='absolute top-3 right-6 text-xs text-gray-400'>
-          {latestHeight}
-        </span>
-        <span data-role='block height' className='absolute top-3 left-6 text-xs text-gray-400'>
-          {latestHeight-1}
-        </span>
+        { latestHeight && 
+          <span data-role='block height' className='absolute top-3 right-6 text-xs text-gray-400'>
+            {latestHeight}
+          </span>
+        }
+        { latestHeight && 
+          <span data-role='block height' className='absolute top-3 left-6 text-xs text-gray-400'>
+            {latestHeight-1}
+          </span>
+        }
         <div data-role='top banner title' className='text-center'>
           <p className='tracking-wider text-lg font-medium'>On-chain Pixel NFTs on <span className='text-cb-pink font-bold'>Kadena</span></p>
           <p className='my-6 leading-6'>Explore, Mint or Create your own pixel non fungible tokens<br />with ColorBlock</p>
