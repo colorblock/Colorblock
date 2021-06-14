@@ -17,6 +17,7 @@ const CollectionList = (props) => {
               data-role='block container' 
               className={`${width} h-44 flex-none px-4 py-4 my-2 mx-1 border rounded-xl border-gray-300 hover-gray cursor-pointer`}
               onClick={ () => document.location.href = `/collection/${collection.id}` }
+              key={collection.id}
             >
               <div data-role='thumbnail' className='h-28 py-4 flex justify-center'>
                 <img className='h-full' src={`${serverUrl}/static/img/${collection.items[0].id}.${collection.items[0].type === 0 ? 'png' : 'gif'}`} alt={collection.name} />

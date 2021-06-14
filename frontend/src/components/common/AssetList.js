@@ -17,6 +17,7 @@ const AssetList = (props) => {
               data-role='block container' 
               className={`${width} h-56 flex-none px-4 py-4 cursor-pointer border rounded-xl border-gray-300 hover-gray`}
               onClick={ () => document.location.href = `/asset/${asset.asset_id}` }
+              key={asset.id}
             >
               <div data-role='title and collection' className='h-8'>
                 <p>{asset.item.title}</p>

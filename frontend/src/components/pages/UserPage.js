@@ -17,12 +17,6 @@ const UserPage = (props) => {
   const [user, setUser] = useState(null);
   const [assets, setAssets] = useState([]);
 
-  const assetListConfig = {
-    type: 'asset',
-    flow: 'grid',
-    cols: 5
-  };
-
   useEffect(() => {
     const fetchData = async (userId) => {
       showLoading();
@@ -79,7 +73,7 @@ const UserPage = (props) => {
       {
         assets.length > 0 ? (
           <div data-role='asset list'>
-            <AssetList assets={assets} config={assetListConfig} />
+            <AssetList assets={assets} display='grid' />
           </div>
         ) : (
           <div>

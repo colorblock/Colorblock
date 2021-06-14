@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +12,7 @@ import { switchWalletModal, setAccountAddress } from '../../store/actions/action
 const Header = (props) => {
   const { wallet, switchWalletModal, setAccountAddress } = props;
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
+  const userPopupEl = useRef(null);
 
   const onSearch = (e) => {
     const value = e.target.value;
@@ -40,6 +41,17 @@ const Header = (props) => {
   };
 
   useEffect(() => {
+    const handleClickOutside = (e) => {    
+      if (!userPopupEl.current || !userPopupEl.current.contains(e.target)) {
+        setIsUserPopupOpen(false);
+      }
+    };
+
+    const clickOutsideHandler = () => {
+      // add click outside handler
+      document.addEventListener('mousedown', handleClickOutside);
+    };
+
     const fetchUserLoginStatus = async () => {
       const { onLoading, onLoaded } = props;
       onLoading();
@@ -53,7 +65,13 @@ const Header = (props) => {
       onLoaded();
     };
 
+    clickOutsideHandler();
     fetchUserLoginStatus();
+
+    return () => {
+      // Unbind the event listener on clean up
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [setAccountAddress]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -98,7 +116,10 @@ const Header = (props) => {
               </button>
               {
                 isUserPopupOpen && 
-                <div className='absolute top-10 left-0 w-24 flex flex-col border rounded bg-white'>
+                <div 
+                  className='absolute top-0 left-0 mt-10 w-24 flex flex-col border rounded bg-white'
+                  ref={userPopupEl}
+                >
                   <button className='w-full py-2 border-b' onClick={ () => myProfile() }>My Profile</button>
                   <button className='w-full py-2' onClick={ () => logout() }>logout</button>
                 </div>

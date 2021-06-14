@@ -317,13 +317,14 @@ const CreatePage = (props) => {
                   selected: false
                 }
               ))}
+              value={getCollectionTitle()}
             >
               {
                 collections.length > 0 ?
                 collections.map(collection => (
                   <option 
                     className='text-center mx-auto'
-                    selected={collection.selected === true}
+                    key={collection.id}
                   >
                     {collection.title}
                   </option>
@@ -486,8 +487,8 @@ const CreatePage = (props) => {
     initPage();
   }, [wallet, dpt]);
 
-  return loading ? <div className='pickr' hidden></div> : (
-    <div data-role='creator body' className='bg-cb-gray'>
+  return (
+    <div data-role='creator body' className='bg-cb-gray' hidden={loading}>
       <div data-role='tabs at top' className='h-10 border-b flex items-end space-x-10 text-sm mb-5'>
         <button className={`ml-16 px-3 py-2 ${tabType === 'collection' ? 'selected' : ''}`} onClick={ () => setTabType('collection') }>Collection</button>
         <button className={`px-3 py-2 ${tabType === 'design' ? 'selected' : ''}`} onClick={ () => setTabType('design') }>Design</button>
@@ -501,7 +502,7 @@ const CreatePage = (props) => {
         >
           <input 
             value={getCollectionTitle()}
-            disabled
+            readOnly
             className='w-full py-2 text-center bg-white text-gray-500 border rounded cursor-pointer'
           />
           <div className='absolute top-0 left-1/2 ml-24 h-full flex items-center'>
@@ -524,6 +525,7 @@ const CreatePage = (props) => {
                   selected: false
                 }
               ))}
+              key={collection.id}
             >
               <input 
                 value={collection.isNew && !collection.hasModified ? '' : collection.title}
@@ -636,7 +638,7 @@ const CreatePage = (props) => {
                       className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
                       style={{ backgroundColor: color }}
                     ></button>
-                  </div> : <></>
+                  </div> : <div key={index}></div>
                 ))
               }
             </div>
@@ -654,13 +656,14 @@ const CreatePage = (props) => {
                       className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
                       style={{ backgroundColor: color }}
                     ></button>
-                  </div> : <></>
+                  </div> : <div key={index}></div>
                 ))
               }
             </div>
             <input 
               value={palette.selectedIndex >= 0 ? convertRgbaToHex(palette.colors[palette.selectedIndex]) : '#FFFFFF'}
               className='w-full text-xs py-1 border-0 rounded bg-gray-200 px-3 tracking-wide my-2'
+              readOnly
             />
             <p className='text-gray-500 text-xs mb-1'>Recent</p>
             <div className='flex flex-wrap justify-between'>
@@ -676,7 +679,7 @@ const CreatePage = (props) => {
                       className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
                       style={{ backgroundColor: color }}
                     ></button>
-                  </div> : <></>
+                  </div> : <div key={index}></div>
                 ))
               }
             </div>
@@ -717,7 +720,7 @@ const CreatePage = (props) => {
             </button>
             <div className='absolute top-3 right-0'>
               <input 
-                disabled 
+                readOnly
                 value={`${frames.width} x ${frames.height}`}
                 className='border rounded w-24 py-0.5 text-center text-sm text-gray-500' 
               />
@@ -786,7 +789,7 @@ const CreatePage = (props) => {
                     value={ frames.frameList[frameId].interval } 
                     onChange={ (e) => onSetFrameInterval(e, frameId) } 
                     className='absolute bottom-1 left-1 w-6 text-center text-xs text-gray-700 bg-white rounded'
-                    disabled={frameId === frames.frameIds.length - 1}
+                    readOnly={frameId === frames.frameIds.length - 1}
                   />
                 </div>
               ))
@@ -810,7 +813,6 @@ const CreatePage = (props) => {
           {getItemSettingBoard()}
         </div>
       </div>
-
     </div>
   );
 };

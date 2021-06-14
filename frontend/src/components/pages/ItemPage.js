@@ -21,12 +21,6 @@ const ItemPage = (props) => {
   const [showCollections, setShowCollections] = useState(false);
   const [collections, setCollections] = useState(null);
 
-  const assetListConfig = {
-    type: 'item',
-    flow: 'flex',
-    cols: 5
-  };
-
   const getBlockInfo = (data) => {
     return (
       <div className='w-full text-left'>
@@ -199,7 +193,7 @@ const ItemPage = (props) => {
         </div>
         {
           assets &&
-          <AssetList assets={assets} config={assetListConfig} />
+          <AssetList assets={assets} display='flex' />
         }
       </div>
     </div>
