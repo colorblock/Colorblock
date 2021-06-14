@@ -206,6 +206,9 @@ def update_ledger(ledger_id):
     pact_code = '({}.details "{}" "{}")'.format(get_module_names()['colorblock'], item_id, user_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
+    if result['status'] != 'success':
+        return result
+
     data = result['data']
     asset_id = hash_id(ledger_id)
     balance = data['balance']
@@ -231,6 +234,9 @@ def update_deal(deal_id):
     pact_code = '({}.deal-details "{}")'.format(get_module_names()['colorblock-market'], deal_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
+    if result['status'] != 'success':
+        return result
+
     data = result['data']
     app.logger.debug(data)
     (item_id, user_id) = deal_id.split(':')

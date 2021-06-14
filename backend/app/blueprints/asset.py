@@ -116,9 +116,6 @@ def release_asset():
     ledger_id = '{}:{}'.format(item_id, seller)
     asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
 
-    if asset_data['amount'] > asset.balance:
-        return get_error_response('Balance is not sufficient')
-
     # submit item to pact server
     result = send_req(post_data)
         

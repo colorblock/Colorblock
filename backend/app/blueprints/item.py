@@ -143,14 +143,6 @@ def submit_item():
     return result
 
 def validate_item(item):
-    # validate supply
-    if item['supply'] < app.config['ITEM_MIN_SUPPLY'] or item['supply'] > app.config['ITEM_MAX_SUPPLY']:
-        return get_error_response('supply is not correct')
-
-    # validate title
-    if len(item['title']) > app.config['ITEM_MAX_TITLE_LENGTH']:
-        return get_error_response('the length of title is too large')
-
     # validate description
     if len(item.get('description', '')) > app.config['ITEM_MAX_DESCRIPTION_LENGTH']:
         return get_error_response('the length of description is too large')
