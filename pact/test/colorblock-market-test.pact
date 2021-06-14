@@ -254,7 +254,7 @@
 
     (with-capability (PURCHASE token buyer seller price amount)
       (with-read deals (key token seller)
-        { "total" := total-amount
+        { "remain" := remain-amount
         }
         (let* 
           (
@@ -262,7 +262,7 @@
             (fees (* FEES_RATE payment))
             (total-pay (+ fees payment))
             (balance (coin.get-balance buyer))
-            (remain-amount (- total-amount amount))
+            (left-amount (- remain-amount amount))
           )
           (enforce 
             (<= total-pay balance)
@@ -275,10 +275,10 @@
           (coin.transfer buyer COLORBLOCK_MARKET_POOL fees)
           (colorblock-test.transfer token COLORBLOCK_MARKET_POOL buyer amount)
           (update deals (key token seller) {
-            "remain": remain-amount
+            "remain": left-amount
           })
           (if
-            (= 0.0 remain-amount)
+            (= 0.0 left-amount)
             (update deals (key token seller) {
               "open": false
             })
