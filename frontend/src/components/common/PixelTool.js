@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -100,7 +100,7 @@ export const PixelTool = (props) => {
               <img 
                 src={imagePreviewUrls.origin} 
                 className='w-40 my-3'
-                alt='Origin Image Preview' 
+                alt='Origin Preview' 
               />
               <div className='my-5 flex flex-col justify-center items-center text-sm'>
                 <span>Set output width:</span>
@@ -132,7 +132,7 @@ export const PixelTool = (props) => {
             <img 
               src={imagePreviewUrls.compressed} 
               className='w-40 my-3'
-              alt='Compressed Image Preview' 
+              alt='Compressed Preview' 
             />
             {
               mintedFrames.width && 
@@ -157,12 +157,12 @@ export const PixelTool = (props) => {
 };
 
 PixelTool.propTypes = {
-  props: PropTypes
+  loadProject: PropTypes.func.isRequired,
+  closeTab: PropTypes.func.isRequired,
+  saveFrames: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state) => ({
-  
-});
+const mapStateToProps = state => state;
 
 const mapDispatchToProps = dispatch => ({
   loadProject: (frames) => dispatch(loadProject(frames))

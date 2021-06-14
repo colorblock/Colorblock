@@ -19,11 +19,10 @@ import exampleFrames from '../../assets/exampleFrames';
 import { randomId, toAmountPrecision, toPricePrecision } from '../../utils/tool';
 
 const CreatePage = (props) => {
-  const { frames, palette, dpt, wallet } = props;  // dpt means dispatch
+  const { frames, palette, dpt, wallet, loading } = props;  // dpt means dispatch
 
-  const [projects, setProjects] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [isPreviewStatic, setIsPreviewStatic] = useState(true);  // whether preview box is showing static frame or not. true: static, false: animation
-  const [modalState, setModalState] = useState([false, '']);     // first value is open or not, second is type
   const [submitItem, setSubmitItem] = useState({});
   const [pickr, setPickr] = useState(null);
   const [tabType, setTabType] = useState('collection');
@@ -33,23 +32,6 @@ const CreatePage = (props) => {
   const [moveStartIndex, setMoveStartIndex] = useState(null);
 
   const widthPct = `${100.0 / frames.width}%`;
-
-  // calc suitable size for preview presentation
-  const getPreviewBoxSize = (boxWidth=0, boxHeight=0, frameWidth, frameHeight) => {
-    const xScale = boxWidth ? boxWidth / frameWidth : 100;
-    const yScale = boxHeight ? boxHeight / frameHeight : 100;
-    const scale = Math.min(xScale, yScale);
-    const width = frameWidth * scale;
-    const height = frameHeight * scale;
-    return {
-      width,
-      height
-    }
-  };
-  const previewSizeXS = getPreviewBoxSize(0, 1.5, frames.width, frames.height);
-  const previewSizeSM = getPreviewBoxSize(12, 3, frames.width, frames.height);
-  const previewSizeLG = getPreviewBoxSize(12, 6, frames.width, frames.height);
-  const previewSizeXL = getPreviewBoxSize(18, 18, frames.width, frames.height);
 
   const onSetFrameInterval = (e, frameId) => {
     const interval = parseInt(e.target.value);
@@ -254,7 +236,7 @@ const CreatePage = (props) => {
 
   const handleMove = (e, cellIndex) => {
     // start calc if mouseDown + moveTool
-    if (moveStartIndex && palette.toolType == 'move') {
+    if (moveStartIndex && palette.toolType === 'move') {
       // if same index, skip
       if (cellIndex !== moveStartIndex) {
         dpt.drawWithMove(moveStartIndex, cellIndex);
@@ -265,14 +247,24 @@ const CreatePage = (props) => {
     e.preventDefault();
   };
 
-  const saveProject = () => {
-    const state = {
-      creator: {
-        frames,
-        palette
-      }
+  const saveProject = async () => {
+    const { title } = submitItem;
+    if (!title) {
+      toast.error('Title cannot be empty');
+      return;
+    }
+    const postData = {
+      title,
+      frames: JSON.stringify(frames),
+      palette: JSON.stringify(palette)
     };
-    // todo: send to server
+    const url = `${serverUrl}/project/new`;
+    const result = await fetch(url, mkReq(postData)).then(res => res.json());
+    if (result.status === 'success') {
+      toast.success('project is successfully saved');
+    } else {
+      toast.error(result.data);
+    }
   };
 
   const newCollection = () => {
@@ -397,7 +389,7 @@ const CreatePage = (props) => {
           </div>
         }
         <div className='flex justify-between'>
-          <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded'>
+          <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded' onClick={ () => saveProject() }>
             Save
           </button>
           <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded' onClick={ () => onSubmitItem() }>
@@ -408,49 +400,68 @@ const CreatePage = (props) => {
     );
   };
 
-  // load pickr after DOM loaded
   useEffect(() => {
-    const newPickr = Pickr.create({
-      el: '.pickr',
-      theme: 'nano',
-      defaultRepresentation: 'RGBA',
-      inline: true,
-      components: {
-        preview: true,
-        opacity: true,
-        hue: true,
-        interaction: {
-          hex: true,
-          rgba: true,
-          input: true,
-          clear: true,
-          save: true
-        }
-      }
-    });
-    newPickr.isShown = false;
-    newPickr.zIndex = -1;
+    const initPage = async () => {
+      initPickr();
+      await fetchData();
+    };
 
-    newPickr.on('save', (colorData) => {
-      if (colorData) {
-        const color = colorData.toRGBA().toString(0);
-        dpt.changePaletteColor(color, false);
-      }
-    });
-    newPickr.on('show', currenctPickr => {
-      currenctPickr.isShown = true;
-      currenctPickr.zIndex = 100;
-      setPickr(currenctPickr);
-    });
-    newPickr.on('hide', currenctPickr => {
-      currenctPickr.isShown = false;
-      currenctPickr.zIndex = -1;
-      setPickr(currenctPickr);
-    });
+    const initPickr = () => {
+      const newPickr = Pickr.create({
+        el: '.pickr',
+        theme: 'nano',
+        defaultRepresentation: 'RGBA',
+        inline: true,
+        components: {
+          preview: true,
+          opacity: true,
+          hue: true,
+          interaction: {
+            hex: true,
+            rgba: true,
+            input: true,
+            clear: true,
+            save: true
+          }
+        }
+      });
+      newPickr.isShown = false;
+      newPickr.zIndex = -1;
+  
+      newPickr.on('save', (colorData) => {
+        if (colorData) {
+          const color = colorData.toRGBA().toString(0);
+          dpt.changePaletteColor(color, false);
+        }
+      });
+      newPickr.on('show', currenctPickr => {
+        currenctPickr.isShown = true;
+        currenctPickr.zIndex = 100;
+        setPickr(currenctPickr);
+      });
+      newPickr.on('hide', currenctPickr => {
+        currenctPickr.isShown = false;
+        currenctPickr.zIndex = -1;
+        setPickr(currenctPickr);
+      });
+      
+      setPickr(newPickr);
+    };
+
+    const fetchData = async () => {
+      dpt.showLoading();
+
+      await Promise.all([
+        fetchProjects(),
+        fetchCollections()
+      ]);
+
+      dpt.hideLoading();
+    };
 
     const fetchProjects = async () => {
       // if there's no project from server, then load examples
-      const url = `${serverUrl}/user/projects`;
+      const url = `${serverUrl}/project`;
       const projects = await fetch(url, mkReq()).then(res => res.json());
       if (projects.length > 0) {
         projects.forEach(project => {
@@ -472,338 +483,334 @@ const CreatePage = (props) => {
       }
     };
 
-    setPickr(newPickr);
-    fetchProjects();
-    fetchCollections();
-  }, [dpt]);
+    initPage();
+  }, [wallet, dpt]);
 
-  return (
-    <div>
-      <div data-role='creator body' className='bg-cb-gray'>
-        <div data-role='tabs at top' className='h-10 border-b flex items-end space-x-10 text-sm mb-5'>
-          <button className={`ml-16 px-3 py-2 ${tabType === 'collection' ? 'selected' : ''}`} onClick={ () => setTabType('collection') }>Collection</button>
-          <button className={`px-3 py-2 ${tabType === 'design' ? 'selected' : ''}`} onClick={ () => setTabType('design') }>Design</button>
-          <button className={`px-3 py-2 ${tabType === 'mint' ? 'selected' : ''}`} onClick={ () => setTabType('mint') }>Mint</button>
+  return loading ? <div className='pickr' hidden></div> : (
+    <div data-role='creator body' className='bg-cb-gray'>
+      <div data-role='tabs at top' className='h-10 border-b flex items-end space-x-10 text-sm mb-5'>
+        <button className={`ml-16 px-3 py-2 ${tabType === 'collection' ? 'selected' : ''}`} onClick={ () => setTabType('collection') }>Collection</button>
+        <button className={`px-3 py-2 ${tabType === 'design' ? 'selected' : ''}`} onClick={ () => setTabType('design') }>Design</button>
+        <button className={`px-3 py-2 ${tabType === 'mint' ? 'selected' : ''}`} onClick={ () => setTabType('mint') }>Mint</button>
+      </div>
+      <div data-role='collection tab' className={`flex flex-col items-center justify-center w-1/3 mx-auto text-sm ${tabType === 'collection' ? '' : 'hidden'}`}>
+        <p className='text-lg'>Select Collection</p>
+        <div 
+          className='w-full my-3 relative text-gray-300 hover-pink hover:text-pink-500 cursor-pointer'
+          onClick={ () => setTabType('design') }
+        >
+          <input 
+            value={getCollectionTitle()}
+            disabled
+            className='w-full py-2 text-center bg-white text-gray-500 border rounded cursor-pointer'
+          />
+          <div className='absolute top-0 left-1/2 ml-24 h-full flex items-center'>
+            <FontAwesomeIcon icon={fa.faCaretRight} />
+          </div>
         </div>
-        <div data-role='collection tab' className={`flex flex-col items-center justify-center w-1/3 mx-auto text-sm ${tabType === 'collection' ? '' : 'hidden'}`}>
-          <p className='text-lg'>Select Collection</p>
-          <div 
-            className='w-full my-3 relative text-gray-300 hover-pink hover:text-pink-500 cursor-pointer'
-            onClick={ () => setTabType('design') }
-          >
-            <input 
-              value={getCollectionTitle()}
-              disabled
-              className='w-full py-2 text-center bg-white text-gray-500 border rounded cursor-pointer'
-            />
-            <div className='absolute top-0 left-1/2 ml-24 h-full flex items-center'>
-              <FontAwesomeIcon icon={fa.faCaretRight} />
-            </div>
-          </div>
-          <div className='w-4/5 mx-auto border-b my-2'></div>
-          <div className='text-sm my-2'>
-            Your Collections
-          </div>
-          {
-            collections.map((collection, index) => (
-              <div 
-                className='w-full relative'
-                onClick={ () => setCollections(collections.map((clt, _index) => _index === index ? {
+        <div className='w-4/5 mx-auto border-b my-2'></div>
+        <div className='text-sm my-2'>
+          Your Collections
+        </div>
+        {
+          collections.map((collection, index) => (
+            <div 
+              className='w-full relative'
+              onClick={ () => setCollections(collections.map((clt, _index) => _index === index ? {
+                  ...clt,
+                  selected: true
+                } : {
+                  ...clt,
+                  selected: false
+                }
+              ))}
+            >
+              <input 
+                value={collection.isNew && !collection.hasModified ? '' : collection.title}
+                placeholder={collection.isNew ? collection.title : ''}
+                disabled={collection.isNew ? false : true}
+                className='w-full py-3 text-left px-4 my-2 bg-white border rounded hover-pink'
+                onChange={ (e) => setCollections(collections.map((clt, _index) => _index === index ? {
                     ...clt,
+                    title: e.target.value,
+                    hasModified: true,
                     selected: true
                   } : {
                     ...clt,
                     selected: false
                   }
                 ))}
+              />
+              <div className='absolute top-0 right-4 ml-16 text-gray-300 h-full flex items-center'>
+                {collection.collectibles.length} Colletibles
+              </div>
+              <div 
+                className='absolute top-0 -right-8 text-gray-300 h-full flex items-center hover:text-pink-500 cursor-pointer'
+                onClick={ () => setCollections(collections.filter((clt, _index) => _index !== index)) }
               >
-                <input 
-                  value={collection.isNew && !collection.hasModified ? '' : collection.title}
-                  placeholder={collection.isNew ? collection.title : ''}
-                  disabled={collection.isNew ? false : true}
-                  className='w-full py-3 text-left px-4 my-2 bg-white border rounded hover-pink'
-                  onChange={ (e) => setCollections(collections.map((clt, _index) => _index === index ? {
-                      ...clt,
-                      title: e.target.value,
-                      hasModified: true,
-                      selected: true
-                    } : {
-                      ...clt,
-                      selected: false
-                    }
-                  ))}
-                />
-                <div className='absolute top-0 right-4 ml-16 text-gray-300 h-full flex items-center'>
-                  {collection.collectibles.length} Colletibles
-                </div>
-                <div 
-                  className='absolute top-0 -right-8 text-gray-300 h-full flex items-center hover:text-pink-500 cursor-pointer'
-                  onClick={ () => setCollections(collections.filter((clt, _index) => _index !== index)) }
-                >
-                  <FontAwesomeIcon icon={fa.faTimes} />
-                </div>
-              </div>
-            ))
-          }
-          <button 
-            className='w-full my-4 rounded bg-gray-100 py-3'
-            onClick={ () => setCollections([...collections, newCollection()]) }
-          >
-            New Collections +
-          </button>
-          <button 
-            className='w-full my-4 rounded bg-cb-pink text-white py-3'
-            onClick={ () => syncCollections() }
-          >
-            Update collection onto Server
-          </button>
-        </div>
-        <div data-role='create tab' className={`flex ${tabType === 'design' ? '' : 'hidden'}`}>
-          <div data-role='creator primary tools on the left side' className='w-48 ml-12'>
-            <div data-role='painting tools' className='flex flex-col py-4 space-y-3 border rounded bg-white text-gray-500'>
-              <div data-role='color pickr' className='relative'>
-                <div 
-                  className='block absolute left-5 top-5' 
-                  style={{ 
-                    paddingLeft: '100%', 
-                    zIndex: pickr ? pickr.zIndex : 0, 
-                    display: pickr && pickr.isShown ? 'block' : 'none'
-                  }}
-                >
-                  <div className='pickr'></div>
-                </div>
-              </div>
-              <div className='flex justify-between space-x-3 px-5'>
-                <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'pencil' ? 'selected' : ''}`} 
-                  onClick={ () => clickPaletteTool('pencil') }
-                >
-                  <img src='/img/tool_pencil.svg' alt='pencil' className='w-10 h-10' />
-                </div>
-                <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'eraser' ? 'selected' : ''}`} 
-                  onClick={ () => clickPaletteTool('eraser') }
-                >
-                  <img src='/img/tool_eraser.svg' alt='eraser' className='w-10 h-10' />
-                </div>
-                <div 
-                  className={`w-10 h-10 flex justify-center items-center cursor-pointer ${palette.toolType === 'bucket' ? 'selected' : ''}`} 
-                  onClick={ () => clickPaletteTool('bucket') }
-                >
-                  <img src='/img/tool_bucket.svg' alt='bucket' className='w-10 h-10' />
-                </div>
-              </div>
-              <div className='flex justify-between space-x-3 px-5'>
-                <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${pickr && pickr.isShown ? 'selected' : ''}`} 
-                  onClick={ () => clickPaletteTool('brush') }
-                >
-                  <img src='/img/tool_brush.svg' alt='brush' className='w-10 h-10' />
-                </div>
-                <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'eyedrop' ? 'selected' : ''}`} 
-                  onClick={ () => clickPaletteTool('eyedrop') }
-                >
-                  <img src='/img/tool_eyedrop.svg' alt='eyedrop' className='w-10 h-10' />
-                </div>
-                <div 
-                  className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'move' ? 'selected' : ''}`} 
-                  onClick={ () => clickPaletteTool('move') }
-                >
-                  <img src='/img/tool_move.svg' alt='move' className='w-10 h-10' />
-                </div>
+                <FontAwesomeIcon icon={fa.faTimes} />
               </div>
             </div>
-            <div data-role='palette' className='pt-5 pb-2 px-4 mt-6 border rounded bg-white'>
-              <div className='flex flex-wrap justify-between'>
-                {
-                  palette.colors.map((color, index) => (
-                    index < 30 ? 
-                    <div
-                      className='mx-1 my-0.5'
-                      onClick={ () => clickPaletteColor(index) }
-                      key={index}
-                    >
-                      <button 
-                        className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
-                        style={{ backgroundColor: color }}
-                      ></button>
-                    </div> : <></>
-                  ))
-                }
+          ))
+        }
+        <button 
+          className='w-full my-4 rounded bg-gray-100 py-3'
+          onClick={ () => setCollections([...collections, newCollection()]) }
+        >
+          New Collections +
+        </button>
+        <button 
+          className='w-full my-4 rounded bg-cb-pink text-white py-3'
+          onClick={ () => syncCollections() }
+        >
+          Update collection onto Server
+        </button>
+      </div>
+      <div data-role='create tab' className={`flex ${tabType === 'design' ? '' : 'hidden'}`}>
+        <div data-role='creator primary tools on the left side' className='w-48 ml-12'>
+          <div data-role='painting tools' className='flex flex-col py-4 space-y-3 border rounded bg-white text-gray-500'>
+            <div data-role='color pickr' className='relative'>
+              <div 
+                className='block absolute left-5 top-5' 
+                style={{ 
+                  paddingLeft: '100%', 
+                  zIndex: pickr ? pickr.zIndex : 0, 
+                  display: pickr && pickr.isShown ? 'block' : 'none'
+                }}
+              >
+                <div className='pickr'></div>
               </div>
-              <p className='mt-1 mb-2 border-t bg-gray-400'></p>
-              <div className='flex flex-wrap justify-between'>
-                {
-                  palette.colors.map((color, index) => (
-                    index >= 30 && index < 42 ? 
-                    <div
-                      className='mx-1 my-0.5'
-                      onClick={ () => clickPaletteColor(index) }
-                      key={index}
-                    >
-                      <button 
-                        className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
-                        style={{ backgroundColor: color }}
-                      ></button>
-                    </div> : <></>
-                  ))
-                }
+            </div>
+            <div className='flex justify-between space-x-3 px-5'>
+              <div 
+                className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'pencil' ? 'selected' : ''}`} 
+                onClick={ () => clickPaletteTool('pencil') }
+              >
+                <img src='/img/tool_pencil.svg' alt='pencil' className='w-10 h-10' />
               </div>
-              <input 
-                value={palette.selectedIndex >= 0 ? convertRgbaToHex(palette.colors[palette.selectedIndex]) : '#FFFFFF'}
-                className='w-full text-xs py-1 border-0 rounded bg-gray-200 px-3 tracking-wide my-2'
-              />
-              <p className='text-gray-500 text-xs mb-1'>Recent</p>
-              <div className='flex flex-wrap justify-between'>
-                {
-                  palette.colors.map((color, index) => (
-                    index >= 42 ? 
-                    <div
-                      className='mx-1 my-0.5'
-                      onClick={ () => clickPaletteColor(index) }
-                      key={index}
-                    >
-                      <button 
-                        className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
-                        style={{ backgroundColor: color }}
-                      ></button>
-                    </div> : <></>
-                  ))
-                }
+              <div 
+                className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'eraser' ? 'selected' : ''}`} 
+                onClick={ () => clickPaletteTool('eraser') }
+              >
+                <img src='/img/tool_eraser.svg' alt='eraser' className='w-10 h-10' />
+              </div>
+              <div 
+                className={`w-10 h-10 flex justify-center items-center cursor-pointer ${palette.toolType === 'bucket' ? 'selected' : ''}`} 
+                onClick={ () => clickPaletteTool('bucket') }
+              >
+                <img src='/img/tool_bucket.svg' alt='bucket' className='w-10 h-10' />
+              </div>
+            </div>
+            <div className='flex justify-between space-x-3 px-5'>
+              <div 
+                className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${pickr && pickr.isShown ? 'selected' : ''}`} 
+                onClick={ () => clickPaletteTool('brush') }
+              >
+                <img src='/img/tool_brush.svg' alt='brush' className='w-10 h-10' />
+              </div>
+              <div 
+                className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'eyedrop' ? 'selected' : ''}`} 
+                onClick={ () => clickPaletteTool('eyedrop') }
+              >
+                <img src='/img/tool_eyedrop.svg' alt='eyedrop' className='w-10 h-10' />
+              </div>
+              <div 
+                className={`w-10 h-10 flex justify-center items-center border rounded-lg bg-cb-gray cursor-pointer ${palette.toolType === 'move' ? 'selected' : ''}`} 
+                onClick={ () => clickPaletteTool('move') }
+              >
+                <img src='/img/tool_move.svg' alt='move' className='w-10 h-10' />
               </div>
             </div>
           </div>
-
-          <div data-role='painting grids of one frame' className='mx-12'>
-            <div 
-              className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' 
-              style={{ cursor: palette.toolType === 'move' ? 'not-allowed' : 'cell' }}
-              onMouseUp={ () => setMoveStartIndex(null) }
-            >
+          <div data-role='palette' className='pt-5 pb-2 px-4 mt-6 border rounded bg-white'>
+            <div className='flex flex-wrap justify-between'>
               {
-                frames.frameList[frames.activeId].cells.map((color, index) => (
-                  <div 
-                    className='border border-gray-100' 
-                    style={{ 
-                      width: widthPct,
-                      cursor: palette.toolType === 'move' ? 'move' : 'cell'
-                    }}  
-                    onMouseOver={ () => dpt.setHoveredIndex(index) }
-                    onMouseDown={ () => setMoveStartIndex(index) }
-                    onMouseMove={ (e) => handleMove(e, index) }
-                    onClick={ () => clickGridCell(index, color) }
+                palette.colors.map((color, index) => (
+                  index < 30 ? 
+                  <div
+                    className='mx-1 my-0.5'
+                    onClick={ () => clickPaletteColor(index) }
                     key={index}
                   >
-                    <div className='w-full square' style={{ backgroundColor: color }}></div>
-                  </div>
+                    <button 
+                      className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
+                      style={{ backgroundColor: color }}
+                    ></button>
+                  </div> : <></>
                 ))
               }
             </div>
-            <div className='relative flex justify-center space-x-10 pt-4'>
-              <button data-role='undo button' className='w-6 h-6' onClick={ () => dpt.undo() }>
-                <img src='/img/undo.svg' alt='undo' className='w-full h-full' />
-              </button>
-              <button data-role='redo button' className='w-6 h-6' onClick={ () => dpt.redo() }>
-                <img src='/img/redo.svg' alt='redo' className='w-full h-full' />
-              </button>
-              <div className='absolute top-3 right-0'>
-                <input 
-                  disabled 
-                  value={`${frames.width} x ${frames.height}`}
-                  className='border rounded w-24 py-0.5 text-center text-sm text-gray-500' 
-                />
-              </div>
-            </div>
-          </div>
-
-          <div data-role='frame list'>
-            <div data-role='preview box' className='relative w-20 h-20 border rounded'>
+            <p className='mt-1 mb-2 border-t bg-gray-400'></p>
+            <div className='flex flex-wrap justify-between'>
               {
-                isPreviewStatic ? 
-                <Preview
-                  task={{
-                    type: 'single',
-                    frames,
-                    frameId: frames.activeId
-                  }} 
-                /> :
-                <Preview 
-                  task={{
-                    type: 'animation',
-                    frames: frames
-                  }} 
-                />
-              }
-              <div className='absolute top-0 left-20 pl-2 w-20 rounded flex flex-col space-y-1'>
-                <button onClick={ () => setIsPreviewStatic(!isPreviewStatic) }>
-                  <img src='/img/play.svg' alt='play' className='w-6 h-6' />
-                </button>
-                <button>
-                  <img src='/img/settings.svg' alt='settings' className='w-6 h-6' />
-                </button>
-                <button onClick={ () => dpt.addFrame() }>
-                  <img src='/img/add.svg' alt='add' className='w-6 h-6' />
-                </button>
-              </div>
-            </div>
-            <div className='border-b border-gray-400 my-2'></div>
-            <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto'>
-              {
-                frames.frameIds.map((frameId) => (
-                  <div 
-                    data-role='preview box with buttons' 
-                    className={`relative w-20 h-20 mb-4 border rounded ${frameId === frames.activeId ? 'bd-cb-pink' : 'border-gray-400'}`} 
-                    key={frameId}
-                    onClick={ () => dpt.setActiveFrameId(frameId) }
+                palette.colors.map((color, index) => (
+                  index >= 30 && index < 42 ? 
+                  <div
+                    className='mx-1 my-0.5'
+                    onClick={ () => clickPaletteColor(index) }
+                    key={index}
                   >
-                    <Preview
-                      task={{
-                        type: 'single',
-                        frames,
-                        frameId
-                      }} 
-                    />
-                    <div className='absolute bottom-0 right-0.5 flex justify-between items-center space-x-1 py-1'>
-                      <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
-                        <img src='/img/duplicate.svg' alt='duplicate' className='w-full h-full' />
-                      </button>
-                      <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
-                      <img src='/img/trash.svg' alt='trash' className='w-full h-full' />
-                      </button>
-                    </div>
-                    <input 
-                      type='number' 
-                      step='1' 
-                      value={ frames.frameList[frameId].interval } 
-                      onChange={ (e) => onSetFrameInterval(e, frameId) } 
-                      className='absolute bottom-1 left-1 w-6 text-center text-xs text-gray-700 bg-white rounded'
-                      disabled={frameId === frames.frameIds.length - 1}
-                    />
-                  </div>
+                    <button 
+                      className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
+                      style={{ backgroundColor: color }}
+                    ></button>
+                  </div> : <></>
+                ))
+              }
+            </div>
+            <input 
+              value={palette.selectedIndex >= 0 ? convertRgbaToHex(palette.colors[palette.selectedIndex]) : '#FFFFFF'}
+              className='w-full text-xs py-1 border-0 rounded bg-gray-200 px-3 tracking-wide my-2'
+            />
+            <p className='text-gray-500 text-xs mb-1'>Recent</p>
+            <div className='flex flex-wrap justify-between'>
+              {
+                palette.colors.map((color, index) => (
+                  index >= 42 ? 
+                  <div
+                    className='mx-1 my-0.5'
+                    onClick={ () => clickPaletteColor(index) }
+                    key={index}
+                  >
+                    <button 
+                      className={`w-4 h-4 ${color === 'rgba(255, 255, 255, 1)' ? 'border' : 'border-0'} rounded ${index === palette.selectedIndex ? 'ring' : ''}`} 
+                      style={{ backgroundColor: color }}
+                    ></button>
+                  </div> : <></>
                 ))
               }
             </div>
           </div>
-          <div className='pl-16 w-full'>
-            {getItemSettingBoard()}
-          </div>
-            
         </div>
 
-        <div data-role='mint tab' className={`flex ${tabType === 'mint' ? '' : 'hidden'}`}>
-          <div className='w-3/4'>
-            <PixelTool 
-              closeTab={ () => setTabType('design') }
-              saveFrames={ (frames) => setMintedFrames(frames) } 
-            />
+        <div data-role='painting grids of one frame' className='mx-12'>
+          <div 
+            className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' 
+            style={{ cursor: palette.toolType === 'move' ? 'not-allowed' : 'cell' }}
+            onMouseUp={ () => setMoveStartIndex(null) }
+          >
+            {
+              frames.frameList[frames.activeId].cells.map((color, index) => (
+                <div 
+                  className='border border-gray-100' 
+                  style={{ 
+                    width: widthPct,
+                    cursor: palette.toolType === 'move' ? 'move' : 'cell'
+                  }}  
+                  onMouseOver={ () => dpt.setHoveredIndex(index) }
+                  onMouseDown={ () => setMoveStartIndex(index) }
+                  onMouseMove={ (e) => handleMove(e, index) }
+                  onClick={ () => clickGridCell(index, color) }
+                  key={index}
+                >
+                  <div className='w-full square' style={{ backgroundColor: color }}></div>
+                </div>
+              ))
+            }
           </div>
-          <div className='w-1/4'>
-            {getItemSettingBoard()}
+          <div className='relative flex justify-center space-x-10 pt-4'>
+            <button data-role='undo button' className='w-6 h-6' onClick={ () => dpt.undo() }>
+              <img src='/img/undo.svg' alt='undo' className='w-full h-full' />
+            </button>
+            <button data-role='redo button' className='w-6 h-6' onClick={ () => dpt.redo() }>
+              <img src='/img/redo.svg' alt='redo' className='w-full h-full' />
+            </button>
+            <div className='absolute top-3 right-0'>
+              <input 
+                disabled 
+                value={`${frames.width} x ${frames.height}`}
+                className='border rounded w-24 py-0.5 text-center text-sm text-gray-500' 
+              />
+            </div>
           </div>
         </div>
 
+        <div data-role='frame list'>
+          <div data-role='preview box' className='relative w-20 h-20 border rounded'>
+            {
+              isPreviewStatic ? 
+              <Preview
+                task={{
+                  type: 'single',
+                  frames,
+                  frameId: frames.activeId
+                }} 
+              /> :
+              <Preview 
+                task={{
+                  type: 'animation',
+                  frames: frames
+                }} 
+              />
+            }
+            <div className='absolute top-0 left-20 pl-2 w-20 rounded flex flex-col space-y-1'>
+              <button onClick={ () => setIsPreviewStatic(!isPreviewStatic) }>
+                <img src='/img/play.svg' alt='play' className='w-6 h-6' />
+              </button>
+              <button>
+                <img src='/img/settings.svg' alt='settings' className='w-6 h-6' />
+              </button>
+              <button onClick={ () => dpt.addFrame() }>
+                <img src='/img/add.svg' alt='add' className='w-6 h-6' />
+              </button>
+            </div>
+          </div>
+          <div className='border-b border-gray-400 my-2'></div>
+          <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto'>
+            {
+              frames.frameIds.map((frameId) => (
+                <div 
+                  data-role='preview box with buttons' 
+                  className={`relative w-20 h-20 mb-4 border rounded ${frameId === frames.activeId ? 'bd-cb-pink' : 'border-gray-400'}`} 
+                  key={frameId}
+                  onClick={ () => dpt.setActiveFrameId(frameId) }
+                >
+                  <Preview
+                    task={{
+                      type: 'single',
+                      frames,
+                      frameId
+                    }} 
+                  />
+                  <div className='absolute bottom-0 right-0.5 flex justify-between items-center space-x-1 py-1'>
+                    <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
+                      <img src='/img/duplicate.svg' alt='duplicate' className='w-full h-full' />
+                    </button>
+                    <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
+                    <img src='/img/trash.svg' alt='trash' className='w-full h-full' />
+                    </button>
+                  </div>
+                  <input 
+                    type='number' 
+                    step='1' 
+                    value={ frames.frameList[frameId].interval } 
+                    onChange={ (e) => onSetFrameInterval(e, frameId) } 
+                    className='absolute bottom-1 left-1 w-6 text-center text-xs text-gray-700 bg-white rounded'
+                    disabled={frameId === frames.frameIds.length - 1}
+                  />
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        <div className='pl-16 w-full'>
+          {getItemSettingBoard()}
+        </div>
+          
       </div>
+
+      <div data-role='mint tab' className={`flex ${tabType === 'mint' ? '' : 'hidden'}`}>
+        <div className='w-3/4'>
+          <PixelTool 
+            closeTab={ () => setTabType('design') }
+            saveFrames={ (frames) => setMintedFrames(frames) } 
+          />
+        </div>
+        <div className='w-1/4'>
+          {getItemSettingBoard()}
+        </div>
+      </div>
+
     </div>
   );
 };
@@ -812,13 +819,15 @@ CreatePage.propTypes = {
   palette: PropTypes.object.isRequired,
   frames: PropTypes.object.isRequired,
   dpt: PropTypes.object.isRequired,
-  wallet: PropTypes.object.isRequired
+  wallet: PropTypes.object.isRequired,
+  loading: PropTypes.bool.isRequired
 };
 
 const mapStateToProps = state => ({
   frames: state.creator.present.frames,
   palette: state.creator.present.palette,
-  wallet: state.wallet
+  wallet: state.wallet,
+  loading: state.root.loading
 });
 
 const mapDispatchToProps = dispatch => ({

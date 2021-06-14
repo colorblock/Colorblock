@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { connect } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import ItemList from '../common/ItemList';
-import AssetList from '../common/AssetList';
 import { serverUrl } from '../../config';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 export const CollectionPage = (props) => {
   
   const { collectionId } = useParams();
+  const { loading, showLoading, hideLoading } = props;
   const [items, setItems] = useState([]);
 
   const itemListConfig = {
@@ -21,16 +23,20 @@ export const CollectionPage = (props) => {
 
   useEffect(() => {
     const fetchLatestItems = async () => {
+      showLoading();
+
       const itemsUrl = `${serverUrl}/collection/${collectionId}/items`;
       const itemsData = await fetch(itemsUrl).then(res => res.json());
       console.log(itemsData);
       setItems(itemsData);
+
+      hideLoading();
     };
 
     fetchLatestItems();
-  }, [collectionId]);
+  }, [collectionId, showLoading, hideLoading]);
 
-  return (
+  return loading ? <></> : (
     <div data-role='market container' className='bg-cb-gray text-sm'>
       <div data-role='item filter and sort' className='w-5/6 mx-auto my-10 flex justify-between'>
         <div data-role='filter at left' className='flex space-x-4'>
@@ -58,4 +64,19 @@ export const CollectionPage = (props) => {
   );
 };
 
-export default CollectionPage;
+CollectionPage.propTypes = {
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
+};
+
+const mapStateToProps = state => ({
+  loading: state.root.loading
+});
+
+const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(CollectionPage);

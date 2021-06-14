@@ -12,13 +12,16 @@ export const Footer = (props) => {
 
   useEffect(() => {
     const fetchItemCnt = async () => {
+      const { onLoading, onLoaded } = props;
+      onLoading();
       const url = `${serverUrl}/item/count`;
       const data = await fetch(url).then(res => res.json());
       setItemCnt(data.count);
+      onLoaded();
     };
 
     fetchItemCnt();
-  });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div data-role='footer container' className='text-sm'>
@@ -53,14 +56,12 @@ export const Footer = (props) => {
 };
 
 Footer.propTypes = {
+  onLoaded: PropTypes.func.isRequired,
+  onLoading: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state) => ({
-  
-});
+const mapStateToProps = state => state;
 
-const mapDispatchToProps = {
-  
-};
+const mapDispatchToProps = {};
 
 export default connect(mapStateToProps, mapDispatchToProps)(Footer);

@@ -8,10 +8,11 @@ import { getSignedCmd } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
 import { shortAddress } from '../../utils/polish';
 import { toPricePrecision, toAmountPrecision } from '../../utils/tool';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 const AssetPage = (props) => {
   const { assetId } = useParams();
-  const { wallet } = props;
+  const { wallet, loading, showLoading, hideLoading } = props;
   const [asset, setItem] = useState(null);
   const [releaseData, setReleaseData] = useState({
     price: null,
@@ -67,7 +68,7 @@ const AssetPage = (props) => {
     console.log('get result', result);
     if (result.status === 'success') {
       toast.success('release successfully');
-      document.location.href = document.location.href;
+      window.location.reload();
     } else {
       toast.error(result.data);
     }
@@ -77,7 +78,6 @@ const AssetPage = (props) => {
     // post recall request
     const itemId = asset.item.id;
     const seller = wallet.address;
-    const amount = asset.deal.remain;
     const cmd = {
       code: `(${contractModules.colorblockMarket}.recall (read-msg "token") (read-msg "seller"))`,
       caps: [{
@@ -113,7 +113,7 @@ const AssetPage = (props) => {
     console.log('get result', result);
     if (result.status === 'success') {
       toast.success('release successfully');
-      document.location.href = document.location.href;
+      window.location.reload();
     } else {
       toast.error(result.data);
     }
@@ -210,17 +210,21 @@ const AssetPage = (props) => {
 
   useEffect(() => {
     const fetchAsset = async (assetId) => {
+      showLoading();
+
       const url = `${serverUrl}/asset/${assetId}`;
       const assetData = await fetch(url).then(res => res.json());
       assetData.url = `${serverUrl}/static/img/${assetData.item.id}.${assetData.item.type === 0 ? 'png' : 'gif'}`;
       assetData.dealOpen = assetData.deal ? assetData.deal.open : false;
       setItem(assetData);
+
+      hideLoading();
     };
 
     fetchAsset(assetId);
-  }, [assetId]);
+  }, [assetId, showLoading, hideLoading]);
 
-  return (
+  return loading ? <></> : (
     <div data-role='asset page'>
       <div data-role='asset info' className='flex my-10'>
       {
@@ -305,13 +309,20 @@ const AssetPage = (props) => {
 };
 
 AssetPage.propTypes = {
+  wallet: PropTypes.object.isRequired,
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
-  wallet: state.wallet
+  wallet: state.wallet,
+  loading: state.root.loading
 });
 
 const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(AssetPage);

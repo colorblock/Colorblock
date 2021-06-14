@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ReactLoading from 'react-loading';
 
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -19,22 +21,37 @@ import ContactPage from './pages/ContactPage';
 
 const App = (props) => {
 
+  const { loading } = props;
+  
+  const [layoutLoading, setLayoutLoading] = useState({
+    header: false,
+    footer: false
+  });  // shows when layout is loading
+
+  const isLayoutLoaded = !layoutLoading.header && !layoutLoading.footer;
+
   return (
     <div data-role='app container' className='px-12 font-work'>
-      <Router>
-        <Header />
-        <Wallet />
-        <ToastContainer
-          position='top-center'
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
+      <div 
+        className={isLayoutLoaded ? '' : 'fixed w-full h-full flex items-center justify-center bg-white'}
+        hidden={isLayoutLoaded}
+      >
+        <ReactLoading type='spin' color='rgb(254, 94, 174)' height='50px' width='50px' className='-mt-20' />
+      </div>
+      <Router hidden={!isLayoutLoaded}>
+        <Header 
+          onLoading={ () => setLayoutLoading({...layoutLoading, header: true}) } 
+          onLoaded={ () => setLayoutLoading({...layoutLoading, header: false}) } 
         />
+        <Wallet />
+        <ToastContainer position='top-center' />
+        { loading && 
+          <div 
+            className='w-full h-80 flex items-center justify-center bg-white'
+          >
+            <ReactLoading type='cubes' color='rgb(254, 94, 174)' height='50px' width='50px' className='mt-20' />
+          </div>
+        }
         <Route path='/' exact>
           <HomePage />
         </Route>
@@ -65,13 +82,22 @@ const App = (props) => {
         <Route path='/contact'>
           <ContactPage />
         </Route>
-        <Footer />
+        <Footer 
+          onLoading={ () => setLayoutLoading({...layoutLoading, footer: true}) } 
+          onLoaded={ () => setLayoutLoading({...layoutLoading, footer: false}) } 
+        />
       </Router>
     </div>
   );
 };
 
-const mapStateToProps = state => state;
+App.propTypes = {
+  loading: PropTypes.bool.isRequired
+};
+
+const mapStateToProps = state => ({
+  loading: state.root.loading
+});
 
 const mapDispatchToProps = dispatch => ({
 });

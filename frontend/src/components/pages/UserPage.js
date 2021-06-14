@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { toast } from 'react-toastify';
 
@@ -8,11 +8,12 @@ import { shortAddress } from '../../utils/polish';
 import { withCors } from '../../utils/sign';
 import AssetList from '../common/AssetList';
 import { serverUrl } from '../../config';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 const UserPage = (props) => {
-  console.log(useParams());
+
   const { userId } = useParams();
-  console.log(userId);
+  const { loading, showLoading, hideLoading, wallet } = props;
   const [user, setUser] = useState(null);
   const [assets, setAssets] = useState([]);
 
@@ -22,8 +23,18 @@ const UserPage = (props) => {
     cols: 5
   };
 
-  const { wallet } = props;
   useEffect(() => {
+    const fetchData = async (userId) => {
+      showLoading();
+
+      await Promise.all([
+        fetchUser(userId),
+        fetchAssets(userId)
+      ]);
+
+      hideLoading();
+    };
+
     const fetchUser = async (userId) => {
       let userData;
       if (userId) {
@@ -33,8 +44,8 @@ const UserPage = (props) => {
         const url = `${serverUrl}/user`;
         userData = await fetch(url, withCors).then(res => res.json());
         if (userData.status === 'error') {
-          toast.error(userData.message);
-          window.history.back();
+          toast.error('Please login first');
+          setTimeout(() => document.location.href = '/', 2000);
           return;
         }
       }
@@ -51,11 +62,10 @@ const UserPage = (props) => {
       setAssets(assetsData);
     };
 
-    fetchUser(userId);
-    fetchAssets(userId)
-  }, [userId, wallet]);
+    fetchData(userId);
+  }, [userId, showLoading, hideLoading, wallet]);
 
-  return user ? (
+  return !user || loading ? <></> : (
     <div>
       <div data-role='user info' className='my-8 flex flex-col items-center justify-center'>
         <img 
@@ -78,17 +88,23 @@ const UserPage = (props) => {
         )
       }
     </div>
-  ) : <></>;
+  );
 };
 
 UserPage.propTypes = {
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
-  wallet: state.wallet
+  wallet: state.wallet,
+  loading: state.root.loading
 });
 
 const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(UserPage);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
@@ -9,9 +10,11 @@ import { serverUrl } from '../../config';
 import { shortAddress } from '../../utils/polish';
 import AssetList from '../common/AssetList';
 import { mkReq } from '../../utils/sign';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 const ItemPage = (props) => {
   const { itemId } = useParams();
+  const { loading, showLoading, hideLoading } = props;
   const [item, setItem] = useState(null);
   const [itemLog, setItemLog] = useState(null);
   const [assets, setAssets] = useState(null);
@@ -75,6 +78,18 @@ const ItemPage = (props) => {
   };
 
   useEffect(() => {
+    const fetchData = async (itemId) => {
+      showLoading();
+
+      await Promise.all([
+        fetchItem(itemId),
+        fetchItemLog(itemId),
+        fetchOnSaleAssets(itemId)
+      ]);
+
+      hideLoading();
+    };
+
     const fetchItem = async (itemId) => {
       const url = `${serverUrl}/item/${itemId}`;
       const itemData = await fetch(url).then(res => res.json());
@@ -94,12 +109,10 @@ const ItemPage = (props) => {
       setAssets(assets);
     };
 
-    fetchItem(itemId);
-    fetchItemLog(itemId);
-    fetchOnSaleAssets(itemId);
-  }, [itemId]);
+    fetchData(itemId);
+  }, [itemId, showLoading, hideLoading]);
 
-  return (
+  return loading ? <></> : (
     <div data-role='item page'>
       <div data-role='item info' className='flex my-10'>
       {
@@ -194,13 +207,20 @@ const ItemPage = (props) => {
 };
 
 ItemPage.propTypes = {
+  wallet: PropTypes.object.isRequired,
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
-  wallet: state.wallet
+  wallet: state.wallet,
+  loading: state.root.loading
 });
 
 const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ItemPage);

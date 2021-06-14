@@ -57,6 +57,7 @@ export const Wallet = (props) => {
     setAccountAddress(address);  // set address
     switchWalletModal();  // close modal
     setSelectedKey('');  // clear selected key
+    toast.success('login successfully');
   };
 
   return wallet.isModalOpen ? (
@@ -130,7 +131,10 @@ export const Wallet = (props) => {
 };
 
 Wallet.propTypes = {
-  wallet: PropTypes.object.isRequired
+  wallet: PropTypes.object.isRequired,
+  switchWalletModal: PropTypes.func.isRequired,
+  setPublicKeyList: PropTypes.func.isRequired,
+  setAccountAddress: PropTypes.func.isRequired
 };
 
 const mapStateToProps = (state) => ({

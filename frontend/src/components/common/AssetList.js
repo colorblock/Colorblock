@@ -44,7 +44,8 @@ const AssetList = (props) => {
 };
 
 AssetList.propTypes = {
-  props: PropTypes
+  assets: PropTypes.array.isRequired,
+  display: PropTypes.string.isRequired
 };
 
 export default AssetList;

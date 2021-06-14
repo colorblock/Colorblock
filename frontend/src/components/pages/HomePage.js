@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+
 import CollectionList from '../common/CollectionList';
 import ItemList from '../common/ItemList';
 import AssetList from '../common/AssetList';
 import { serverUrl } from '../../config';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 const HomePage = (props) => {
 
@@ -11,7 +15,22 @@ const HomePage = (props) => {
   const [collections, setCollections] = useState([]);
   const [latestHeight, setLatestHeight] = useState(null);
 
+  const { loading, showLoading, hideLoading } = props;
+
   useEffect(() => {
+    const initPage = async () => {
+      showLoading();
+
+      await Promise.all([
+        fetchLatestItems(),
+        fetchLatestAssets(),
+        fetchLatestCollections(),
+        fetchLatestHeight()
+      ]);
+
+      hideLoading();
+    };
+
     const fetchLatestItems = async () => {
       const itemsUrl = `${serverUrl}/item/latest`;
       const itemsData = await fetch(itemsUrl).then(res => res.json());
@@ -38,14 +57,11 @@ const HomePage = (props) => {
       const data = await fetch(url).then(res => res.json());
       setLatestHeight(data.height);
     };
+    
+    initPage();
+  }, [showLoading, hideLoading]);
 
-    fetchLatestItems();
-    fetchLatestAssets();
-    fetchLatestCollections();
-    fetchLatestHeight();
-  }, []);
-
-  return (
+  return loading ? <></> : (
     <div data-role='home container' className='bg-cb-gray text-sm'>
       <div 
         data-role='top banner' 
@@ -130,4 +146,20 @@ const HomePage = (props) => {
   );
 };
 
-export default HomePage;
+HomePage.propTypes = {
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
+};
+
+const mapStateToProps = state => ({
+  loading: state.root.loading,
+});
+
+const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(HomePage);
+

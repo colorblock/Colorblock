@@ -36,7 +36,8 @@ const CollectionList = (props) => {
 };
 
 CollectionList.propTypes = {
-  props: PropTypes
+  collections: PropTypes.array.isRequired,
+  display: PropTypes.string.isRequired
 };
 
 export default CollectionList;

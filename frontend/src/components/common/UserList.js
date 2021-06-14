@@ -44,7 +44,8 @@ const UserList = (props) => {
 };
 
 UserList.propTypes = {
-  props: PropTypes
+  users: PropTypes.array.isRequired,
+  display: PropTypes.string.isRequired
 };
 
 export default UserList;

@@ -45,7 +45,8 @@ const ItemList = (props) => {
 };
 
 ItemList.propTypes = {
-  props: PropTypes
+  items: PropTypes.array.isRequired,
+  display: PropTypes.string.isRequired
 };
 
 export default ItemList;

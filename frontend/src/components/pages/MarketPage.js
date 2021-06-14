@@ -9,29 +9,35 @@ import ItemList from '../common/ItemList';
 import AssetList from '../common/AssetList';
 import CollectionList from '../common/CollectionList';
 import { serverUrl } from '../../config';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 export const MarketPage = (props) => {
   
+  const { type } = useParams();
+  const { loading, showLoading, hideLoading } = props;
   const [items, setItems] = useState([]);
   const [assets, setAssets] = useState([]);
   const [collections, setCollections] = useState([]);
-  const { type } = useParams();
 
   useEffect(() => {
     const fetchLatestData = async () => {
+      showLoading();
+
       switch (type) {
         case 'items':
           await fetchLatestItems();
-          return;
+          break;
         case 'assets':
           await fetchLatestAssets();
-          return;
+          break;
         case 'collections':
           await fetchLatestCollections();
-          return;
+          break;
         default:
-          return;
+          break;
       }
+
+      hideLoading();
     };
 
     const fetchLatestItems = async () => {
@@ -56,9 +62,9 @@ export const MarketPage = (props) => {
     };
 
     fetchLatestData();
-  }, []);
+  }, [type, showLoading, hideLoading]);
 
-  return (
+  return loading ? <></> : (
     <div data-role='market container' className='bg-cb-gray text-sm'>
       <div data-role='item filter and sort' className='w-5/6 mx-auto my-10 flex justify-between'>
         <div data-role='filter at left' className='flex space-x-4'>
@@ -99,15 +105,18 @@ export const MarketPage = (props) => {
 };
 
 MarketPage.propTypes = {
-  props: PropTypes
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state) => ({
-  
+const mapStateToProps = state => ({
+  loading: state.root.loading
 });
 
-const mapDispatchToProps = {
-  
-};
+const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(MarketPage);

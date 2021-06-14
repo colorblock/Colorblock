@@ -22,7 +22,13 @@ const Header = (props) => {
     }
   };
 
+  const myProfile = () => {
+    setIsUserPopupOpen(false);
+    document.location.href = '/user';
+  };
+
   const logout = async () => {
+    setIsUserPopupOpen(false);
     setAccountAddress('');
     const url = `${serverUrl}/logout`;
     const result = await fetch(url, mkReq()).then(res => res.json());
@@ -35,15 +41,20 @@ const Header = (props) => {
 
   useEffect(() => {
     const fetchUserLoginStatus = async () => {
+      const { onLoading, onLoaded } = props;
+      onLoading();
       const url = `${serverUrl}/login_status`;
-      const result = await fetch(url).then(res => res.json());
-      if (result.status !== 'success') {
+      const result = await fetch(url, mkReq()).then(res => res.json());
+      if (result.status === 'success') {
+        setAccountAddress(result.data);
+      } else {
         setAccountAddress('');
       }
+      onLoaded();
     };
 
     fetchUserLoginStatus();
-  }, [setAccountAddress]);
+  }, [setAccountAddress]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div data-role='header page'>
@@ -88,7 +99,7 @@ const Header = (props) => {
               {
                 isUserPopupOpen && 
                 <div className='absolute top-10 left-0 w-24 flex flex-col border rounded bg-white'>
-                  <button className='w-full py-2 border-b' onClick={ () => document.location.href = '/user' }>My Profile</button>
+                  <button className='w-full py-2 border-b' onClick={ () => myProfile() }>My Profile</button>
                   <button className='w-full py-2' onClick={ () => logout() }>logout</button>
                 </div>
               }
@@ -101,7 +112,11 @@ const Header = (props) => {
 };
 
 Header.propTypes = {
-  wallet: PropTypes.object.isRequired
+  wallet: PropTypes.object.isRequired,
+  switchWalletModal: PropTypes.func.isRequired,
+  setAccountAddress: PropTypes.func.isRequired,
+  onLoaded: PropTypes.func.isRequired,
+  onLoading: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({

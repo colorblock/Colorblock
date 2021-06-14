@@ -2,34 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import * as fa from '@fortawesome/free-solid-svg-icons';
 
 import ItemList from '../common/ItemList';
 import UserList from '../common/UserList';
 import { serverUrl } from '../../config';
+import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 export const SearchPage = (props) => {
   
   const { keyword } = useParams();
+  const { loading, showLoading, hideLoading } = props;
   const [items, setItems] = useState([]);
   const [users, setUsers] = useState([]);
   const [tabType, setTabType] = useState('item');
 
   useEffect(() => {
     const fetchSearchResults = async () => {
+      showLoading();
+
       const url = `${serverUrl}/search/${keyword}`;
       console.log(url);
       const data = await fetch(url).then(res => res.json());
       console.log(data);
       setItems(data.items);
       setUsers(data.users);
+
+      hideLoading();
     };
 
     fetchSearchResults();
-  }, [keyword]);
+  }, [keyword, showLoading, hideLoading]);
 
-  return (
+  return loading ? <></> : (
     <div data-role='market container' className='bg-cb-gray text-sm'>
       <div data-role='result tabs' className='mx-auto my-10 pb-3 flex justify-center space-x-20 text-lg border-b'>
         <button className='px-5 py-2 hover:bg-gray-300' onClick={ () => setTabType('item') }>Item({items.length})</button>
@@ -60,15 +64,18 @@ export const SearchPage = (props) => {
 };
 
 SearchPage.propTypes = {
-  props: PropTypes
+  loading: PropTypes.bool.isRequired,
+  showLoading: PropTypes.func.isRequired,
+  hideLoading: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state) => ({
-  
+const mapStateToProps = state => ({
+  loading: state.root.loading
 });
 
-const mapDispatchToProps = {
-  
-};
+const mapDispatchToProps = dispatch => ({
+  showLoading: () => dispatch(showLoading()),
+  hideLoading: () => dispatch(hideLoading())
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(SearchPage);
