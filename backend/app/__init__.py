@@ -7,8 +7,6 @@ from flask.json import JSONEncoder
 from datetime import datetime
 import decimal
 
-import logging
-
 db = SQLAlchemy(engine_options={
     'pool_recycle': 299,
     'pool_size': 5,
@@ -22,10 +20,13 @@ def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.url_map.strict_slashes = False
 
+    # load config from public config and then secret
+    app.config.from_object('config')
     try:
         app.config.from_object('instance.config')
     except Exception as e:
-        app.config.from_object('config')
+        app.logger.exception(e)
+
     app.config['mode'] = 'prod' if app.config['ENV'] == 'production' else 'dev'
 
     db_config = app.config['DATABASE']
