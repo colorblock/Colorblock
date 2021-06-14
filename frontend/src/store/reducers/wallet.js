@@ -13,7 +13,7 @@ const switchWalletModal = (wallet) => {
   return wallet;
 };
 
-const setPublicKeyList = (wallet, keyList) => {
+const setAddressList = (wallet, keyList) => {
   wallet.keyList = keyList;
   return wallet;
 };
@@ -27,8 +27,8 @@ const wallet = produce((wallet, action) => {
   switch (action.type) {
     case types.SWITCH_WALLET_MODAL:
       return switchWalletModal(wallet);
-    case types.SET_PUBLIC_KEY_LIST:
-      return setPublicKeyList(wallet, action.keyList);
+    case types.SET_ADDRESS_LIST:
+      return setAddressList(wallet, action.keyList);
     case types.SET_ACCOUNT_ADDRESS:
       return setAccountAddress(wallet, action.address);
     default:

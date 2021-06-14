@@ -121,6 +121,9 @@
     @apply border rounded border-gray-300;
   }
 
+  div[data-role='wallet modal'] button.wallet-tab {
+    @apply w-full border border-gray-200 rounded-lg hover-pink h-12 text-left px-5 py-2.5 my-3 text-gray-300 hover:text-black flex items-center justify-between;
+  }
 
   .switch {
     position: relative;

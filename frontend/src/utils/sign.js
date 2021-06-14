@@ -68,9 +68,23 @@ export const getSignedCmd = async (inputCmd, postData={}) => {
   // get sign from wallet
   console.log('signingCmd', signingCmd);
   const signingResult = await fetch(`${walletUrl}/sign`, signingCmd)
+    .then(res => {
+      if (res.ok) {
+        return res;
+      } else {
+        return res.text().then(text => {
+          throw new Error(text);
+        });
+      }
+    })
     .then(res => res.json())
-    .catch(() => {
-      toast.error('Please follow the instructions to open wallet API');
+    .catch(error => {
+      console.log(error);
+      if (error.message === 'Cancelled') {
+        toast.error('User cancelled sign');
+      } else {
+        toast.error('Please follow the instructions to turn on Wallet Server');
+      }
     });
   console.log('signingResult', signingResult);
 

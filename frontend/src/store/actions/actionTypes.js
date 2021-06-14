@@ -23,7 +23,7 @@ export const CHANGE_TOOL_TYPE = 'CHANGE_TOOL_TYPE';
 
 // wallet
 export const SWITCH_WALLET_MODAL = 'SWITCH_WALLET_MODAL';
-export const SET_PUBLIC_KEY_LIST = 'SET_PUBLIC_KEY_LIST';
+export const SET_ADDRESS_LIST = 'SET_ADDRESS_LIST';
 export const SET_ACCOUNT_ADDRESS = 'SET_ACCOUNT_ADDRESS';
 
 // root

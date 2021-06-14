@@ -154,9 +154,9 @@ export const switchWalletModal = () => {
   };
 };
 
-export const setPublicKeyList = (keyList) => {
+export const setAddressList = (keyList) => {
   return {
-    type: types.SET_PUBLIC_KEY_LIST,
+    type: types.SET_ADDRESS_LIST,
     keyList
   };
 };

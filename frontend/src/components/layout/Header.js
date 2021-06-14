@@ -28,6 +28,11 @@ const Header = (props) => {
     document.location.href = '/user';
   };
 
+  const switchAccount = () => {
+    setIsUserPopupOpen(false);
+    switchWalletModal();
+  };
+
   const logout = async () => {
     setIsUserPopupOpen(false);
     const url = `${serverUrl}/logout`;
@@ -131,10 +136,11 @@ const Header = (props) => {
               {
                 isUserPopupOpen && 
                 <div 
-                  className='absolute top-0 left-0 mt-10 w-24 flex flex-col border rounded bg-white'
+                  className='absolute top-0 left-0 mt-12 w-24 flex flex-col border rounded bg-white text-sm'
                   ref={userPopupEl}
                 >
                   <button className='w-full py-2 border-b' onClick={ () => myProfile() }>My Profile</button>
+                  <button className='w-full py-2 border-b' onClick={ () => switchAccount() }>Switch User</button>
                   <button className='w-full py-2' onClick={ () => logout() }>logout</button>
                 </div>
               }

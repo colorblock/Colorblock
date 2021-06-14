@@ -177,10 +177,10 @@ describe('wallet actions', () => {
   it('should create an action to set public key list', () => {
     const keyList = ['a', 'b'];
     const expectedAction = {
-      type: types.SET_PUBLIC_KEY_LIST,
+      type: types.SET_ADDRESS_LIST,
       keyList
     };
-    expect(actions.setPublicKeyList(keyList)).toEqual(expectedAction);
+    expect(actions.setAddressList(keyList)).toEqual(expectedAction);
   });
   
   it('should create an action to set account address', () => {

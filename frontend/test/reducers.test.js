@@ -313,7 +313,7 @@ describe('wallet reducer', () => {
   
   it('should handle action set public key list', () => {
     const keyList = ['a', 'b'];
-    const state = reducer(savedState, actions.setPublicKeyList(keyList));
+    const state = reducer(savedState, actions.setAddressList(keyList));
     const wallet = state.wallet;
     expect(wallet.keyList).toEqual(keyList);
     savedState = state;
