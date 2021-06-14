@@ -23,36 +23,22 @@ def send_req(post_cmd):
         request_key = request_key_data['requestKeys'][0]
         app.logger.debug('request key: {}'.format(request_key))
 
-        at_first = True
-        for i in range(180):
-            # fetch result for request key
-            try:
-                res = requests.post(app.config['PACT_POLL_URL'], json=request_key_data)
-                if at_first:
-                    time.sleep(30)
-                    at_first = False
-            except Exception as e:
-                app.logger.exception(e)
-                time.sleep(5)
-            app.logger.debug('POLL response text: {}'.format(res.text))
+        listen_data = {
+            'listen': request_key
+        }
+        res = requests.post(app.config['PACT_LISTEN_URL'], json=listen_data)
+        app.logger.debug('LISTEN response text: {}'.format(res.text))
 
-            # extract result
-            result = res.json()
-            app.logger.debug('result: {}'.format(result))
-            if request_key not in result:
-                time.sleep(1)
-                continue
+        # extract result
+        result = res.json()
+        app.logger.debug('result: {}'.format(result))
 
-            result = result[request_key]
-
-            # pack return_data
-            if result['result']['status'] == 'success':
-                return_data = get_success_response(result['result']['data']) 
-                return_data['tx_id'] = result['txId']
-            else:
-                return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
-
-            break
+        # pack return_data
+        if result['result']['status'] == 'success':
+            return_data = get_success_response(result['result']['data']) 
+            return_data['tx_id'] = result['txId']
+        else:
+            return_data = get_error_response('pact error: {}'.format(result['result']['error']['message']))
 
     except Exception as e:
         app.logger.error(e)

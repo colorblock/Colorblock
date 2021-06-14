@@ -41,6 +41,8 @@ def login():
         user = db.session.query(User).filter(User.id == account).first()
         if not user:
             return signup(account)
+    elif 'row not found' in result['data']:
+        result['data'] = 'Please make sure that the wallet assets are not empty'
 
     return result
 

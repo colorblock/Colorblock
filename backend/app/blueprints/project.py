@@ -46,6 +46,7 @@ def save_project(project_id):
     user_id = get_current_user()
     project = db.session.query(Project).filter(Project.id == project_id).first()
     if project:
+        project.title = post_data['title']
         project.frames = post_data['frames']
         project.palette = post_data['palette']
         db.session.commit()
