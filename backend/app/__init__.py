@@ -53,6 +53,8 @@ def create_app():
     app.register_blueprint(asset_blueprint, url_prefix='/asset')
     from app.blueprints.collection import collection_blueprint
     app.register_blueprint(collection_blueprint, url_prefix='/collection')
+    from app.blueprints.project import project_blueprint
+    app.register_blueprint(project_blueprint, url_prefix='/project')
     from app.blueprints.tool import tool_blueprint
     app.register_blueprint(tool_blueprint, url_prefix='/tool')
     from app.blueprints.search import search_blueprint

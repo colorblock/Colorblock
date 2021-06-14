@@ -170,6 +170,7 @@ create table if not exists project (
     `user_id` varchar(64),
     `title` varchar(64),
     `frames` text,
+    `palette` text,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)

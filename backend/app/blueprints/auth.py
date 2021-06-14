@@ -10,7 +10,7 @@ from app.utils.security import admin_required, login_required
 
 auth_blueprint = Blueprint('auth', __name__)
 
-@auth_blueprint.route('/login_status', methods=['GET'])
+@auth_blueprint.route('/login_status', methods=['POST'])
 def login_status():
     if session.get('logged_in'):
         return get_success_response(session['account'])

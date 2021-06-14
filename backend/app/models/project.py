@@ -10,6 +10,7 @@ class Project(db.Model):
     user_id: str
     title: str
     frames: str
+    palette: str
     created_at: str
     updated_at: str
 
@@ -17,6 +18,7 @@ class Project(db.Model):
     user_id = db.Column(db.String)
     title = db.Column(db.String)
     frames = db.Column(db.String)
+    palette = db.Column(db.String)
     created_at = db.Column(db.DateTime, server_default=FetchedValue())
     updated_at = db.Column(db.DateTime, server_default=FetchedValue())
 
