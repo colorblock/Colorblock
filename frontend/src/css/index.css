@@ -99,32 +99,6 @@
     z-index: inherit;
   }
 
-  div[data-role='painting tools'] div.selected {
-    @apply bg-gray-200;
-  }
-  div[data-role='image type selection'] label {
-    @apply border border-black;
-  }
-  div[data-role='image type selection'] label.selected {
-    @apply bg-black text-white;
-  }
-  div[data-role='item submit'] * {
-    @apply block mx-auto;
-  }
-  div[data-role='tabs at top'] button.selected {
-    @apply border-b bd-cb-pink;
-  }
-  button[data-role='undo button']:hover {
-    @apply border rounded border-gray-300;
-  }
-  button[data-role='redo button']:hover {
-    @apply border rounded border-gray-300;
-  }
-
-  div[data-role='wallet modal'] button.wallet-tab {
-    @apply w-full border border-gray-200 rounded-lg hover-pink h-12 text-left px-5 py-2.5 my-3 text-gray-300 hover:text-black flex items-center justify-between;
-  }
-
   .switch {
     position: relative;
     display: inline-block;
@@ -187,10 +161,39 @@
     border-radius: 50%;
   }
 
-  div[data-role='footer social links'] svg {
-    @apply w-full h-full;
-  }
-  div[data-role='footer social links'] svg:hover {
-    fill: rgba(30, 162, 243, 1);
-  }
+}
+
+/* custom style */
+
+div[data-role='painting tools'] div.selected {
+  @apply bg-gray-200;
+}
+div[data-role='image type selection'] label {
+  @apply border border-black;
+}
+div[data-role='image type selection'] label.selected {
+  @apply bg-black text-white;
+}
+div[data-role='item submit'] * {
+  @apply block mx-auto;
+}
+div[data-role='tabs at top'] button.selected {
+  @apply border-b bd-cb-pink;
+}
+button[data-role='undo button']:hover {
+  @apply border rounded border-gray-300;
+}
+button[data-role='redo button']:hover {
+  @apply border rounded border-gray-300;
+}
+
+div[data-role='wallet modal'] button.wallet-tab {
+  @apply w-full border border-gray-200 rounded-lg hover-pink h-12 text-left px-5 py-2.5 my-3 text-gray-300 hover:text-black flex items-center justify-between;
+}
+
+div[data-role='footer social links'] svg {
+  @apply w-full h-full;
+}
+div[data-role='footer social links'] svg:hover {
+  fill: rgba(30, 162, 243, 1);
 }
