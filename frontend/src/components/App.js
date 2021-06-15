@@ -49,7 +49,7 @@ const App = (props) => {
       >
         <ReactLoading type='spin' color='rgb(254, 94, 174)' height='50px' width='50px' className='-mt-20' />
       </div>
-      <Router hidden={!isLayoutLoaded}>
+      <Router hidden={!isLayoutLoaded} history={history}>
         <Header 
           onLoading={ () => setLayoutLoading({...layoutLoading, header: true}) } 
           onLoaded={ () => setLayoutLoading({...layoutLoading, header: false}) } 
