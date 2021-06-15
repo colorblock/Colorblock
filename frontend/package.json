@@ -32,10 +32,10 @@
     "web-vitals": "^2.0.1"
   },
   "scripts": {
-    "local": "NODE_ENV=local craco start",
-    "local-win": "set NODE_ENV=local && craco start",
-    "start": "craco start",
-    "build": "craco build && rsync -av --delete build/ server",
+    "local": "craco start",
+    "start": "REACT_APP_STAGE=dev craco start",
+    "build-dev": "REACT_APP_STAGE=dev craco build && rsync -av --delete build/ server",
+    "build": "REACT_APP_STAGE=prod craco build && rsync -av --delete build/ server",
     "server": "serve -s server -p 3000 -n",
     "test": "jest",
     "eject": "react-scripts eject"

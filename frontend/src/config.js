@@ -1,16 +1,16 @@
-export const devMode = process.env.NODE_ENV;
-export const inProd = devMode === 'production';
-const getServerUrl = (devMode) => {
-  switch (devMode) {
-    case 'development':
+console.log(process.env);
+const getServerUrl = () => {
+  // read env params
+  switch (process.env.REACT_APP_STAGE) {
+    case 'dev':
       return 'http://api.colorblockart.com';
-    case 'production':
+    case 'prod':
       return 'https://api.colorblock.art';
     default:
       return 'http://localhost:5000';
   }
 };
-export const serverUrl = getServerUrl(devMode);
+export const serverUrl = getServerUrl();
 export const walletUrl = 'http://127.0.0.1:9467/v1';
 
 export const cookiesKey = 'colorblock';
