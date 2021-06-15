@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import ReactGA from 'react-ga';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
@@ -18,6 +20,15 @@ import CollectionPage from './pages/CollectionPage';
 import UserPage from './pages/UserPage';
 import Wallet from './common/Wallet';
 import ContactPage from './pages/ContactPage';
+
+ReactGA.initialize('UA-199276956-1');
+const history = createBrowserHistory();
+
+// Initialize google analytics page view tracking
+history.listen(location => {
+  ReactGA.set({ page: location.pathname }); // Update the user's current page
+  ReactGA.pageview(location.pathname); // Record a pageview for the given page
+});
 
 const App = (props) => {
 
