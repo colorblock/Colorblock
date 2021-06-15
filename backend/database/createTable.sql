@@ -1,3 +1,5 @@
+-- Database: colorblock
+
 create table if not exists user (
     `id` varchar(64),
     `address` varchar(64),

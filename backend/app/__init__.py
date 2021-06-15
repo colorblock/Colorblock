@@ -7,13 +7,7 @@ from flask.json import JSONEncoder
 from datetime import datetime
 import decimal
 
-db = SQLAlchemy(engine_options={
-    'pool_recycle': 299,
-    'pool_size': 5,
-    'pool_pre_ping': True,
-}, session_options={
-    'autoflush': False
-})
+db = SQLAlchemy()
 search = Search()
 
 def create_app():

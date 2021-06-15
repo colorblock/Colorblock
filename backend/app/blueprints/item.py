@@ -117,7 +117,7 @@ def submit_item():
         ledger_id = '{}:{}'.format(item_data['id'], item_data['account'])
         update_ledger(ledger_id)
         
-        if 'collection' in post_data:
+        if post_data.get('collection'):
             # update collectible
             collection = post_data['collection']
             collection_id = collection['id']
