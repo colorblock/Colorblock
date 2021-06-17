@@ -317,7 +317,7 @@
 ])
 (expect-failure
   "Purchase will fail as managed cap hasn't been installed correctly in sig"
-  "Purchase amount cannot exceed remained amount"
+  "Purchase amount cannot exceed remaining amount"
   (colorblock-market-test.purchase "item-id" "bob" "admin" 2.0 0.1 0.001)
 )
 

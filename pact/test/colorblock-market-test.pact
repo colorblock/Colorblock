@@ -129,10 +129,10 @@
     (enforce-unit token amount)
 
     (with-read item-deposits (key token account)
-      { "amount" := remained }
+      { "amount" := remaining }
       (enforce
-        (<= amount remained )
-        "Withdrawl amount can not exceed deposit remained amount"
+        (<= amount remaining )
+        "Withdrawl amount can not exceed deposit remaining amount"
       )
     )
   )
@@ -148,10 +148,10 @@
     (compose-capability (AUTH-M account))
 
     (with-read coin-deposits account
-      { "amount" := remained }
+      { "amount" := remaining }
       (enforce
-        (<= amount remained )
-        "Withdrawl amount can not exceed deposit remained amount"
+        (<= amount remaining )
+        "Withdrawl amount can not exceed deposit remaining amount"
       )
     )
   )
@@ -173,10 +173,10 @@
 
     (enforce-unit token amount)
     (with-read item-deposits (key token seller)
-      { "amount" := remained }
+      { "amount" := remaining }
       (enforce
-        (<= amount remained)
-        "Purchase amount cannot exceed remained amount"
+        (<= amount remaining)
+        "Purchase amount cannot exceed remaining amount"
       )
       (enforce
         (!= seller buyer)
