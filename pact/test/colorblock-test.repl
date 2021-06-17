@@ -1,0 +1,319 @@
+;; -----------------------------
+;; Prepare
+;; -----------------------------
+
+(begin-tx)
+
+(define-namespace 'test (sig-keyset) (sig-keyset))
+(env-data { 
+  "ns": "test",
+  "admin-keyset": {"keys": ["admin"]},
+  "admin-keyset-copy": {"keys": ["admin-copy"]},
+  "alice-keyset": {"keys": ["alice"]},
+  "bob-keyset": {"keys": ["bob"]},
+  "lucy-keyset": {"keys": ["lucy"]},
+  "jack-keyset": {"keys": ["jack"]},
+  "upgrade": false
+})
+(load "colorblock-poly-fungible-v1-test.pact")
+
+(load "../coin/fungible-v1.pact")
+(load "../coin/coin.pact")
+(load "colorblock-fungible-util-test.pact")
+(load "colorblock-test.pact")
+
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+;; -----------------------------
+;; Account
+;; -----------------------------
+
+;
+; create account in COIN module
+;
+(coin.create-account "admin" (read-keyset "admin-keyset"))
+(coin.create-account "bob" (read-keyset "bob-keyset"))
+(coin.create-account "alice" (read-keyset "alice-keyset"))
+(coin.create-account "lucy" (read-keyset "lucy-keyset"))
+(coin.create-account "jack" (read-keyset "jack-keyset"))
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [{"key": "bob", "caps": [()]}])
+
+;
+; create account in COLORBLOCK module
+;
+
+(expect
+  "Create successfully for the first time"
+  "Write succeeded"
+  (colorblock-test.create-account "token-id" "admin" (read-keyset "admin-keyset"))
+)
+(expect
+  "No failure but nothing happened for the second time"
+  "Account already exists"
+  (colorblock-test.create-account "token-id" "admin" (read-keyset "admin-keyset"))
+)
+(expect
+  "Create successfully for the another token"
+  "Write succeeded"
+  (colorblock-test.create-account "token-id-other" "admin" (read-keyset "admin-keyset"))
+)
+(expect
+  "Create failed when token:account exists"
+  "Account already exists"
+  (colorblock-test.create-account "token-id" "admin" (read-keyset "admin-keyset"))
+)
+(expect
+  "Create successfully for the another account"
+  "Write succeeded"
+  (colorblock-test.create-account "token-id" "bob" (read-keyset "bob-keyset"))
+)
+
+;
+; query default account
+;
+
+(expect
+  "Get default balance of token:account"
+  0.0
+  (colorblock-test.get-balance "token-id" "admin")
+)
+(expect-failure
+  "Get balance failed when token:account not exists"
+  "row not found: token-id:alice"
+  (colorblock-test.get-balance "token-id" "alice")
+)
+
+(expect
+  "Get default object of token:account"
+  "token-id"
+  (at 'token (colorblock-test.details "token-id" "admin"))
+)
+(expect
+  "Get default object of token:account"
+  "admin"
+  (at 'account (colorblock-test.details "token-id" "admin"))
+)
+(expect
+  "Get default object of token:account"
+  0.0
+  (at 'balance (colorblock-test.details "token-id" "admin"))
+)
+
+;
+; rotate account
+;
+
+(expect-failure
+  "Rotate will fail as not supported"
+  "Please rotate your KDA account"
+  (colorblock-test.rotate "token-id" "admin" (read-keyset "admin-keyset"))
+)
+
+
+;; -----------------------------
+;; Item
+;; -----------------------------
+
+;
+; create item
+;
+
+(expect-failure
+  "Creating will fail as title is blank"
+  "Title can not be empty"
+  (colorblock-test.create-item "item-id" "" "colors" 1 1 1 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail as row length is smaller than limit"
+  "the number of rows in each frame expected in range of"
+  (colorblock-test.create-item "item-id" "title" "colors" 1 1 1 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail as color length is wrong"
+  "the length of colors is not correct"
+  (colorblock-test.create-item "item-id" "title" "colors" 2 1 1 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail as cols length is smaller than limit"
+  "the number of cols in each frame expected in range of"
+  (colorblock-test.create-item "item-id" "title" "colorscolors" 2 1 1 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail as colors contains illegal character"
+  "not a digit"
+  (colorblock-test.create-item "item-id" "title" "colorscolorscolorscolors" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail as frames count is illegal"
+  "the number of frames expected to be larger than"
+  (colorblock-test.create-item "item-id" "title" "" 2 2 0 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail as intervals count not equal to frame"
+  "Interval count must equal to the number of frames"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
+    4 4 1 [0.5 0.5] "admin" 1.0)
+)
+(expect-failure
+  "Creating will fail as intervals count not equal to frame"
+  "larger than"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccddddddaaaaaabbbbbbccccccdddddd"
+    4 4 1 [0.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail without capability"
+  "Managed capability not installed: (test.colorblock-test.MINT"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(expect-failure
+  "Creating will fail without capability"
+  "Managed capability not installed:"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.2)
+)
+
+(env-sigs [{"key": "bob", "caps": [(colorblock-test.MINT "item-id" "admin" 1.0)]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Keyset failure (keys-all): [admin]"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.MINT "item-id" "bob" 1.0)]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock-test.MINT"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [
+  (colorblock-test.CREDIT "item-id" "admin" 0.0),
+  (colorblock-test.DEBIT "item-id" "admin" 0.0)
+]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock-test.MINT"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.MINT "item-id-other" "admin" 1.0)]}])
+(expect-failure
+  "Creating will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock-test.MINT"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.MINT "item-id" "admin" 1.0)]}])
+(expect
+  "Creating will succeed with capability"
+  "Write succeeded"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.MINT "item-id" "admin" 1.0)]}])
+(expect-failure
+  "Creating will fail as item is duplicate"
+  "The item is already existed"
+  (colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 1.0)
+)
+
+
+;; -----------------------------
+;; Transfer
+;; -----------------------------
+
+
+(expect-failure
+  "Transfer will fail as sender is same with receiver"
+  "sender cannot be the receiver of a transfer"
+  (colorblock-test.transfer "item-id" "admin" "admin" 1.0)
+)
+
+(expect-failure
+  "Transfer will fail as receiver is illegal"
+  "minimum account length"
+  (colorblock-test.transfer "item-id" "admin" "a" 1.0)
+)
+
+(expect-failure
+  "Transfer will fail as receiver is illegal"
+  "Managed capability not installed: (test.colorblock-test.TRANSFER"
+  (colorblock-test.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.TRANSFER "item-id-other" "admin" "bob" 1.0)]}])
+(expect-failure
+  "Transfer will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock-test.TRANSFER"
+  (colorblock-test.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.TRANSFER "item-id-other" "admin" "alice" 1.0)]}])
+(expect-failure
+  "Transfer will fail with incorrect capability"
+  "Managed capability not installed: (test.colorblock-test.TRANSFER"
+  (colorblock-test.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "bob", "caps": [(colorblock-test.TRANSFER "item-id" "admin" "bob" 1.0)]}])
+(expect-failure
+  "Transfer will fail with incorrect capability"
+  "Keyset failure (keys-all): [admin]"
+  (colorblock-test.transfer "item-id" "admin" "bob" 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.TRANSFER "item-id" "admin" "bob" 1.0)]}])
+(expect
+  "Transfer-create will be successfully with correct capability"
+  "Write succeeded"
+  (colorblock-test.transfer-create "item-id" "admin" "bob" (read-keyset "bob-keyset") 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.CREDIT "item-id" "admin" 1.0)]}])
+(expect-failure
+  "Cannot directly credit"
+  "require-capability: not granted"
+  (colorblock-test.credit "item-id" "admin" (read-keyset "admin-keyset") 1.0)
+)
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.DEBIT "item-id" "admin" 1.0)]}])
+(expect-failure
+  "Cannot directly credit"
+  "require-capability: not granted"
+  (colorblock-test.debit "item-id" "admin" 1.0)
+)
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [{"key": "bob", "caps": [(colorblock-test.TRANSFER "item-id" "bob" "admin" 1.0)]}])
+(expect
+  "Transfer-create will be successfully with correct capability"
+  "Write succeeded"
+  (colorblock-test.transfer-create "item-id" "bob" "admin" (read-keyset "bob-keyset") 1.0)
+)
+

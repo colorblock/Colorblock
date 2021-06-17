@@ -1,0 +1,378 @@
+;; -----------------------------
+;; Prepare
+;; -----------------------------
+
+(begin-tx)
+
+(define-namespace 'test (sig-keyset) (sig-keyset))
+(env-data {
+  "ns": "test",
+  "admin-keyset": {"keys": ["admin"]},
+  "alice-keyset": {"keys": ["alice"]},
+  "bob-keyset": {"keys": ["bob"]},
+  "lucy-keyset": {"keys": ["lucy"]},
+  "manager-keyset": {"keys": ["manager"]},
+  "upgrade": false
+})
+(load "colorblock-poly-fungible-v1-test.pact")
+
+(load "../coin/fungible-v1.pact")
+(load "coin-test.pact")
+(load "colorblock-fungible-util-test.pact")
+(load "colorblock-test.pact")
+
+; Get module hash for bless
+(print (format "Colorblock module hash: {}" [(at 'hash (describe-module "test.colorblock-test"))]))
+
+(load "colorblock-market-test.pact")
+
+(commit-tx)
+
+(begin-tx)
+(namespace 'test)
+
+;; -----------------------------
+;; Account
+;; -----------------------------
+
+;
+; create account in COIN module
+;
+
+; each account inits with 12 KDA
+(coin.create-account "admin" (read-keyset "admin-keyset"))
+(coin.create-account "bob" (read-keyset "bob-keyset"))
+(coin.create-account "alice" (read-keyset "alice-keyset"))
+(coin.create-account "lucy" (read-keyset "lucy-keyset"))
+(coin.create-account "colorblock-market-manager-test" (read-keyset "manager-keyset"))
+
+(env-sigs [{"key": "admin", "caps": [(colorblock-test.MINT "item-id" "admin" 5.0)]}])
+(colorblock-test.create-item "item-id" "title" "aaaaaabbbbbbccccccdddddd" 2 2 1 [1.0] "admin" 5.0)
+(colorblock-test.create-account "item-id" "bob" (read-keyset "bob-keyset"))
+
+(commit-tx)
+
+;; -----------------------------
+;; interact with market
+;; -----------------------------
+
+
+(begin-tx)
+(namespace 'test)
+
+;
+; deposit-item
+;
+
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock-market-test.DEPOSIT-ITEM "item-id" "admin" 1.0)]}
+])
+(expect-failure
+  "Deposit-item will fail as manager signature is required"
+  "Keyset failure (keys-all): [manager]"
+  (colorblock-market-test.deposit-item "item-id" "admin" 1.0)
+)
+(env-sigs [
+  {"key": "admin", "caps": []}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Deposit-item will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (colorblock-market-test.deposit-item "item-id" "admin" 1.0)
+)
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock-test.TRANSFER "item-id" "bob" "colorblock-market-pool-test" 1.0)]}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Deposit-item will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (colorblock-market-test.deposit-item "item-id" "admin" 1.0)
+)
+(env-sigs [
+  {"key": "bob", "caps": [(colorblock-test.TRANSFER "item-id" "bob" "colorblock-market-pool-test" 1.0)]}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Deposit-item will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (colorblock-market-test.deposit-item "item-id" "admin" 1.0)
+)
+(env-sigs [
+  {"key": "admin", "caps": [
+    (colorblock-test.TRANSFER "item-id" "admin" "colorblock-market-pool-test" 2.0)
+    (colorblock-market-test.DEPOSIT-ITEM "item-id" "admin" 2.0)
+  ]}
+  {"key": "manager", "caps": []}
+])
+(expect
+  "Deposit-item will succeed with correct capability"
+  "Write succeeded"
+  (colorblock-market-test.deposit-item "item-id" "admin" 2.0)
+)
+
+(expect
+  "Check deposit-item result"
+  2.0
+  (at 'amount (colorblock-market-test.item-deposit-details "item-id" "admin"))
+)
+(expect
+  "Check deposit-item result"
+  3.0
+  (colorblock-test.get-balance "item-id" "admin")
+)
+(expect
+  "Check deposit-item result"
+  2.0
+  (colorblock-test.get-balance "item-id" "colorblock-market-pool-test")
+)
+
+
+;
+; deposit-coin
+;
+
+(env-sigs [
+  {"key": "admin", "caps": [(coin.TRANSFER "admin" "colorblock-market-pool-test" 3.0)]}
+])
+(expect-failure
+  "Deposit-coin will fail as manager signature is required"
+  "Managed capability not installed"
+  (colorblock-market-test.deposit-coin "admin" 3.0)
+)
+
+(commit-tx)
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [
+  {"key": "admin", "caps": [
+    (coin.TRANSFER "admin" "colorblock-market-pool-test" 3.0)
+    (colorblock-market-test.DEPOSIT-COIN "admin" 3.0)
+  ]}
+  {"key": "manager", "caps": []}
+])
+(expect
+  "Deposit-coin will succeed with correct capability"
+  "Write succeeded"
+  (colorblock-market-test.deposit-coin "admin" 3.0)
+)
+
+(expect
+  "Check deposit-coin result"
+  3.0
+  (at 'amount (colorblock-market-test.coin-deposit-details "admin"))
+)
+(expect
+  "Check deposit-coin result"
+  9.0
+  (coin.get-balance "admin")
+)
+(expect
+  "Check deposit-coin result"
+  15.0
+  (coin.get-balance "colorblock-market-pool-test")
+)
+
+
+;
+; withdraw-item
+;
+
+(env-sigs [{"key": "admin", "caps": []}])
+(expect-failure
+  "Withdrawl-item will fail as manager signature is required"
+  "Managed capability not installed"
+  (colorblock-market-test.withdrawl-item "item-id" "admin" 1.0)
+)
+
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock-test.TRANSFER "item-id" "colorblock-market-pool-test" "admin" 1.0)]}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Withdrawl-item will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (colorblock-market-test.withdrawl-item "item-id" "admin" 1.0)
+)
+
+(commit-tx)
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [
+  {"key": "admin", "caps": [
+    (colorblock-market-test.WITHDRAWL-ITEM "item-id" "admin" 1.0)
+  ]}
+  {"key": "manager", "caps": []}
+])
+(expect
+  "Deposit-coin will succeed with correct capability"
+  "Write succeeded"
+  (colorblock-market-test.withdrawl-item "item-id" "admin" 1.0)
+)
+
+(expect
+  "Check withdrawl-item result"
+  1.0
+  (at 'amount (colorblock-market-test.item-deposit-details "item-id" "admin"))
+)
+(expect
+  "Check withdrawl-item result"
+  4.0
+  (colorblock-test.get-balance "item-id" "admin")
+)
+(expect
+  "Check withdrawl-item result"
+  1.0
+  (colorblock-test.get-balance "item-id" "colorblock-market-pool-test")
+)
+
+
+;
+; withdraw-coin
+;
+
+(env-sigs [{"key": "admin", "caps": []}])
+(expect-failure
+  "Withdrawl-coin will fail as manager signature is required"
+  "Managed capability not installed"
+  (colorblock-market-test.withdrawl-coin "admin" 1.0)
+)
+
+(env-sigs [
+  {"key": "admin", "caps": [(coin.TRANSFER "colorblock-market-pool-test" "admin" 1.0)]}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Withdrawl-coin will fail as managed cap hasn't been installed correctly in sig"
+  "Managed capability not installed"
+  (colorblock-market-test.withdrawl-coin "admin" 1.0)
+)
+
+(commit-tx)
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [
+  {"key": "admin", "caps": [
+    (colorblock-market-test.WITHDRAWL-COIN "admin" 1.0)
+  ]}
+  {"key": "manager", "caps": []}
+])
+(expect
+  "Deposit-coin will succeed with correct capability"
+  "Write succeeded"
+  (colorblock-market-test.withdrawl-coin "admin" 1.0)
+)
+
+(expect
+  "Check withdrawl-coin result"
+  2.0
+  (at 'amount (colorblock-market-test.coin-deposit-details "admin"))
+)
+(expect
+  "Check withdrawl-coin result"
+  10.0
+  (coin.get-balance "admin")
+)
+(expect
+  "Check withdrawl-coin result"
+  14.0
+  (coin.get-balance "colorblock-market-pool-test")
+)
+
+
+;
+; purchase
+;
+
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock-market-test.PURCHASE "item-id" "bob" "admin" 1.0 0.1 0.001)]}
+])
+(expect-failure
+  "Purchase will fail as managed cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [manager]"
+  (colorblock-market-test.purchase "item-id" "bob" "admin" 1.0 0.1 0.001)
+)
+
+(commit-tx)
+(begin-tx)
+(namespace 'test)
+
+(env-sigs [
+  {"key": "admin", "caps": [(colorblock-market-test.PURCHASE "item-id" "bob" "admin" 1.0 0.1 0.001)]}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Purchase will fail as bob cap hasn't been installed correctly in sig"
+  "Keyset failure (keys-all): [bob]"
+  (colorblock-market-test.purchase "item-id" "bob" "admin" 1.0 0.1 0.001)
+)
+
+(env-sigs [
+  {"key": "bob", "caps": [(colorblock-market-test.PURCHASE "item-id" "bob" "admin" 2.0 0.1 0.001)]}
+  {"key": "manager", "caps": []}
+])
+(expect-failure
+  "Purchase will fail as managed cap hasn't been installed correctly in sig"
+  "Purchase amount cannot exceed remained amount"
+  (colorblock-market-test.purchase "item-id" "bob" "admin" 2.0 0.1 0.001)
+)
+
+(env-sigs [
+  {"key": "bob", "caps": [(colorblock-market-test.PURCHASE "item-id" "bob" "admin" 1.0 0.1 0.001)]}
+  {"key": "manager", "caps": []}
+])
+(expect
+  "Purchase will fail as managed cap hasn't been installed correctly in sig"
+  "Write succeeded"
+  (colorblock-market-test.purchase "item-id" "bob" "admin" 1.0 0.1 0.001)
+)
+
+(expect
+  "Check purchase result"
+  0.0
+  (at 'amount (colorblock-market-test.item-deposit-details "item-id" "admin"))
+)
+(expect
+  "Check purchase result"
+  2.0
+  (at 'amount (colorblock-market-test.coin-deposit-details "admin"))
+)
+(expect
+  "Check purchase result"
+  4.0
+  (colorblock-test.get-balance "item-id" "admin")
+)
+(expect
+  "Check purchase result"
+  0.0
+  (colorblock-test.get-balance "item-id" "colorblock-market-pool-test")
+)
+(expect
+  "Check purchase result"
+  1.0
+  (colorblock-test.get-balance "item-id" "bob")
+)
+(expect
+  "Check purchase result"
+  10.1
+  (coin.get-balance "admin")
+)
+(expect
+  "Check purchase result"
+  14.0
+  (coin.get-balance "colorblock-market-pool-test")
+)
+(expect
+  "Check purchase result"
+  12.001
+  (coin.get-balance "colorblock-market-manager-test")
+)
+(expect
+  "Check purchase result"
+  11.899
+  (coin.get-balance "bob")
+)

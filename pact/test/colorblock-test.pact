@@ -46,7 +46,7 @@
           \   token: the token asset id \
           \   account: same account as kda account \
           \   balance: the amount of specific token \
-          \   guard: the same guard as kda account "
+          \   guard: empty guard here so program must verify user's kda guard "
 
     token:string
     account:string
@@ -65,26 +65,27 @@
     (enforce-guard (at 'guard (coin.details "colorblock-admin-test")))
   )
 
-  (defcap AUTH (token:string account:string)
-    (enforce-guard
-      (at 'guard
-        (read ledger (key token account))
-      )
-    )
+  (defcap AUTH:bool (account:string)
+    @doc " Enforce requester having the ownership of account in KDA network "
+    (enforce-guard (at 'guard (coin.details account)))
   )
 
-  (defcap DEBIT (token:string sender:string)
-    (compose-capability (AUTH token sender))
+  (defcap DEBIT:bool (token:string sender:string amount:decimal)
+    (compose-capability (AUTH sender))
   )
-  (defcap CREDIT (token:string receiver:string) 
+  (defcap CREDIT:bool (token:string receiver:string amount:decimal) 
     true
   )
 
-  (defcap MINT (token:string account:string amount:decimal)
+  (defcap MINT:bool (token:string account:string amount:decimal)
     @managed   ; make sure one-shot (only-once), will trigger event
     (enforce-unit token amount)
-    (compose-capability (AUTH token account))
-    (compose-capability (CREDIT token account))
+    (enforce 
+      (< 0.0 amount)
+      "Amount must be larger than 0"
+    )
+    (compose-capability (AUTH account))
+    (compose-capability (CREDIT token account amount))
   )
 
   (defcap ROTATE:bool (account:string)
@@ -109,8 +110,8 @@
     @managed amount TRANSFER-mgr  ; make sure amount is sufficient, will trigger event
 
     (enforce-valid-transfer sender receiver (precision token) amount)
-    (compose-capability (DEBIT token sender))
-    (compose-capability (CREDIT token receiver))
+    (compose-capability (DEBIT token sender amount))
+    (compose-capability (CREDIT token receiver amount))
   )
 
   (defun TRANSFER-mgr:decimal
@@ -145,24 +146,10 @@
   (defconst MAX_FRAME_COLS 128
     "The max cols for each frames"
   )
-  (defconst MIN_FRAMES 1
-    "The min count of frames"
-  )
-  (defconst MAX_FRAMES 16
-    "The max count of frames"
-  )
   (defconst CELL_LENGTH 6
     "The length for each cell"
   )
-
-  (defconst MIN_INTERVAL 0.01
-    "The min interval limitation"
-  )
-  (defconst MAX_INTERVAL 1.0
-    "The max interval limitation"
-  )
-
-  (defconst MAX_TITLE_LENGTH 64
+  (defconst MAX_TITLE_LENGTH 200
     "The max length of item title"
   )
 
@@ -203,7 +190,7 @@
         \1. the length of colors = rows * cols * frames * cell-length \
         \2. rows between MIN_FRAME_ROWS and MAX_FRAME_ROWS \
         \3. cols between MIN_FRAME_COLS and MAX_FRAME_COLS \
-        \4. frames between MIN_FRAMES and MAX_FRAMES \
+        \4. frames cannot be less than zero \
         \5. colors in HEX format "
 
     ; Validate Rule-1
@@ -244,17 +231,8 @@
 
     ; Validate Rule-4
     (enforce 
-      (and
-        (<= MIN_FRAMES frames)
-        (>= MAX_FRAMES frames)
-      )
-      (format
-        "the number of frames expected in range of {} ~ {}"
-        [
-          MIN_FRAMES
-          MAX_FRAMES
-        ]
-      )
+      (< 0 frames)
+      "the number of frames expected to be larger than 0"
     )
 
     ; Validate Rule-5
@@ -283,17 +261,11 @@
       frames:integer
     )
     @doc " Check whether intervals conforms to following rules: \
-        \1.each interval should between MIN_INTERVAL than MAX_INTERVAL \
+        \1.each interval must larger than zero \
         \2.interval count equals frames "
     (enforce
-      (and
-        (<= MIN_INTERVAL (at 0 (sort intervals)))
-        (>= MAX_INTERVAL (at 0 (reverse (sort intervals))))
-      )
-      (format
-        "Interval should between {} and {}"
-        [MIN_INTERVAL, MAX_INTERVAL]
-      )
+      (< 0.0 (at 0 (sort intervals)))
+      "Interval must be larger than 0"
     )
     (enforce
       (= frames (length intervals))
@@ -301,19 +273,16 @@
     )
   )
 
-  (defun validate-ownership (token:string account:string)
-    (with-capability (AUTH token account)
-      true
-    )
+  (defun empty-guard:guard ()
+    (create-user-guard (empty-valid 1))
   )
 
-  (defun validate-guard:bool (account:string)
-    (let 
-      ((guard-kda (at 'guard (coin.details account))))
-      (enforce-guard guard-kda) 
+  (defun empty-valid (n:integer)
+    (enforce 
+      (= n n)
+      ""
     )
   )
-
 
 
   ; -------------------------------------------------------
@@ -329,11 +298,7 @@
       intervals:[decimal]
       creator:string 
       amount:decimal
-      guard:guard
     )
-
-    ; Create account if not exists
-    (create-account-maybe token creator guard)
 
     ; Validate base infomations
     (enforce
@@ -377,7 +342,7 @@
           "valid-hash": valid-hash
         })
         ; Credit creator certain amount
-        (credit token creator guard amount)
+        (credit token creator (empty-guard) amount)
       )
     )
   )
@@ -390,48 +355,35 @@
   ; -------------------------------------------------------
   ; Account Functions
 
-  (defun create-account-maybe:string
-    ( token:string
-      account:string
-      guard:guard
-    )
-    @doc " Create ACCOUNT for TOKEN, skip if account already exists"
-    (let ((g-null (create-user-guard (enforce-valid-account account))))  ; define empty guard
-      (with-default-read ledger (key token account)
-        { "guard" : g-null }
-        { "guard" := g }
-        (if 
-          (= g-null g)
-          (create-account token account guard)
-          "Account already exists"
-        )
-      )
-    )
-  )
-
   (defun create-account:string
     ( token:string
       account:string
       guard:guard
     )
-    @doc " Create ACCOUNT for TOKEN with 0.0 balance, with GUARD controlling access."
+    @doc " Create ACCOUNT for TOKEN with 0.0 balance, with empty GUARD "
     
     (enforce-valid-account account)
-    (let ((guard-kda (at 'guard (coin.details account))))
-      ; enforce guard consistent with KDA here,
-      ; but doesn't require owning the guard 
-      ; so that one can transfer to another account which
-      ; hasn't been initiated yet.
-      (enforce 
-        (= guard guard-kda) 
-        "Guard must match the same account of KDA"
+
+    (let 
+      (
+        (guard-kda (at 'guard (coin.details account)))
+        (g-null (empty-guard))
       )
-      (insert ledger (key token account)
-        { "token"   : token,
-          "account" : account,
-          "balance" : 0.0,
-          "guard"   : guard
-        }
+      ; Check whether account is existed
+      (with-default-read ledger (key token account)
+        { "balance" : -1.0 }
+        { "balance" := balance }
+        (if 
+          (= balance -1.0)
+          (insert ledger (key token account)
+            { "token"   : token,
+              "account" : account,
+              "balance" : 0.0,
+              "guard"   : g-null
+            }
+          )
+          "Account already exists"
+        )
       )
     )
   )
@@ -452,32 +404,7 @@
       account:string
       new-guard:guard
     )
-    @doc " Update guard after coin's guard get updating \
-        \  Command must have the guard of current kda account "
-    (with-capability (ROTATE account)
-      (let ((guard-kda (at 'guard (coin.details account))))
-        (enforce 
-          (= new-guard guard-kda) 
-          "Guard must match the same account of KDA"
-        )
-        (enforce-guard guard-kda)
-        (map (rotate-one account guard-kda) (select ledger (where 'account (= account))))
-        "success"
-      )
-    )
-  )
-
-  (defun rotate-one:string
-    ( account:string
-      new-guard:guard
-      item:object
-    )
-    (let
-      ((token (at 'token item)))
-      (update ledger (key token account) {
-        "guard" : new-guard
-      })
-    )
+    (enforce false "Please rotate your KDA account")
   )
 
 
@@ -499,11 +426,8 @@
     (enforce-valid-transfer sender receiver (precision token) amount)
 
     (with-capability (TRANSFER token sender receiver amount)
-      (with-read ledger (key token receiver)
-        { "guard" := g }
-        (debit token sender amount)
-        (credit token receiver g amount)
-      )
+      (debit token sender amount)
+      (credit token receiver (empty-guard) amount)
     )
   )
 
@@ -519,15 +443,7 @@
          \ Fails if account exists and GUARD does not match. \
          \ Managed by 'TRANSFER' capability. "
 
-    (enforce (!= sender receiver)
-      "sender cannot be the receiver of a transfer"
-    )
-    (enforce-valid-transfer sender receiver (precision token) amount)
-
-    (with-capability (TRANSFER token sender receiver amount)
-      (debit token sender amount)
-      (credit token receiver receiver-guard amount)
-    )
+    (transfer token sender receiver amount)
   )
 
   (defun debit:string
@@ -536,7 +452,7 @@
       amount:decimal
     )
 
-    (require-capability (DEBIT token account))
+    (require-capability (DEBIT token account amount))
 
     (enforce-unit token amount)
 
@@ -558,17 +474,19 @@
       amount:decimal
     )
 
-    (require-capability (CREDIT token account))
+    (require-capability (CREDIT token account amount))
 
     (enforce-unit token amount)
 
-    (create-account-maybe token account guard)
-
-    (with-read ledger (key token account)
+    (with-default-read ledger (key token account)
+      { "balance" : 0.0 }
       { "balance" := balance }
-
-      (update ledger (key token account)
-        { "balance" : (+ balance amount) }
+      (write ledger (key token account)
+        { "token" : token,
+          "account" : account,
+          "balance" : (+ balance amount),
+          "guard": (empty-guard)
+        }
       )
     )
   )
