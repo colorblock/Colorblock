@@ -1,9 +1,9 @@
 from flask import current_app as app
 from datetime import datetime
+import subprocess
 import requests
 import hashlib
 import json
-import yaml
 import time
 import os
 
@@ -73,29 +73,41 @@ def local_req(local_cmd):
     app.logger.debug('return data: {}'.format(return_data))
     return return_data
 
-def build_unsigned_send_cmd(pact_code, pact_data={}, cmd_config={}, output_path=''):
+def add_manager_sig(signed_cmd):
+    result = subprocess.run(['pact', 'add-sig', '../../instance/keys-colorful.yaml'], stdout=subprocess.PIPE, text=True, input=json.dumps(signed_cmd))
+    app.logger.debug(result)
+
+def build_unsigned_send_cmd(pact_code, pact_data={}, cmd_config={}):
     config = app.config['CHAINWEB']
+    modules = get_module_names()
+    accounts = get_accounts()
+
+    gas_cap = {
+        'name': modules['colorblock-gas-payer'],
+        'args': ['hi', {'int': 1}, 1.0]
+    }
+    manager_sig = {
+        'public': app.config['COLORBLOCK_CUTE']['public'],
+        'caps': [],
+    }
     cmd = {
-        'networkId': config['NETWORK'],
+        'networkId': cmd_config.get('network_id', config['NETWORK_ID']),
         'signers': [{
-            'public': cmd_config['public_key'],
-            'caps': cmd_config['capabilities'],
-        }],
+            'public': cmd_config.get('public_key', ''),
+            'caps': cmd_config.get('capabilities', []) + [gas_cap],
+        }] + [manager_sig],
         'data': pact_data,
         'code': pact_code,
         'publicMeta': {
-            'ttl': 7200,
-            'gasLimit': cmd_config['gas_limit'],
-            'gasPrice': cmd_config['gas_price'],
-            'chainId': config['CHAIN_ID'],
-            'sender': cmd_config['sender'],
+            'ttl': cmd_config.get('ttl', config['TTL']),
+            'gasLimit': cmd_config.get('gas_limit', config['GAS_LIMIT']),
+            'gasPrice': cmd_config.get('gas_price', config['GAS_PRICE']),
+            'chainId': cmd_config.get('chain_id', config['CHAIN_ID']),
+            'sender': cmd_config.get('sender', accounts['gas-payer']),
         },
     }
-    
-    with open(output_path, 'w') as outfile:
-        yaml.dump(cmd, outfile, default_flow_style=False)
 
-    return 'success'
+    return cmd
 
 def build_local_cmd(pact_code, pact_data={}):
     config = app.config['CHAINWEB']
@@ -114,7 +126,7 @@ def build_local_cmd(pact_code, pact_data={}):
             'chainId': config['CHAIN_ID'],
             'sender': 'COLORBLOCK',
         },
-        'networkId': config['NETWORK'],
+        'networkId': config['NETWORK_ID'],
         'signers': [],
         'nonce': str(datetime.now()),
     }
