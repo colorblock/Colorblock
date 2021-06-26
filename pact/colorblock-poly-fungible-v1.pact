@@ -2,7 +2,7 @@
 
 (namespace (read-msg 'ns))
 
-(interface poly-fungible-v1
+(interface colorblock-poly-fungible-v1
 
   (defschema account-details
     @doc

@@ -15,12 +15,14 @@
   "jack-keyset": {"keys": ["jack"]},
   "upgrade": false
 })
-(load "../../poly-fungible-v1.pact")
-
-(load "../../fungible-util.pact")
-
 (load "../../coin/fungible-v1.pact")
 (load "../../coin/coin.pact")
+(load "../../test/colorblock-poly-fungible-v1-test.pact")
+
+(load "../../test/colorblock-fungible-util-test.pact")
+
 (load "../../test/colorblock-test.pact")
 
 (commit-tx)
+
+(print (format "Colorblock module hash: {}" [(at 'hash (describe-module "test.colorblock-test"))]))

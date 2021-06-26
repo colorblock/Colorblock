@@ -1,6 +1,6 @@
 codeFile: "../../test/colorblock-gas-station-test.pact"
 publicMeta:
-  chainId: "0"
+  chainId: "7"
   sender: "colorblock-admin-test"
   gasLimit: 10000
   gasPrice: 0.00000001

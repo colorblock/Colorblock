@@ -1,6 +1,6 @@
 (namespace (read-msg 'ns))
 
-(module fungible-util GOVERNANCE
+(module colorblock-fungible-util GOVERNANCE
 
   (defcap GOVERNANCE () true)
 

@@ -24,6 +24,8 @@
           \   intervals: the intervals to control gif presentaion, in seconds, fixed \
           \   creator: the creator account of item, fixed \
           \   supply: the supply amount of item, fixed \
+          \   urls: the urls for displaying item, variable \
+          \   verifier: the address of verifier who confirms the accurancy of urls, variable \
           \   valid-hash: hash by item colors, used to check duplication, unique, fixed "
 
     title:string
@@ -34,6 +36,8 @@
     intervals:[decimal]
     creator:string
     supply:decimal
+    urls:[string]
+    verifier:string
     valid-hash:string
   )
 
@@ -299,6 +303,29 @@
       creator:string 
       amount:decimal
     )
+    (create-item-with-verifier token title colors rows cols frames intervals creator amount [] "")
+  )
+
+  (defun create-item-with-verifier
+    ( token:string
+      title:string 
+      colors:string
+      rows:integer
+      cols:integer
+      frames:integer
+      intervals:[decimal]
+      creator:string 
+      amount:decimal
+      urls:[string]
+      verifier:string
+    )
+
+    ; auth of verifier
+    (if
+      (> 0 (length urls))
+      (enforce-guard (at 'guard (coin.details verifier)))
+      ""
+    )
 
     ; Validate base infomations
     (enforce
@@ -339,6 +366,8 @@
           "intervals" : intervals,
           "creator": creator, 
           "supply": amount,
+          "urls": urls,
+          "verifier": verifier,
           "valid-hash": valid-hash
         })
         ; Credit creator certain amount
@@ -347,8 +376,12 @@
     )
   )
 
-  (defun item-details:{item-schema} (id:string)
+  (defun item-details-full:{item-schema} (id:string)
     (read items id)
+  )
+
+  (defun item-details:object (item:object{colorblock-poly-fungible-v1-test.account-details})
+    (take ['title, 'creator, 'supply, 'urls, 'verifier] item)
   )
 
 
@@ -397,6 +430,10 @@
       account:string
     )
     (read ledger (key token account))
+  )
+
+  (defun all-items:list (account:string)
+    (map (item-details) (select ledger (where 'account (= account))))
   )
 
   (defun rotate:string

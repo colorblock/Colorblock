@@ -6,31 +6,34 @@
       \2. supporting pricing and trading efficiently. "
 
   (use coin [ details ])
-  (use colorblock)
+  (use colorblock "Lb1eL_5WLesufHYftlr8tZErwn0SRkv09BlsTbO6k44")
 
   ; -------------------------------------------------------
   ; Schemas and Tables
 
-  (defschema deal-schema
-    @doc  " Record every deal of token in market \
+  (defschema item-deposit-schema
+    @doc  " Record deposit of colorblock item into pool \
           \ Column definitions: \
-          \   @key: the combined key token:account for index \
-          \   token: the token asset id \
-          \   seller: current seller \
-          \   price: item price \
-          \   total: total amount \
-          \   remain: remain amount \
-          \   open: true - open, false - close "
+          \   @key: the combined key token:account \
+          \   token: the token id \
+          \   account: owner of deposit \
+          \   amount: deposit amount of item "
     token:string
-    seller:string
-    price:decimal
-    total:decimal
-    remain:decimal
-    open:bool
+    account:string
+    amount:decimal
   )
 
-  (deftable deals:{deal-schema})
+  (deftable item-deposits:{item-deposit-schema})
 
+  (defschema coin-deposit-schema
+    @doc  " Record deposit of KDA coin into pool \
+          \ Column definitions: \
+          \   @key: account, the owner of deposit \
+          \   amount: deposit amount of coin "
+    amount:decimal
+  )
+
+  (deftable coin-deposits:{coin-deposit-schema})
 
   ; -------------------------------------------------------
   ; Capabilities
@@ -40,24 +43,32 @@
     (enforce-guard (at 'guard (coin.details "colorblock-admin")))
   )
 
-  (defcap RELEASE:bool 
+  (defcap MANAGER ()
+    @doc " Only support executed by manager "
+    (enforce-guard (at 'guard (coin.details COLORBLOCK_MARKET_MANAGER)))
+  )
+
+  (defcap AUTH-M:bool (account:string)
+    @doc " Enforce requester having the ownership of account in KDA network. \
+         \ Add M to distinguish from colorblock.AUTH "
+    (enforce-guard (at 'guard (coin.details account)))
+  )
+
+  (defcap DEPOSIT-ITEM:bool 
     ( token:string
-      seller:string 
-      price:decimal
+      account:string 
       amount:decimal
     )
-    @doc "Notifies release of TOKEN owned by SELLER, partially or fully"
-    @event
+    @doc "Validate capabilities for deposit TOKEN "
+    @managed amount AMOUNT-mgr
 
-    (enforce 
-      (< 0.0 price)
-      "Price must larger than zero"
-    )
-    (valid-price-precision price)
+    (compose-capability (MANAGER))
+    (compose-capability (AUTH-M account))
+
     (enforce-unit token amount)
 
     (let 
-      ((balance (colorblock.get-balance token seller)))
+      ((balance (colorblock.get-balance token account)))
       (enforce 
         ( > 
           balance
@@ -73,28 +84,74 @@
         "Amount must not exceed balance"
       )
     )
-    (with-default-read deals (key token seller)
-      { "open" : false }
-      { "open" := open }
-      (enforce
-        (= false open)
-        "Item is already on sale"
+  )
+
+  (defcap DEPOSIT-COIN:bool 
+    ( account:string 
+      amount:decimal
+    )
+    @doc "Validate capabilities for deposit KDA coin "
+    @managed amount AMOUNT-mgr
+
+    (compose-capability (MANAGER))
+    (compose-capability (AUTH-M account))
+
+    (let 
+      ((balance (coin.get-balance account)))
+      (enforce 
+        ( > 
+          balance
+          0.0
+        )
+        "Seller has no balance of this token"
+      )
+      (enforce 
+        ( <= 
+          amount
+          balance
+        )
+        "Amount must not exceed balance"
       )
     )
   )
 
-  (defcap RECALL:bool 
+  (defcap WITHDRAWL-ITEM:bool 
     ( token:string
-      seller:string 
+      account:string
+      amount:decimal
     )
-    @doc "Notifies recall of TOKEN owned by SELLER"
-    @event
+    @doc "Validate capabilities for withdrawl item "
+    @managed amount AMOUNT-mgr
 
-    (with-read deals (key token seller)
-      { "open" := open }
+    (compose-capability (MANAGER))
+    (compose-capability (AUTH-M account))
+
+    (enforce-unit token amount)
+
+    (with-read item-deposits (key token account)
+      { "amount" := remaining }
       (enforce
-        (= true open)
-        "Deal status is closed"
+        (<= amount remaining )
+        "Withdrawl amount can not exceed deposit remaining amount"
+      )
+    )
+  )
+
+  (defcap WITHDRAWL-COIN:bool 
+    ( account:string
+      amount:decimal
+    )
+    @doc "Validate capabilities for withdrawl KDA coin "
+    @managed amount AMOUNT-mgr
+
+    (compose-capability (MANAGER))
+    (compose-capability (AUTH-M account))
+
+    (with-read coin-deposits account
+      { "amount" := remaining }
+      (enforce
+        (<= amount remaining )
+        "Withdrawl amount can not exceed deposit remaining amount"
       )
     )
   )
@@ -103,34 +160,47 @@
     ( token:string
       buyer:string 
       seller:string
-      price:decimal
       amount:decimal
+      payment:decimal
+      fees:decimal
     )
-    @doc "Notifies purchase of TOKEN from SELLER to BUYER"
-    @event
+    @doc "Validate capabilities for purchase token "
+    @managed amount AMOUNT-mgr
+
+    (compose-capability (MANAGER))
+    (compose-capability (AUTH-M buyer))
+    (compose-capability (CREDIT-ITEM buyer))
 
     (enforce-unit token amount)
-    (with-read deals (key token seller)
-      { "remain" := remain,
-        "open" := open,
-        "price" := sale-price
-      }
+    (with-read item-deposits (key token seller)
+      { "amount" := remaining }
       (enforce
-        (= sale-price price)
-        "Purchase price must equal sale-price"
-      )
-      (enforce
-        (<= amount remain)
-        "Purchase amount cannot be larger than remain amount"
+        (<= amount remaining)
+        "Purchase amount cannot exceed remaining amount"
       )
       (enforce
         (!= seller buyer)
         "Buyer cannot be seller"
       )
-      (enforce
-        (= true open)
-        "Deal status is closed"
+    )
+  )
+
+  (defcap CREDIT-ITEM (account:string)
+    @doc " Required capability in PURCHASE "
+    true
+  )
+
+  (defun AMOUNT-mgr:decimal
+    ( managed:decimal
+      requested:decimal
+    )
+    @doc " Manages ACTIONS cap AMOUNT where MANAGED is the installed quantity \
+         \ and REQUESTED is the quantity attempting to be granted."
+    (let ((newbal (- managed requested)))
+      (enforce (>= newbal 0.0)
+        (format "ACTION exceeded for balance {}" [managed])
       )
+      newbal
     )
   )
 
@@ -139,158 +209,149 @@
   ; Constants
 
   (defconst COLORBLOCK_MARKET_POOL "colorblock-market-pool"
-    "The official account of colorblock market pool"
+    "The official account as transfer station "
   )
-
-  (defconst FEES_RATE 0.01
-    "The rate of fees that platform taking"
-  )
-
-  (defconst PRICE_PRECISION 12
-    "The precision of sale price"
-  )
-
-  ; -------------------------------------------------------
-  ; Constants
-
-  (defun valid-price-precision (amount:decimal)
-    (enforce
-      (= (floor amount PRICE_PRECISION) amount)
-      "precision violation"
-    )
+  (defconst COLORBLOCK_MARKET_MANAGER "colorblock-market-manager"
+    "The official account as fees receiver and also command sender "
   )
 
 
   ; -------------------------------------------------------
-  ; Marketing Functions
+  ; Deposit Functions
 
-  (defun colorblock-market-guard ()
-    (create-module-guard 'colorblock-market-guard)
-  )
-
-  (defun release:string
+  (defun deposit-item:string
     ( token:string
       account:string
-      price:decimal
       amount:decimal
     )
-    @doc " Release item for sale."
-    (with-capability (RELEASE token account price amount)
-      ; Transfer token to platform
+    (with-capability (DEPOSIT-ITEM token account amount)
+      ; Transfer token to pool
       (install-capability (colorblock.TRANSFER token account COLORBLOCK_MARKET_POOL amount))
       (colorblock.transfer-create token account COLORBLOCK_MARKET_POOL (colorblock-market-guard) amount)
-      (write deals (key token account) {
-        "token" : token,
-        "seller" : account,
-        "price" : price,
-        "total" : amount,
-        "remain" : amount,
-        "open" : true
-      })
-    )
-  )
-
-  (defun recall:string
-    ( token:string
-      account:string
-    )
-    @doc " Recall item and stop selling."
-    (with-capability (RECALL token account)
-      (let* 
-        (
-          (deal (read deals (key token account)))
-          (remain-amount (at 'remain deal))
-        )
-        ; Check ownership
-        (install-capability (colorblock.AUTH token account))
-        (validate-ownership token account)
-
-        ; Transfer token back
-        (if
-          (>
-            remain-amount
-            0.0
-          )
-          [
-            (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL account remain-amount))
-            (colorblock.transfer token COLORBLOCK_MARKET_POOL account remain-amount)
-          ]
-          "no need to transfer token"
-        )
-        (update deals (key token account) {
-          "total": 0.0,
-          "remain": 0.0,
-          "open": false
+      ; Update ledger
+      (with-default-read item-deposits (key token account)
+        { "amount" : 0.0 }
+        { "amount" := existed }
+        (write item-deposits (key token account) {
+          "token" : token,
+          "account" : account,
+          "amount" : (+ existed amount)
         })
       )
     )
   )
 
-  (defun purchase-new-account:string
-    ( token:string
-      buyer:string
-      seller:string
-      price:decimal
-      amount:decimal
-      guard:guard
-    )
-    @doc " Create account and purchase item"
-    (colorblock.create-account-maybe token buyer guard)
-    (purchase token buyer seller price amount)
-  )
-
-  (defun purchase:string 
-    ( token:string
-      buyer:string
-      seller:string
-      price:decimal
+  (defun deposit-coin:string
+    ( account:string
       amount:decimal
     )
-    @doc " Purchase item."
-
-    ; validate receiver first
-    (install-capability (colorblock.AUTH token buyer))
-    (validate-ownership token buyer)
-
-    (with-capability (PURCHASE token buyer seller price amount)
-      (with-read deals (key token seller)
-        { "remain" := remain-amount
-        }
-        (let* 
-          (
-            (payment (* price amount))
-            (fees (* FEES_RATE payment))
-            (total-pay (+ fees payment))
-            (balance (coin.get-balance buyer))
-            (left-amount (- remain-amount amount))
-          )
-          (enforce 
-            (<= total-pay balance)
-            "Insufficient balance"
-          )
-          (install-capability (coin.TRANSFER buyer seller payment))
-          (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET_POOL fees))
-          (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL buyer amount))
-          (coin.transfer buyer seller payment)
-          (coin.transfer buyer COLORBLOCK_MARKET_POOL fees)
-          (colorblock.transfer token COLORBLOCK_MARKET_POOL buyer amount)
-          (update deals (key token seller) {
-            "remain": left-amount
-          })
-          (if
-            (= 0.0 left-amount)
-            (update deals (key token seller) {
-              "open": false
-            })
-            "no need to close deal"
-          )
-        )
+    (with-capability (DEPOSIT-COIN account amount)
+      ; Transfer coin to pool
+      (install-capability (coin.TRANSFER account COLORBLOCK_MARKET_POOL amount))
+      (coin.transfer account COLORBLOCK_MARKET_POOL amount)
+      ; Update ledger
+      (with-default-read coin-deposits account
+        { "amount" : 0.0 }
+        { "amount" := existed }
+        (write coin-deposits account {
+          "amount" : (+ existed amount)
+        })
       )
     )
   )
 
-  (defun item-sale-status:{deal-schema} (token:string account:string)
-    (read deals (key token account))
+  (defun withdrawl-item:string
+    ( token:string
+      account:string
+      amount:decimal
+    )
+
+    (with-capability (WITHDRAWL-ITEM token account amount)
+
+      ;(colorblock.valid-own-item token account)
+      ; Update ledger
+      (with-default-read item-deposits (key token account)
+        { "amount" : 0.0 }
+        { "amount" := existed }
+        (write item-deposits (key token account) {
+          "token" : token,
+          "account" : account,
+          "amount" : (- existed amount)
+        })
+      )
+      ; Transfer token from pool to account
+      (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL account amount))
+      (colorblock.transfer token COLORBLOCK_MARKET_POOL account amount)
+    )
+  )
+
+  (defun withdrawl-coin:string
+    ( account:string
+      amount:decimal
+    )
+    (with-capability (WITHDRAWL-COIN account amount)
+      ; Update ledger
+      (with-default-read coin-deposits account
+        { "amount" : 0.0 }
+        { "amount" := existed }
+        (write coin-deposits account {
+          "amount" : (- existed amount)
+        })
+      )
+      ; Transfer coin from pool to account
+      (install-capability (coin.TRANSFER COLORBLOCK_MARKET_POOL account amount))
+      (coin.transfer COLORBLOCK_MARKET_POOL account amount)
+    )
+  )
+
+  (defun credit-item:string
+    ( token:string
+      sender:string
+      receiver:string
+      amount:decimal
+    )
+    (require-capability (CREDIT-ITEM receiver))
+
+    ; Update ledger
+    (with-default-read item-deposits (key token sender)
+      { "amount" : 0.0 }
+      { "amount" := existed }
+      (write item-deposits (key token sender) {
+        "token" : token,
+        "account" : sender,
+        "amount" : (- existed amount)
+      })
+    )
+    ; Transfer token from pool to receiver
+    (install-capability (colorblock.TRANSFER token COLORBLOCK_MARKET_POOL receiver amount))
+    (colorblock.transfer token COLORBLOCK_MARKET_POOL receiver amount)
+  )
+
+  (defun purchase:string
+    ( token:string
+      buyer:string
+      seller:string
+      amount:decimal
+      payment:decimal
+      fees:decimal
+    )
+    @doc " Create ledger and purchase item. "
+
+    (with-capability (PURCHASE token buyer seller amount payment fees)
+      (install-capability (coin.TRANSFER buyer seller payment))
+      (install-capability (coin.TRANSFER buyer COLORBLOCK_MARKET_MANAGER fees))
+      (coin.transfer buyer seller payment)
+      (coin.transfer buyer COLORBLOCK_MARKET_MANAGER fees)
+      (credit-item token seller buyer amount)
+    )
+  )
+
+  
+  (defun item-deposit-details (token:string account:string)
+    (read item-deposits (key token account))
+  )
+  (defun coin-deposit-details (account:string)
+    (read coin-deposits account)
   )
 
 
@@ -302,21 +363,27 @@
     (coin.create-account COLORBLOCK_MARKET_POOL (colorblock-market-guard))
   )
 
-  (defun deal-details (key:string)
-    (read deals key)
+  (defun colorblock-market-guard ()
+    (create-module-guard 'colorblock-market-guard)
   )
+
 
   ; -------------------------------------------------------
   ; Transaction Logs
-  (defun deals-txlog (tx-id:integer)
-    (map (at 'key) (txlog deals tx-id))
+  (defun item-deposits-txlog (tx-id:integer)
+    (map (at 'key) (txlog item-deposits tx-id))
   )
+  (defun coin-deposits-txlog (tx-id:integer)
+    (map (at 'key) (txlog coin-deposits tx-id))
+  )
+
   (defun all-txlog (tx-id:integer)
     {
       "tx-id": tx-id,
       "items": (colorblock.items-txlog tx-id),
       "ledger": (colorblock.ledger-txlog tx-id),
-      "deals": (deals-txlog tx-id)
+      "item-deposits": (item-deposits-txlog tx-id),
+      "coin-deposits": (coin-deposits-txlog tx-id)
     }
   )
   (defun all-txlogs (tx-ids:[decimal])
@@ -329,7 +396,8 @@
 (if (read-msg "upgrade")
   ["upgrade"]
   [
-    (create-table deals)
+    (create-table item-deposits)
+    (create-table coin-deposits)
     (init-market-account)
   ]
 )
