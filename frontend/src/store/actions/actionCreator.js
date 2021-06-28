@@ -161,6 +161,13 @@ export const setAddressList = (keyList) => {
   };
 };
 
+export const setWallet = (wallet) => {
+  return {
+    type: types.SET_WALLET,
+    wallet
+  };
+};
+
 export const setAccountAddress = (address) => {
   return {
     type: types.SET_ACCOUNT_ADDRESS,
@@ -169,14 +176,22 @@ export const setAccountAddress = (address) => {
 };
 
 // root
-export const showLoading = () => {
+export const showLoading = (text=null) => {
   return {
-    type: types.SHOW_LOADING
+    type: types.SHOW_LOADING,
+    text
   };
 };
 
 export const hideLoading = () => {
   return {
     type: types.HIDE_LOADING
+  };
+};
+
+// extension
+export const createBaseMsg = () => {
+  return {
+    source: 'colorblock.webpage'
   };
 };

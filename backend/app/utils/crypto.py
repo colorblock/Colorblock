@@ -1,20 +1,25 @@
+from flask import current_app as app
 from hashlib import blake2b
 from datetime import datetime
 import base64
 import codecs
+import shortuuid
 
-def hash_id(input_str):
-    h = blake2b(digest_size=8)
-    input_bytes = str.encode(input_str)
-    h.update(input_bytes)
-    return h.hexdigest()
+def hash_id(key):
+    return shortuuid.uuid(key)
 
-def check_hash(input_str, id):
-    return hash_id(input_str) == id
+def hash_item_id(key):
+    prefix = app.config['ITEM_ID_PREFIX']
+    return prefix + shortuuid.uuid(key)
+
+def check_hash(key, id):
+    return hash_id(key) == id
+
+def check_item_hash(key, id):
+    return hash_item_id(key) == id
 
 def random():
-    now = datetime.now().strftime('%Y%m%d-%H:%M:%S')
-    return hash_id(now)
+    return shortuuid.uuid()
 
 def base64_to_string(b):
     return base64.urlsafe_b64decode(b + '==').decode('utf-8')

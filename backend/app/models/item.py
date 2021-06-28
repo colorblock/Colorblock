@@ -19,7 +19,7 @@ class Item(db.Model):
     created_at: str
     updated_at: str
 
-    id = db.Column(db.String, primary_key=True)
+    id = db.Column(db.String, primary_key=True)  # Format: CB + uuid
     title = db.Column(db.String)
     type = db.Column(db.Integer)
     tags = db.Column(db.String)

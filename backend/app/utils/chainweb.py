@@ -9,7 +9,7 @@ def fetch_latest_block(chain_id):
     return: { height, hash }
     '''
     config = app.config['CHAINWEB']
-    url = '{}/chainweb/0.0/{}/cut'.format(config['HOST'], config['NETWORK'])
+    url = '{}/chainweb/0.0/{}/cut'.format(config['HOST'], config['NETWORK_ID'])
     res = requests.get(url)
     data = res.json()
     block = data['hashes'][str(chain_id)]
@@ -25,7 +25,7 @@ def fetch_previous_blocks(block_hash, limit=10):
     }]
     '''
     config = app.config['CHAINWEB']
-    url = '{}/chainweb/0.0/{}/chain/{}/header/branch'.format(config['HOST'], config['NETWORK'], config['CHAIN_ID'])
+    url = '{}/chainweb/0.0/{}/chain/{}/header/branch'.format(config['HOST'], config['NETWORK_ID'], config['CHAIN_ID'])
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json;blockheader-encoding=object'
@@ -59,7 +59,7 @@ def fetch_payloads(blocks):
     }]
     '''
     config = app.config['CHAINWEB']
-    url = '{}/chainweb/0.0/{}/chain/{}/payload/outputs/batch'.format(config['HOST'], config['NETWORK'], config['CHAIN_ID'])
+    url = '{}/chainweb/0.0/{}/chain/{}/payload/outputs/batch'.format(config['HOST'], config['NETWORK_ID'], config['CHAIN_ID'])
     headers = {
         'Content-Type': 'application/json',
     }

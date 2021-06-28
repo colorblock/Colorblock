@@ -35,3 +35,6 @@ def get_pixel():
 @tool_blueprint.route('/latest_height')
 def get_latest_block_height():
     return fetch_latest_block(0)
+
+def get_image_type(frames):
+    return 'gif' if frames > 1 else 'png'

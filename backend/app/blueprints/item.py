@@ -1,23 +1,27 @@
 from flask import Blueprint, request, session, current_app as app, jsonify
+import cloudinary.uploader
+import boto3
 import json
 
 from app import db
+from app.blueprints.tool import get_image_type
 from app.models.collectible import Collectible
 from app.models.collection import Collection
 from app.models.item import Item
-from app.models.ledger import Ledger
+from app.models.asset import Asset
 from app.models.mint import Mint
 from app.models.release import Release
 from app.models.recall import Recall
 from app.models.purchase import Purchase
 
-from app.blueprints.admin.routine import update_item, update_ledger
+from app.blueprints.admin.routine import update_item, update_asset
+from app.utils.pact_lang_api import fetch_listen, mk_cap, mk_meta, prepare_exec_cmd, send_signed, sign, verify
 from app.utils.render import generate_image_from_item
 from app.utils.crypto import check_hash, hash_id
-from app.utils.pact import send_req
-from app.utils.tools import jsonify_data
+from app.utils.pact import get_accounts, get_module_names, send_req
+from app.utils.tools import current_timestamp, current_utc_string, jsonify_data
 from app.utils.response import get_error_response, get_success_response
-from app.utils.security import login_required, validate_account
+from app.utils.security import get_current_public_key, get_current_user, login_required, validate_account
 
 item_blueprint = Blueprint('item', __name__)
 
@@ -47,8 +51,8 @@ def get_latest_items():
 
 @item_blueprint.route('/<item_id>/is-owned-by/<user_id>', methods=['GET'])
 def get_item_is_owned_by(item_id, user_id):
-    ledger_id = '{}:{}'.format(item_id, user_id)
-    asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+    asset_id = '{}:{}'.format(item_id, user_id)
+    asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
     result = {
         'result': True if asset else False
     }
@@ -75,72 +79,140 @@ def get_item_log(item_id):
     log['purchases'] = jsonify_data(purchases)
     return jsonify(log)
 
-@item_blueprint.route('/', methods=['POST'])
+@item_blueprint.route('/prepare', methods=['POST'])
 @login_required
-def submit_item():
+def prepare_item():
     post_data = request.json
-
-    # add item type, strip supply
-    cmd = json.loads(post_data['cmds'][0]['cmd'])
-    item_data = cmd['payload']['exec']['data']
-    item_data['type'] = 0 if item_data['frames'] == 1 else 1  # just 1 frame -> static -> type 0
-    item_data['supply'] = int(item_data['supply'])
-    app.logger.debug('item_data: {}'.format([v for k, v in item_data.items() if k != 'colors']))
-
-    # validate account
-    user_valid_result = validate_account(item_data['account'])
-    if user_valid_result['status'] != 'success':
-        return user_valid_result
-
-    # validate item
-    item_valid_result = validate_item(item_data)
+    env_data = post_data['envData']
+    item_id = env_data['id']
+    user_id = get_current_user()
+    public_key = get_current_public_key()
+    
+    modules = get_module_names()
+    accounts = get_accounts()
+    verifier_account = accounts['verifier']
+    
+    item_valid_result = validate_item(env_data)
     if item_valid_result['status'] != 'success':
         return item_valid_result
-
+    
     # create image
     try:
-        generate_image_from_item(item_data)
+        file_path = generate_image_from_item(env_data)
+        file_name = file_path.split('/')[-1]
     except Exception as e:
         app.logger.exception(e)
         return get_error_response('generage image error: {}'.format(e))
 
-    # submit item to pact server
-    result = send_req(post_data)
-        
-    if result['status'] == 'success':
-        item_id = item_data['id']
-        item_info = {
-            'tags': post_data['tags'],
-            'description': post_data['description'],
-        }
-        update_item(item_id, item_info)
-        ledger_id = '{}:{}'.format(item_data['id'], item_data['account'])
-        update_ledger(ledger_id)
-        
-        if post_data.get('collection'):
-            # update collectible
-            collection = post_data['collection']
-            collection_id = collection['id']
-            collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
-            collectible = Collectible(
-                id=collectible_id,
-                item_id=item_id,
-                collection_id=collection_id
-            )
-            db.session.add(collectible)
-            db.session.commit()
+    # upload image
+    upload_result = cloudinary.uploader.upload(file_path, public_id=item_id)
+    app.logger.debug('upload result: {}'.format(upload_result))
+    cloudinary_url = upload_result['secure_url']
+    cloudfront_url = '{}/{}'.format(app.config['CLOUDFRONT_HOST'], file_name)
+    urls = [cloudfront_url, cloudinary_url]
+    # add into env_data
+    env_data['urls'] = urls
+    env_data['verifier'] = verifier_account
 
-            collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
-            if not collection_db:
-                collection = Collection(
-                    id=collection_id,
-                    title=collection['title'],
-                    user_id=collection['user_id'],
-                )
-                db.session.add(collection)
-                db.session.commit()
+    pact_code = '({}.create-item-with-verifier "{}" (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") "{}" (read-decimal "supply") (read-msg "urls") "{}")'.format(modules['colorblock'], item_id, user_id, verifier_account)
+    key_pairs = [{
+        'public_key': app.config['VERIFIER']['public_key'],
+        'secret_key': app.config['VERIFIER']['secret_key'],
+        'clist': [
+            mk_cap('gas', 'pay gas', '{}.GAS_PAYER'.format(modules['colorblock-gas-payer']), ['colorblock-gas', {'int': 1.0}, 1.0])['cap'],
+            mk_cap('mint', 'mint item', '{}.MINT'.format(modules['colorblock']), [item_id, user_id, env_data['supply']])['cap'],
+        ]
+    }, {
+        'public_key': public_key,
+        'clist': [
+            mk_cap('gas', 'pay gas', '{}.GAS_PAYER'.format(modules['colorblock-gas-payer']), ['colorblock-gas', {'int': 1.0}, 1.0])['cap'],
+            mk_cap('mint', 'mint item', '{}.MINT'.format(modules['colorblock']), [item_id, user_id, env_data['supply']])['cap'],
+        ]
+    }]
+    if post_data['onSale']:
+        pact_code += '({}.release "{}" "{}" (read-decimal "price") (read-decimal "amount"))'.format(modules['colorblock_market'], item_id, user_id)
+        for key_pair in key_pairs:
+            cap = mk_cap('release', 'release item', '{}.TRANSFER'.format(modules['colorblock-market']), [item_id, user_id, accounts['market-pool'], env_data['amount']])['cap']
+            key_pair['clist'].append(cap)
+
+    chainweb_config = app.config['CHAINWEB']
+    meta = mk_meta(accounts['gas-payer'], chainweb_config['CHAIN_ID'], chainweb_config['GAS_PRICE'], chainweb_config['GAS_LIMIT'], current_timestamp(), chainweb_config['TTL'])
+    partial_signed_cmd = prepare_exec_cmd(pact_code, env_data, key_pairs, current_utc_string(), meta, chainweb_config['NETWORK_ID'])
+    app.logger.debug('partial_signed_cmd, {}'.format(partial_signed_cmd))
+
+    return get_success_response(partial_signed_cmd)
+
+@item_blueprint.route('/', methods=['POST'])
+@login_required
+def submit_item():
+    post_data = request.json
+    signed_cmd = post_data['signedCmd']
+
+    # parse cmd
+    cmd = json.loads(signed_cmd['cmd'])
+    item_data = cmd['payload']['exec']['data']
+
+    # submit item to pact server
+    result = send_signed(signed_cmd, app.config['API_HOST'])
+    
+    if isinstance(result, dict):
+        listen_cmd = {
+            'listen': result['requestKeys'][0]
+        }
+        app.logger.debug('now listen to: {}'.format(listen_cmd))
+        result = fetch_listen(listen_cmd, app.config['API_HOST'])['result']
+        print(result)
+        app.logger.debug('result = {}'.format(result))
+        if result['status'] == 'success':
+            # upload to s3
+            try:
+                s3_client = boto3.client('s3')
+                object_name = '{}.{}'.format(item_data['id'], get_image_type(item_data['frames']))
+                file_name = 'app/static/img/{}'.format(object_name)
+                response = s3_client.upload_file(file_name, app.config['S3_BUCKET'], object_name)
+                app.logger.debug(response)
+            except Exception as e:
+                app.logger.error(e)
+                return get_error_response(str(e))
+
+            item_id = item_data['id']
+            item_info = {
+                'tags': post_data['tags'],
+                'description': post_data['description'],
+            }
+            update_item(item_id, item_info)
+            asset_id = '{}:{}'.format(item_data['id'], item_data['account'])
+            update_asset(asset_id)
             
-    return result
+            if post_data.get('collection'):
+                # update collectible
+                collection = post_data['collection']
+                collection_id = collection['id']
+                collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
+                collectible = Collectible(
+                    id=collectible_id,
+                    item_id=item_id,
+                    collection_id=collection_id
+                )
+                db.session.add(collectible)
+                db.session.commit()
+
+                collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
+                if not collection_db:
+                    collection = Collection(
+                        id=collection_id,
+                        title=collection['title'],
+                        user_id=collection['user_id'],
+                    )
+                    db.session.add(collection)
+                    db.session.commit()
+                
+            result['itemId'] = item_data['id']
+            return get_success_response(result)
+        else:
+            return get_error_response(result['error'])
+    else:
+        return get_error_response(result)
 
 def validate_item(item):
     # validate description

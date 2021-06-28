@@ -29,7 +29,7 @@ const UserList = (props) => {
               <div data-role='creator and price' className='h-8 flex users-end justify-between'>
                 <div>
                   <p className='text-xxs text-gray-500'>Creator</p>
-                  <p>{`${user.address.slice(0, 4)}....${user.address.slice(-4)}`}</p>
+                  <p>{user.address ? `${user.address.slice(0, 4)}....${user.address.slice(-4)}` : 'NULL'}</p>
                 </div>
                 <div className='text-right'>
                   <p className='text-xxs-r text-gray-500'>Balance</p>

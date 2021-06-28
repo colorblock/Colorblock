@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import { getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
 import { shortAddress } from '../../utils/polish';
-import { toPricePrecision, toAmountPrecision } from '../../utils/tool';
+import { toPricePrecision, toAmountPrecision } from '../../utils/tools';
 import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
 const AssetPage = (props) => {
@@ -21,6 +21,28 @@ const AssetPage = (props) => {
     amount: null
   });
   const [purchaseAmount, setPurchaseAmount] = useState(null);
+
+  const createSale = async () => {
+    const postData = {
+      item_id: asset.item.id,
+      public_key: wallet.address,
+      amount: 2
+    };
+    const result = await fetch(`${serverUrl}/sale/create/build`, mkReq(postData))
+      .then(res => res.json())
+      .catch(error => {
+        console.log(error);
+        toast.error(error.message);
+      });
+
+    console.log('get result', result);
+    if (result) {
+      toast.success('build successfully');
+      const cmd = result.data;
+      const signedCmd = await getSignedCmd(cmd);
+      console.log(signedCmd);
+    }
+  };
 
   const onRelease = async () => {
     if (!releaseData.price) {
@@ -85,6 +107,9 @@ const AssetPage = (props) => {
     if (!signedCmd) {
       return;
     }
+
+    showLoading();
+
     const result = await fetch(`${serverUrl}/asset/release`, signedCmd)
       .then(res => res.json())
       .catch(error => {
@@ -102,6 +127,8 @@ const AssetPage = (props) => {
         toast.error(result.data);
       }
     }
+
+    hideLoading();
   };
 
   const onRecall = async () => {
@@ -139,6 +166,9 @@ const AssetPage = (props) => {
     if (!signedCmd) {
       return;
     }
+
+    showLoading();
+
     const result = await fetch(`${serverUrl}/asset/recall`, signedCmd)
       .then(res => res.json())
       .catch(error => {
@@ -156,6 +186,8 @@ const AssetPage = (props) => {
         toast.error(result.data);
       }
     }
+
+    hideLoading();
   };
 
   const onPurchase = async () => {
@@ -278,6 +310,9 @@ const AssetPage = (props) => {
     if (!signedCmd) {
       return;
     }
+
+    showLoading();
+
     const result = await fetch(`${serverUrl}/asset/purchase`, signedCmd)
       .then(res => res.json())
       .catch(error => {
@@ -296,6 +331,8 @@ const AssetPage = (props) => {
         toast.error(result.data);
       }
     }
+
+    hideLoading();
   };
 
   useEffect(() => {
@@ -362,6 +399,13 @@ const AssetPage = (props) => {
             onClick={ () => onRelease() }
           >
             Release
+          </button>
+          
+          <button
+            className='px-3 py-2 bg-cb-pink text-white'
+            onClick={ () => createSale() }
+          >
+            Create sale
           </button>
         </div>
       }

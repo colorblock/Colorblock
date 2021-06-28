@@ -11,6 +11,7 @@ class User(db.Model):
 
     id: str
     address: str
+    public_key: str
     uname: str
     avatar: str
     profile: str
@@ -19,6 +20,7 @@ class User(db.Model):
 
     id = db.Column(db.String, primary_key=True)
     address = db.Column(db.String)
+    public_key = db.Column(db.String)
     uname = db.Column(db.String)
     avatar = db.Column(db.String)
     profile = db.Column(db.String)

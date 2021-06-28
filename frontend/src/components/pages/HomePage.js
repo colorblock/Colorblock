@@ -165,18 +165,33 @@ const HomePage = (props) => {
       <div data-role='view more' className='w-5/6 mx-auto my-20'>
         <a href='/market/items'><button className='w-full py-3 border rounded-xl shadow hover-gray'>View More</button></a>
       </div>
-      <div data-role='project highlight' className='w-5/6 mx-auto mt-40 flex justify-center text-center'>
-        <div className='w-1/3 px-10 leading-6'>
+      <div data-role='project highlight' className='w-5/6 mx-auto mt-8 flex justify-center text-center border-t pt-24'>
+        <div className='w-1/3 px-10 leading-6 flex flex-col items-center'>
+          <img src='/img/on_chain_icon.svg' className='w-10 mb-5' alt='on chain' />
           <p className='font-bold text-cb-pink mb-6 text-lg'>On-Chain</p>
           <p>All artwork associated with each NFT is stored and located on chain. All NFTs are deployed onto Kadena's braided multi-chain proof of work network.</p>
         </div>
-        <div className='w-1/3 px-10 leading-6'>
+        <div className='w-1/3 px-10 leading-6 flex flex-col items-center'>
+          <img src='/img/no_fee_mint_icon.svg' className='w-10 mb-5' alt='no fee' />
           <p className='font-bold text-cb-pink mb-6 text-lg'>No Fees</p>
           <p>Kadena's Gas Station feature allows ColorBlock to subsidize gas fees for users allowing for feeless minting! Never has it been easier to get started with NFTs on ColorBlock.</p>
         </div>
-        <div className='w-1/3 px-10 leading-6'>
+        <div className='w-1/3 px-10 leading-6 flex flex-col items-center'>
+          <img src='/img/polyfungibility_icon.svg' className='w-10 mb-5' alt='polyfungibility' />
           <p className='font-bold text-cb-pink mb-6 text-lg'>Polyfungible</p>
           <p>ColorBlock adopts KIP-0011, giving users the option of fractional ownership and custody of NFTs. Customize your NFT in our Creator!</p>
+        </div>
+      </div>
+      <div hidden>TODO: Learn more</div>
+      <div data-role='creator introduction' className='w-5/6 mx-auto flex justify-between mt-10 mb-28'>
+        <div className='w-2/3 flex flex-col pt-20'>
+          <p className='text-lg font-bold text-cb-pink py-10'>Create your NFTs in Colorblock Creator</p>
+          <p>Get started with NFTs on Colorblock by designing your own in Colorblock Creator. Use</p>
+          <p> Colorblock's suite of tools to design and deploy with no fees!</p>
+          <button className='w-40 py-2 my-10 bg-cb-pink border rounded-lg border-white text-white'>Get Started</button>
+        </div>
+        <div className='w-1/3'>
+          <img src='/img/banner_right.png' className='w-96' alt='banner right' />
         </div>
       </div>
     </div>

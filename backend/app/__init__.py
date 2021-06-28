@@ -2,12 +2,18 @@ from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_msearch import Search
+import cloudinary
+import cloudinary.uploader
 
 from flask.json import JSONEncoder
 from datetime import datetime
 import decimal
 
-db = SQLAlchemy()
+db = SQLAlchemy(engine_options={
+    'pool_size': 10,
+    'pool_recycle': 120,
+    'pool_pre_ping': True
+})
 search = Search()
 
 def create_app():
@@ -34,6 +40,12 @@ def create_app():
     db.init_app(app)
 
     search.init_app(app)
+    
+    cloudinary.config(
+        cloud_name = app.config['CLOUDINARY_NAME'],  
+        api_key = app.config['CLOUDINARY_KEY'],  
+        api_secret = app.config['CLOUDINARY_SECRET']  
+    )
 
     app.secret_key = app.config['SECRET_KEY']
     CORS(app, supports_credentials=True, resources={r'/*': {'origins': app.config['CORS_ORIGINS']}})
@@ -48,11 +60,11 @@ def create_app():
     app.register_blueprint(asset_blueprint, url_prefix='/asset')
     from app.blueprints.collection import collection_blueprint
     app.register_blueprint(collection_blueprint, url_prefix='/collection')
-    from app.blueprints.sale import sale_blueprint
-    app.register_blueprint(sale_blueprint, url_prefix='/sale')
-    from app.blueprints.project import project_blueprint
-    app.register_blueprint(colorful_blueprint, url_prefix='/colorful')
+    #from app.blueprints.sale import sale_blueprint
+    #app.register_blueprint(sale_blueprint, url_prefix='/sale')
     from app.blueprints.colorful import colorful_blueprint
+    app.register_blueprint(colorful_blueprint, url_prefix='/colorful')
+    from app.blueprints.project import project_blueprint
     app.register_blueprint(project_blueprint, url_prefix='/project')
     from app.blueprints.tool import tool_blueprint
     app.register_blueprint(tool_blueprint, url_prefix='/tool')

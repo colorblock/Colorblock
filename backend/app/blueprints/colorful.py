@@ -2,13 +2,11 @@ from flask import Blueprint, request, session, current_app as app, jsonify
 import json
 
 from app import db
-from app.blueprints.admin.routine import update_deal, update_asset
-from app.models.sale import Sale
-from app.models.user import User
-from app.models.asset import Asset
+import app.utils.pact_lang_api as pact
+
+import time
+
 from app.utils.response import get_error_response, get_success_response
-from app.utils.security import get_current_user, login_required
-from app.utils.pact import add_manager_sig, get_module_names, send_req, build_unsigned_send_cmd
 
 colorful_blueprint = Blueprint('colorful', __name__)
 
@@ -17,38 +15,40 @@ def create_wallet():
     post_data = request.json
     app.logger.debug('post_data: {}'.format(post_data))
             
-    # constants
-    modules = get_module_names()
-
-    item_id = post_data['item_id']
-    user_id = get_current_user()
-    amount = post_data['amount']
-    code = '(free.colorblock-market-test.deposit-item "{}" "{}" (read-decimal "amount"))'.format(item_id, user_id)
-
-    user = db.session.query(User).filter(User.id == user_id).first()
-    public_key = user.public_key
-    if not public_key:
-        return get_error_response('User has no public key')
-
-    cmd_config = {
-        'public_key': public_key,
-        'capabilities': [
-            {
-                'name': '{}.DEPOSIT-ITEM'.format(modules['colorblock-market']),
-                'args': [item_id, user_id, amount]
-            },
-        ],        
-        'gas_limit': 50000,
+    address = post_data['address']
+    public_key = post_data['public_key']
+    pact_code = '(coin.create-account "{}" (read-keyset "ks"))'.format(address)
+    env_data = {
+        'ks': {
+            'keys': [public_key],
+            'pred': 'keys-any',
+        }
     }
-    data = {
-        'amount': amount
-    }
+    key_pairs = [ app.config['COLORFUL'] ]
+    network_id = 'mainnet01'
+    chain_id = '0'
+    config = app.config['CHAINWEB']
+    meta = pact.mk_meta(key_pairs[0]['address'], config['CHAIN_ID'], config['GAS_PRICE'], config['GAS_LIMIT'], int(time.time()), config['TTL'])
+    cmd = pact.prepare_exec_cmd(pact_code, env_data, key_pairs=key_pairs, meta=meta, network_id=network_id)
 
-    unsigned_cmd = build_unsigned_send_cmd(code, pact_data=data, cmd_config=cmd_config)
-    app.logger.debug('unsigned_cmd: {}'.format(unsigned_cmd))
+    print(cmd)
 
-    signed_cmd = add_manager_sig(unsigned_cmd)
-    app.logger.debug('signed_cmd: {}'.format(signed_cmd))
+    result = pact.verify(cmd['hash'], cmd['sigs'][0]['sig'], key_pairs[0]['public_key'])
 
-    #send_req(signed_cmd)
-    return get_success_response(signed_cmd)
+    print(result)
+
+
+    api_host = 'https://api.chainweb.com/chainweb/0.0/{}/chain/{}/pact'.format(network_id, chain_id)
+    result = pact.send_signed(cmd, api_host)
+    print(result)
+
+    if isinstance(result, dict):
+        listen_cmd = {
+            'listen': result['requestKeys'][0]
+        }
+        app.logger.debug('now listen to: {}'.format(listen_cmd))
+        result = pact.fetch_listen(listen_cmd, api_host)
+        print(result)
+        return get_success_response(result)
+    else:
+        return get_error_response(result)

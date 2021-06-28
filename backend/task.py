@@ -4,7 +4,7 @@ import requests
 import time
 from datetime import datetime
 
-import instance.config as settings
+import config as settings
 
 class TaskBot:
 
@@ -59,6 +59,10 @@ class TaskBot:
         res = self.s.post(url)
         print(res.text)
 
+    def migrate(self):
+        url = 'http://localhost:5000/routine/migrate'
+        res = self.s.post(url)
+
 
 if __name__ == '__main__':
     bot = TaskBot()
@@ -69,5 +73,6 @@ if __name__ == '__main__':
         print('admin logged successfully')
     #bot.run()
     #bot.mint()
-    bot.index()
+    #bot.index()
     #bot.generate_images()
+    bot.migrate()

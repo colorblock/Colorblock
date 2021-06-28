@@ -20,3 +20,7 @@ export const toPricePrecision = (number) => {
 export const toAmountPrecision = (number) => {
   return toPrecision(number, precisionConfig.amountUnit);
 };
+
+export const getTimestamp = () => {
+  return Math.floor(new Date().getTime() / 1000);
+};

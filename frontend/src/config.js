@@ -24,13 +24,15 @@ export const contractModules = moduleInTest ? {
   colorblockMarket: 'free.colorblock-market-test',
   colorblockGasStation: 'free.colorblock-gas-station-test',
   marketPoolAccount: 'colorblock-market-pool-test',
-  gasPayerAccount: 'colorblock-gas-payer-test'
+  gasPayerAccount: 'colorblock-gas-payer-test',
+  verifierAccount: 'colorblock-admin-test',
 } : {
   colorblock: 'free.colorblock',
   colorblockMarket: 'free.colorblock-market',
   colorblockGasStation: 'free.colorblock-gas-station',
   marketPoolAccount: 'colorblock-market-pool',
-  gasPayerAccount: 'colorblock-gas-payer'
+  gasPayerAccount: 'colorblock-gas-payer',
+  verifierAccount: 'colorblock-admin'
 };
 
 export const precisionConfig = {
@@ -38,14 +40,15 @@ export const precisionConfig = {
   amountUnit: 0
 };
 
-export const signConfig = {
-  networkId: 'mainnet01',
-  chainId: '0',
-  gasPrice: 0.000000000001,
-  gasLimit: 150000,
-  minGasLimit: 1000,
-  gasLimitRate: 3.0
-};
+
+export const networkId = 'mainnet01';
+export const chainId = '7';
+export const apiHost = `https://api.chainweb.com/chainweb/0.0/${networkId}/chain/${chainId}/pact`;
+export const gasPrice = 0.000000000001;
+export const gasLimit = 150000;
+export const ttl = 600;
+export const minGasLimit = 1000;
+export const gasLimitRate = 3.0;
 
 export const itemConfig = {
   minSupply: 1,
@@ -68,6 +71,8 @@ export const marketConfig = {
 };
 
 export const creatorConfig = {
-  maxWidth: 16,
-  maxHeight: 16
+  maxWidth: 64,
+  maxHeight: 64
 };
+
+export const editorExtensionId = 'dddjfmamjmnlpmghgilbnmmjnppdkefm';

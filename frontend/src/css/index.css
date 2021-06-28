@@ -197,3 +197,6 @@ div[data-role='footer social links'] svg {
 div[data-role='footer social links'] svg:hover {
   fill: rgba(30, 162, 243, 1);
 }
+div[data-role='footer social links'] svg.github:hover {
+  fill: rgba(36, 41, 46, 1);
+}

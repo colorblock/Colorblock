@@ -13,7 +13,7 @@ def generate_image_from_item(item_data):
     intervals = item_data['intervals']
     id = item_data['id']
 
-    unit = 1
+    unit = max(int(100 / cols), 1)
     width = unit * cols
     height = unit * rows
 
@@ -43,14 +43,18 @@ def generate_image_from_item(item_data):
 
     first_img = img_list[0]
     if frames == 1:
-        first_img.save('app/static/img/{}.png'.format(id))
+        file_path = 'app/static/img/{}.png'.format(id)
+        first_img.save(file_path)
     else:
         app.logger.debug(intervals)
         for index, v in enumerate(intervals):
             if type(v) == dict:
                 intervals[index] = float(v['decimal'])
         intervals = [v * 1000 for v in intervals]
-        first_img.save('app/static/img/{}.gif'.format(id), save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
+        file_path = 'app/static/img/{}.gif'.format(id)
+        first_img.save(file_path, save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
+
+    return file_path
 
 def hex_to_rgba(hex):
     h = hex.lstrip('#')

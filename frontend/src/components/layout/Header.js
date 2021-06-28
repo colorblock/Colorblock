@@ -5,12 +5,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 
+import { switchWalletModal, setWallet, createBaseMsg } from '../../store/actions/actionCreator';
+import * as types from '../../store/actions/actionTypes';
 import { serverUrl } from '../../config';
 import { mkReq } from '../../utils/sign';
-import { switchWalletModal, setAccountAddress } from '../../store/actions/actionCreator';
+
 
 const Header = (props) => {
-  const { wallet, switchWalletModal, setAccountAddress } = props;
+  const { wallet, switchWalletModal, setWallet } = props;
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const userPopupEl = useRef(null);
 
@@ -33,25 +35,23 @@ const Header = (props) => {
     switchWalletModal();
   };
 
-  const logout = async () => {
-    setIsUserPopupOpen(false);
-    const url = `${serverUrl}/logout`;
-    const result = await fetch(url, mkReq())
-      .then(res => res.json())
-      .catch(error => {
-        console.log(error);
-        toast.error(error.message);
-      });
+  const clickLogout = async () => {
+    const msg = createBaseMsg();
+    window.postMessage({
+      ...msg,
+      action: types.LOCK_ACCOUNT,
+      context: 'header'
+    });
+  };
 
-    if (result) {
-      if (result.status === 'success') {
-        toast.success('logout successfully');
-        setAccountAddress('');
-        window.location.reload();
-      } else {
-        toast.error(result.data);
-      }
-    }
+  const logout = () => {
+    setWallet({
+      'address': '',
+      'publicKey': ''
+    });
+            
+    const url = `${serverUrl}/logout`;
+    fetch(url, mkReq());
   };
 
   useEffect(() => {
@@ -60,38 +60,65 @@ const Header = (props) => {
         setIsUserPopupOpen(false);
       }
     };
-
     const clickOutsideHandler = () => {
       // add click outside handler
       document.addEventListener('mousedown', handleClickOutside);
     };
 
-    const fetchUserLoginStatus = async () => {
-      const { onLoading, onLoaded } = props;
-      onLoading();
+    const setupWindow = () => {
+      window.addEventListener('message', handleMessage);
+    };
+    const handleMessage = (event) => {
+      const data = event.data;
+      const source = data.source || '';
+      if (source.startsWith('colorful') && data.context === 'header') {
+        if (data.action === types.GET_ACCOUNT) {
+          if (data.status === 'success') {
+            const wallet = data.data.wallets[0]; // default choose first wallet, TODO: add rotate check
+            setWallet(wallet);
 
-      const url = `${serverUrl}/login_status`;
-      const result = await fetch(url, mkReq())
-        .then(res => res.json())
-        .catch(error => console.log(error));
-      
-      if (result && result.status === 'success') {
-        setAccountAddress(result.data);
-      } else {
-        setAccountAddress('');
+            const postData = {
+              address: wallet.address,
+              public_key: wallet.publicKey,
+              sigs: data.data.sigs[0]
+            };
+            const url = `${serverUrl}/login`;
+            fetch(url, mkReq(postData));
+
+          } else {
+            console.log('get account error', data.data);
+            logout();
+          }
+        } else if (data.action === types.LOCK_ACCOUNT) {
+          if (data.status === 'success') {
+            toast.success('Logout successfully');
+          } else {
+            toast.error(data.data);
+          }
+          logout();
+          setIsUserPopupOpen(false);
+        }
       }
-
-      onLoaded();
+    };
+    const getAccountInfo = () => {
+      const msg = createBaseMsg();
+      window.postMessage({
+        ...msg,
+        action: types.GET_ACCOUNT,
+        context: 'header'
+      });
     };
 
     clickOutsideHandler();
-    fetchUserLoginStatus();
+    setupWindow();
+    getAccountInfo();
 
     return () => {
       // Unbind the event listener on clean up
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('message', handleMessage);
     };
-  }, [setAccountAddress]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div data-role='header page'>
@@ -141,7 +168,7 @@ const Header = (props) => {
                 >
                   <button className='w-full py-2 border-b' onClick={ () => myProfile() }>My Profile</button>
                   <button className='w-full py-2 border-b' onClick={ () => switchAccount() }>Switch User</button>
-                  <button className='w-full py-2' onClick={ () => logout() }>logout</button>
+                  <button className='w-full py-2' onClick={ () => clickLogout() }>logout</button>
                 </div>
               }
             </div>
@@ -166,7 +193,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   switchWalletModal: () => dispatch(switchWalletModal()),
-  setAccountAddress: (address) => dispatch(setAccountAddress(address))
+  setWallet: (wallet) => dispatch(setWallet(wallet))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);

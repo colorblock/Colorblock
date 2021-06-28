@@ -1,5 +1,6 @@
 from flask import jsonify
 from datetime import datetime
+import time
 import math
 
 def get_datetime_from_timestamp(ts, utc=True):
@@ -17,3 +18,9 @@ def get_datetime_from_timestamp(ts, utc=True):
 
 def jsonify_data(data):
     return jsonify(data).json
+
+def current_timestamp():
+    return int(time.time())
+
+def current_utc_string():
+    return datetime.utcnow().isoformat()[:-3]+'Z'

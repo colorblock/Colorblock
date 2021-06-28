@@ -8,15 +8,20 @@ import '@simonwep/pickr/dist/themes/nano.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as fa from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import Pact from 'pact-lang-api';
 
 import Preview from '../common/Preview';
 import PixelTool from '../common/PixelTool';
 import * as actions from '../../store/actions/actionCreator';
+import * as types from '../../store/actions/actionTypes';
 import { convertFramesToString, convertFramesToIntervals, convertRgbaToHex } from '../../utils/render';
-import { getSignedCmd, mkReq } from '../../utils/sign';
-import { serverUrl, itemConfig, contractModules, collectionConfig } from '../../config';
+import { mkReq } from '../../utils/sign';
+import { serverUrl, itemConfig, contractModules, collectionConfig, creatorConfig, editorExtensionId } from '../../config';
+import { fetchListen, fetchLocal, fetchSend, getSendCmd } from '../../utils/chainweb';
 import exampleFrames from '../../assets/exampleFrames';
-import { randomId, toAmountPrecision, toPricePrecision } from '../../utils/tool';
+import { randomId, toAmountPrecision, toPricePrecision } from '../../utils/tools';
+
+/* global chrome */
 
 const CreatePage = (props) => {
   const { frames, palette, dpt, wallet, loading } = props;  // dpt means dispatch
@@ -105,6 +110,7 @@ const CreatePage = (props) => {
   };
 
   const onSubmitItem = async () => {
+
     if (!wallet.address) {
       toast.error('Please connect to wallet first');
       return;
@@ -182,42 +188,18 @@ const CreatePage = (props) => {
     const frameCnt = savedFrames.frameIds.length;
     const intervals = convertFramesToIntervals(savedFrames);
     const account = wallet.address;
-    const cmd = {
-      code: `(${contractModules.colorblock}.create-item (read-msg "id") (read-msg "title") (read-msg "colors") (read-integer "rows") (read-integer "cols") (read-integer "frames") (read-msg "intervals") (read-msg "account")  (read-decimal "supply") (read-keyset "accountKeyset"))`,
-      caps: [{
-        role: 'Identity Verification',
-        description: 'Identity Verification',
-        cap: {
-          name: `${contractModules.colorblock}.MINT`,
-          args: [id, account, supply]
-        }
-      }, {
-        role: 'Pay Gas',
-        description: 'Pay Gas',
-        cap: {
-          name: `${contractModules.colorblockGasStation}.GAS_PAYER`,
-          args: ['colorblock-gas', {int: 1.0}, 1.0]
-        }
-      }
-      ],
-      sender: contractModules.gasPayerAccount,
-      signingPubKey: account,
-      data: {
-        id,
-        title,
-        colors,
-        rows,
-        cols,
-        frames: frameCnt,
-        intervals,
-        supply,
-        account,
-        accountKeyset: { 
-          keys: [account],
-          pred: 'keys-all'
-        }
-      }
+    const envData = {
+      id,
+      title,
+      colors,
+      rows,
+      cols,
+      frames: frameCnt,
+      intervals,
+      supply,
+      account
     };
+
     if (onSale) {
       // if item is directly posted into market, then add release action
       if (!submitItem.price) {
@@ -245,52 +227,47 @@ const CreatePage = (props) => {
         toast.error('Listing quantity must not exceed the supply');
         return;
       }
-      const releaseCmd = {
-        code: `(${contractModules.colorblockMarket}.release (read-msg "id") (read-msg "account") (read-decimal "price") (read-decimal "amount"))`,
-        caps: [{
-          role: 'Transfer',
-          description: 'Transfer item to market pool',
-          cap: {
-            name: `${contractModules.colorblock}.TRANSFER`,
-            args: [id, account, contractModules.marketPoolAccount, saleAmount]
-          }
-        }],
-        data: {
-          price,
-          amount: saleAmount
-        }
-      };
-      cmd.code += releaseCmd.code;
-      cmd.caps = [...cmd.caps, ...releaseCmd.caps];
-      cmd.data = {...cmd.data, ...releaseCmd.data};
+      envData.saleAmount = saleAmount;
+
     }
-    const postData = {
+
+    dpt.showLoading('Preparing command...');
+
+    const addition = {
       tags,
       description,
       collection
     };
-    const signedCmd = await getSignedCmd(cmd, postData);
-
-    console.log('get signedCmd', signedCmd);
-    if (!signedCmd) {
-      return;
-    }
-    const result = await fetch(`${serverUrl}/item`, signedCmd)
+    const postData = {
+      envData,
+      onSale
+    };
+    const url = `${serverUrl}/item/prepare`;
+    const result = await fetch(url, mkReq(postData))
       .then(res => res.json())
       .catch(error => {
         console.log(error);
         toast.error(error.message);
       });
 
-    console.log('get result', result);
-    if (result) {
-      if (result.status === 'success') {
-        document.location.href = '/item/' + id;
-      } else {
-        toast.error(result.data);
-      }
+    if (result && result.status === 'success') {
+      const msg = actions.createBaseMsg();
+      window.postMessage({
+        ...msg,
+        ...result.data,
+        walletIndex: 0,
+        addition,
+        action: types.SIGN_CMD,
+        context: 'creatorPage',
+        scene: 'mint',
+      });
+      dpt.showLoading('Please confirm in Colorful Wallet...');
+      return;
     }
+
+    dpt.hideLoading();
   };
+
 
   const handleMove = (e, cellIndex) => {
     // start calc if mouseDown + moveTool
@@ -316,6 +293,14 @@ const CreatePage = (props) => {
     const { title } = submitItem;
     if (!title) {
       toast.error('Title cannot be empty');
+      return;
+    }
+    if (frames.width > creatorConfig.maxWidth) {
+      toast.error(`Frame width must not exceed ${creatorConfig.maxWidth}`);
+      return;
+    }
+    if (frames.height > creatorConfig.maxHeight) {
+      toast.error(`Frame height must not exceed ${creatorConfig.maxHeight}`);
       return;
     }
     const postData = {
@@ -377,7 +362,7 @@ const CreatePage = (props) => {
 
   const getItemSettingBoard = () => {
     return (
-      <div data-role='item settings' className='pl-6 w-full flex flex-col bg-white border-l text-sm'>
+      <div data-role='item settings' className='px-6 py-6 w-full flex flex-col bg-white border-l text-sm border'>
         <div>
           <input 
             defaultValue={submitItem.title}
@@ -472,7 +457,11 @@ const CreatePage = (props) => {
           </div>
         }
         <div className='flex justify-between'>
-          <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded' onClick={ () => saveProject() }>
+          <button 
+            disabled={tabType==='mint'} 
+            className={`mt-4 text-white py-1 px-3 w-5/12 rounded ${tabType === 'mint' ? 'bg-gray-500' : 'bg-red-500'}`} 
+            onClick={ () => saveProject() }
+          >
             Save
           </button>
           <button className='mt-4 bg-red-500 text-white py-1 px-3 w-5/12 rounded' onClick={ () => onSubmitItem() }>
@@ -584,21 +573,62 @@ const CreatePage = (props) => {
       }
     };
 
+    const setupWindow = () => {
+      window.addEventListener('message', handleMessage);
+    };
+    const handleMessage = (event) => {
+      const data = event.data;
+      const source = data.source || '';
+      if (source.startsWith('colorful') && data.context === 'creatorPage') {
+        if (data.action === types.SIGN_CMD && data.scene === 'mint') {
+          if (data.status === 'success') {
+            console.log(data);
+            dpt.hideLoading();
+            const signedCmd = {
+              hash: data.hash,
+              cmd: data.cmd,
+              sigs: data.sigs.concat(data.data.sigs)
+            };
+            dpt.showLoading('Uploading item to Chainweb, please wait 30 ~ 90 seconds');
+            const postData = {
+              ...data.addition,
+              signedCmd
+            };
+            const url = `${serverUrl}/item`;
+            fetch(url, mkReq(postData))
+              .then(res => res.json())
+              .then(data => {
+                dpt.showLoading('Uploading item to Chainweb, please wait 30 ~ 90 seconds');
+                setTimeout(() => dpt.hideLoading(), 2000);
+                document.location.href = `/item/${data.itemId}`;
+              })
+              .catch(error => console.log(error));
+          }
+        }
+      }
+    };
+
     initPage();
-  }, [wallet, dpt]);
+    setupWindow();
+
+    return () => {
+      // Unbind the event listener on clean up
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
 
   return (
-    <div data-role='creator body' className='bg-cb-gray' hidden={loading}>
+    <div data-role='creator body' className='bg-cb-gray mb-32' hidden={loading}>
       <div data-role='tabs at top' className='h-10 border-b flex items-end space-x-10 text-sm mb-5'>
         <button className={`ml-16 px-3 py-2 ${tabType === 'collection' ? 'selected' : ''}`} onClick={ () => setTabType('collection') }>Collection</button>
-        <button className={`px-3 py-2 ${tabType === 'design' ? 'selected' : ''}`} onClick={ () => setTabType('design') }>Design</button>
         <button className={`px-3 py-2 ${tabType === 'mint' ? 'selected' : ''}`} onClick={ () => setTabType('mint') }>Mint</button>
+        <button className={`px-3 py-2 ${tabType === 'design' ? 'selected' : ''}`} onClick={ () => setTabType('design') }>Design</button>
       </div>
       <div data-role='collection tab' className={`flex flex-col items-center justify-center w-1/3 mx-auto text-sm ${tabType === 'collection' ? '' : 'hidden'}`}>
         <p className='text-lg'>Select Collection</p>
         <div 
           className='w-full my-3 relative text-gray-300 hover-pink hover:text-pink-500 cursor-pointer'
-          onClick={ () => setTabType('design') }
+          onClick={ () => setTabType('mint') }
         >
           <input 
             value={getCollectionTitle()}
@@ -668,7 +698,7 @@ const CreatePage = (props) => {
           Update collection onto Server
         </button>
       </div>
-      <div data-role='create tab' className={`flex ${tabType === 'design' ? '' : 'hidden'}`}>
+      <div data-role='create tab' className={`w-full flex ${tabType === 'design' ? '' : 'hidden'}`}>
         <div data-role='creator primary tools on the left side' className='w-48 ml-12'>
           <div data-role='painting tools' className='flex flex-col py-4 space-y-3 border rounded bg-white text-gray-500'>
             <div data-role='color pickr' className='relative'>
@@ -786,118 +816,122 @@ const CreatePage = (props) => {
           </div>
         </div>
 
-        <div data-role='painting grids of one frame' className='mx-12'>
-          <div 
-            className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' 
-            style={{ cursor: palette.toolType === 'move' ? 'not-allowed' : 'cell' }}
-            onMouseUp={ () => setMoveStartIndex(null) }
-          >
-            {
-              frames.frameList[frames.activeId].cells.map((color, index) => (
-                <div 
-                  className='border border-gray-100' 
-                  style={{ 
-                    width: widthPct,
-                    cursor: palette.toolType === 'move' ? 'move' : 'cell'
-                  }}  
-                  onMouseOver={ () => dpt.setHoveredIndex(index) }
-                  onMouseDown={ () => setMoveStartIndex(index) }
-                  onMouseMove={ (e) => handleMove(e, index) }
-                  onClick={ () => clickGridCell(index, color) }
-                  key={index}
-                >
-                  <div className='w-full square' style={{ backgroundColor: color }}></div>
-                </div>
-              ))
-            }
-          </div>
-          <div className='relative flex justify-center space-x-10 pt-4'>
-            <button data-role='undo button' className='w-6 h-6' onClick={ () => dpt.undo() }>
-              <img src='/img/undo.svg' alt='undo' className='w-full h-full' />
-            </button>
-            <button data-role='redo button' className='w-6 h-6' onClick={ () => dpt.redo() }>
-              <img src='/img/redo.svg' alt='redo' className='w-full h-full' />
-            </button>
-            <div className='absolute top-3 right-0'>
-              <input 
-                readOnly
-                value={`${frames.width} x ${frames.height}`}
-                className='border rounded w-24 py-0.5 text-center text-sm text-gray-500' 
-              />
-            </div>
-          </div>
-        </div>
-
-        <div data-role='frame list'>
-          <div data-role='preview box' className='relative w-20 h-20 border rounded'>
-            {
-              isPreviewStatic ? 
-              <Preview
-                task={{
-                  type: 'single',
-                  frames,
-                  frameId: frames.activeId
-                }} 
-              /> :
-              <Preview 
-                task={{
-                  type: 'animation',
-                  frames: frames
-                }} 
-              />
-            }
-            <div className='absolute top-0 left-20 pl-2 w-20 rounded flex flex-col space-y-1'>
-              <button onClick={ () => setIsPreviewStatic(!isPreviewStatic) }>
-                <img src='/img/play.svg' alt='play' className='w-6 h-6' />
-              </button>
-              <button>
-                <img src='/img/settings.svg' alt='settings' className='w-6 h-6' />
-              </button>
-              <button onClick={ () => dpt.addFrame() }>
-                <img src='/img/add.svg' alt='add' className='w-6 h-6' />
-              </button>
-            </div>
-          </div>
-          <div className='border-b border-gray-400 my-2'></div>
-          <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto' ref={framePreviewEl}>
-            {
-              frames.frameIds.map((frameId) => (
-                <div 
-                  data-role='preview box with buttons' 
-                  className={`relative w-20 h-20 mb-4 border rounded ${frameId === frames.activeId ? 'bd-cb-pink' : 'border-gray-400'}`} 
-                  key={frameId}
-                  onClick={ () => dpt.setActiveFrameId(frameId) }
-                  onLoad={ () => scrollFramePreview(frameId) }
-                >
-                  <Preview
-                    task={{
-                      type: 'single',
-                      frames,
-                      frameId
-                    }} 
-                  />
-                  <div className='absolute bottom-0 right-0.5 flex justify-between items-center space-x-1 py-1'>
-                    <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
-                      <img src='/img/duplicate.svg' alt='duplicate' className='w-full h-full' />
-                    </button>
-                    <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
-                    <img src='/img/trash.svg' alt='trash' className='w-full h-full' />
-                    </button>
+        <div data-role='painting grids and frame list' className='w-2/3 flex mx-auto justify-center'>
+          <div data-role='painting grids of one frame' className='mx-12'>
+            <div 
+              className='w-120 h-120 flex flex-wrap mx-auto border border-gray-400 rounded' 
+              style={{ cursor: palette.toolType === 'move' ? 'not-allowed' : 'cell' }}
+              onMouseUp={ () => setMoveStartIndex(null) }
+            >
+              {
+                frames.frameList[frames.activeId].cells.map((color, index) => (
+                  <div 
+                    className='border border-gray-100' 
+                    style={{ 
+                      width: widthPct,
+                      cursor: palette.toolType === 'move' ? 'move' : 'cell'
+                    }}  
+                    onMouseOver={ () => dpt.setHoveredIndex(index) }
+                    onMouseDown={ () => setMoveStartIndex(index) }
+                    onMouseMove={ (e) => handleMove(e, index) }
+                    onClick={ () => clickGridCell(index, color) }
+                    key={index}
+                  >
+                    <div className='w-full square' style={{ backgroundColor: color }}></div>
                   </div>
-                  <input 
-                    type='number' 
-                    step='1' 
-                    value={ frames.frameList[frameId].interval } 
-                    onChange={ (e) => onSetFrameInterval(e, frameId) } 
-                    className='absolute bottom-1 left-1 w-6 text-center text-xs text-gray-700 bg-white rounded'
-                    readOnly={frameId === frames.frameIds.length - 1}
-                  />
-                </div>
-              ))
-            }
+                ))
+              }
+            </div>
+            <div className='flex justify-center space-x-10 pt-4'>
+              <button data-role='undo button' className='w-6 h-6' onClick={ () => dpt.undo() }>
+                <img src='/img/undo.svg' alt='undo' className='w-full h-full' />
+              </button>
+              <button data-role='redo button' className='w-6 h-6' onClick={ () => dpt.redo() }>
+                <img src='/img/redo.svg' alt='redo' className='w-full h-full' />
+              </button>
+            </div>
+            <div className='relative w-120 mx-auto'>
+              <div className='absolute -top-6 right-0'>
+                <input 
+                  readOnly
+                  value={`${frames.width} x ${frames.height}`}
+                  className='border rounded w-24 py-0.5 text-center text-sm text-gray-500' 
+                />
+              </div>
+            </div>
+          </div>
+
+          <div data-role='frame list'>
+            <div data-role='preview box' className='relative w-20 h-20 border rounded'>
+              {
+                isPreviewStatic ? 
+                <Preview
+                  task={{
+                    type: 'single',
+                    frames,
+                    frameId: frames.activeId
+                  }} 
+                /> :
+                <Preview 
+                  task={{
+                    type: 'animation',
+                    frames: frames
+                  }} 
+                />
+              }
+              <div className='absolute top-0 left-20 pl-2 w-20 rounded flex flex-col space-y-1'>
+                <button onClick={ () => setIsPreviewStatic(!isPreviewStatic) }>
+                  <img src='/img/play.svg' alt='play' className='w-6 h-6' />
+                </button>
+                <button>
+                  <img src='/img/settings.svg' alt='settings' className='w-6 h-6' />
+                </button>
+                <button onClick={ () => dpt.addFrame() }>
+                  <img src='/img/add.svg' alt='add' className='w-6 h-6' />
+                </button>
+              </div>
+            </div>
+            <div className='border-b border-gray-400 my-2'></div>
+            <div data-role='all single frames' className='h-96 flex flex-col overflow-y-auto' ref={framePreviewEl}>
+              {
+                frames.frameIds.map((frameId) => (
+                  <div 
+                    data-role='preview box with buttons' 
+                    className={`relative w-20 h-20 mb-4 border rounded ${frameId === frames.activeId ? 'bd-cb-pink' : 'border-gray-400'}`} 
+                    key={frameId}
+                    onClick={ () => dpt.setActiveFrameId(frameId) }
+                    onLoad={ () => scrollFramePreview(frameId) }
+                  >
+                    <Preview
+                      task={{
+                        type: 'single',
+                        frames,
+                        frameId
+                      }} 
+                    />
+                    <div className='absolute bottom-0 right-0.5 flex justify-between items-center space-x-1 py-1'>
+                      <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.duplicateFrame(frameId) } }>
+                        <img src='/img/duplicate.svg' alt='duplicate' className='w-full h-full' />
+                      </button>
+                      <button className='w-4 h-4 p-1 bg-white rounded' onClick={ (e) => { e.stopPropagation(); dpt.deleteFrame(frameId); } } disabled={frames.frameIds.length === 1}>
+                      <img src='/img/trash.svg' alt='trash' className='w-full h-full' />
+                      </button>
+                    </div>
+                    <input 
+                      type='number' 
+                      step='1' 
+                      value={ frames.frameList[frameId].interval } 
+                      onChange={ (e) => onSetFrameInterval(e, frameId) } 
+                      className='absolute bottom-1 left-1 w-6 text-center text-xs text-gray-700 bg-white rounded'
+                      readOnly={frameId === frames.frameIds.length - 1}
+                    />
+                  </div>
+                ))
+              }
+            </div>
           </div>
         </div>
-        <div className='pl-16 w-full'>
+        <div className='pl-16 w-1/4'>
           {getItemSettingBoard()}
         </div>
           

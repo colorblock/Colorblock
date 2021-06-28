@@ -20,7 +20,7 @@ const CollectionList = (props) => {
               key={collection.id}
             >
               <div data-role='thumbnail' className='h-28 py-4 flex justify-center'>
-                <img className='h-full' src={`${serverUrl}/static/img/${collection.items[0].id}.${collection.items[0].type === 0 ? 'png' : 'gif'}`} alt={collection.name} />
+                <img className='h-full' src={collection.items.length > 0 ? `${serverUrl}/static/img/${collection.items[0].id}.${collection.items[0].type === 0 ? 'png' : 'gif'}` : ''} alt={collection.name} />
               </div>
               <div data-role='brief' className='h-8 flex items-end'>
                 <div>

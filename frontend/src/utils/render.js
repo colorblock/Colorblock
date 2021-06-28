@@ -105,11 +105,7 @@ export const convertFramesToIntervals = (frames, singleFrameId=null) => {
   }
 };
 
-export const createFramesFromImage = async (imageBlob) => {
-
-  console.log('12312');
-  const imageUrl = URL.createObjectURL(imageBlob);
-  const imageType = imageBlob.type;
+const createCanvasFromImage = async (imageUrl, imageType) => {
   
   const canvasList = [];
   const delaysRaw = [];
@@ -142,16 +138,32 @@ export const createFramesFromImage = async (imageBlob) => {
         ctx.drawImage(img, 0, 0);
         resolve(canvas);
       }
-      img.src = URL.createObjectURL(imageBlob);
+      console.log(imageUrl);
+      img.src = imageUrl;
     });
     canvasList.push(canvas);
     delaysRaw.push(100);
   }
+  
+  return {
+    canvasList,
+    delaysRaw,
+    imageType
+  };
+};
 
 
-  console.log(delaysRaw);
-  const width = canvasList[0].width;
-  const height = canvasList[0].height;
+export const createFramesFromImage = async (imageUrl, imageType) => {
+  return createFramesFromCompressedImage(imageUrl, imageType);
+};
+
+export const createFramesFromCompressedImage = async (imageUrl, imageType, compressWidth=undefined) => {
+
+  const { canvasList, delaysRaw } = await createCanvasFromImage(imageUrl, imageType).catch(error => console.log(error));
+
+  const firstCanvas = canvasList[0];
+  const width = compressWidth || firstCanvas.width;
+  const height = Math.floor(firstCanvas.height / firstCanvas.width * width);
   const delays = delaysRaw.map(delay => delay / 100);
   const duration = delays.reduce((a, b) => a + b, 0);
   const intervals = [];
@@ -174,15 +186,33 @@ export const createFramesFromImage = async (imageBlob) => {
   canvasList.forEach((canvas, index) => {
     // read image data from canvas
     const ctx = canvas.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, width, height);
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const pixels = imgData.data;
-    const cells = [];
+    let cells = [];
     for (var i = 0; i < pixels.length; i += 4) {
       const color = pixels.slice(i, i + 3);
       const rgba = `rgba(${color.join()},1)`;
       cells.push(rgba);
     }
-
+    if (compressWidth) {
+      const unitX = canvas.width / width;
+      const unitY = canvas.height / height;
+      const startX = Math.floor(unitX / 2);
+      const startY = Math.floor(unitY / 2);
+      const indexesX = new Array(width).fill(0).map((_, index) => Math.floor(startX + index * unitX));
+      const indexesY = new Array(height).fill(0).map((_, index) => Math.floor(startY + index * unitY));
+      const compressedCells = [];
+      const indexes = [];
+      indexesY.forEach(indexY => {
+        indexesX.forEach(indexX => {
+          const index = indexY * canvas.width + indexX;
+          const cell = cells[index];
+          compressedCells.push(cell);
+          indexes.push(index);
+        });
+      });
+      cells = compressedCells;
+    }
     const interval = intervals[index];
     const frame = {
       id: 0,

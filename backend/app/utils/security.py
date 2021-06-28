@@ -12,7 +12,10 @@ def login_required(function):
     return wrapper
 
 def get_current_user():
-    return session['account']
+    return session['address']
+
+def get_current_public_key():
+    return session['public_key']
 
 def admin_required(function):
     @wraps(function)

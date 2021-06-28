@@ -9,6 +9,7 @@ from app import db, search
 from app.models.item import Item
 from app.models.purchase import Purchase
 from app.models.user import User
+from app.models.asset import Asset
 from app.models.ledger import Ledger
 from app.models.deal import Deal
 from app.models.transfer import Transfer
@@ -16,7 +17,7 @@ from app.models.mint import Mint
 from app.models.release import Release
 from app.models.recall import Recall
 from app.models.block import Block
-from app.utils.crypto import hash_id
+from app.utils.crypto import hash_id, random
 from app.utils.render import generate_image_from_item
 from app.utils.pact import local_req, build_local_cmd, get_module_names
 from app.utils.security import admin_required
@@ -24,6 +25,23 @@ from app.utils.chainweb import fetch_latest_block, fetch_previous_blocks, fetch_
 from app.utils.tools import get_datetime_from_timestamp
 
 routine_blueprint = Blueprint('routine', __name__)
+
+
+@routine_blueprint.route('/migrate', methods=['POST'])
+@admin_required
+def migrate():
+    ledger_list = db.session.query(Ledger).all()
+    for ledger in ledger_list:
+        asset = Asset(
+            id=random(),
+            item_id=ledger.item_id,
+            user_id=ledger.user_id,
+            balance=ledger.balance
+        )
+        db.session.add(asset)
+        app.logger.debug('{} added'.format(asset))
+    db.session.commit()
+
 
 @routine_blueprint.route('/sync/<chain_id>', methods=['POST'])
 @admin_required
@@ -165,8 +183,8 @@ def sync_block(chain_id):
                     result = local_req(local_cmd)
                     data = result['data']
                     for record in data:
-                        for ledger_id in record['ledger']:
-                            update_ledger(ledger_id)
+                        for asset_id in record['asset']:
+                            update_asset(asset_id)
                         for deal_id in record['deals']:
                             update_deal(deal_id)
 
@@ -200,9 +218,9 @@ def sync_block(chain_id):
 
     return 'end of sync'
 
-def update_ledger(ledger_id):
-    app.logger.debug('now update ledger: {}'.format(ledger_id))
-    (item_id, user_id) = ledger_id.split(':')
+def update_asset(asset_id):
+    app.logger.debug('now update asset: {}'.format(asset_id))
+    (item_id, user_id) = asset_id.split(':')
     pact_code = '({}.details "{}" "{}")'.format(get_module_names()['colorblock'], item_id, user_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
@@ -210,24 +228,24 @@ def update_ledger(ledger_id):
         return result
 
     data = result['data']
-    asset_id = hash_id(ledger_id)
+    asset_id = hash_id(asset_id)
     balance = data['balance']
-    ledger = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
-    app.logger.debug('before modification, ledger = {}'.format(ledger))
-    if ledger:
-        ledger.balance = balance
+    asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
+    app.logger.debug('before modification, asset = {}'.format(asset))
+    if asset:
+        asset.balance = balance
         db.session.commit()
     else:
-        ledger = Ledger(
-            id=ledger_id,
+        asset = Asset(
+            id=asset_id,
             asset_id=asset_id,
             item_id=item_id,
             user_id=user_id,
             balance=balance
         )
-        db.session.add(ledger)
+        db.session.add(asset)
         db.session.commit()
-    app.logger.debug('after modification, ledger = {}'.format(ledger))
+    app.logger.debug('after modification, asset = {}'.format(asset))
 
 def update_deal(deal_id):
     app.logger.debug('now update deal: {}'.format(deal_id))
@@ -294,7 +312,9 @@ def update_item(item_id, item_info={}, add_image=False):
             tags=item_info.get('tags', None),
             description=item_info.get('description', None),
             creator=item_data['creator'],
-            supply=item_data['supply']
+            supply=item_data['supply'],
+            urls=json.dumps(item_data['urls']),
+            verifier=item_data['verifier']
         )
         db.session.add(item)
         db.session.commit()

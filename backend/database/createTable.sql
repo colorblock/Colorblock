@@ -3,6 +3,7 @@
 create table if not exists user (
     `id` varchar(64),
     `address` varchar(64),
+    `public_key` varchar(64),
     `uname` varchar(64),
     `avatar` varchar(32),
     `profile` varchar(1000),
@@ -19,17 +20,18 @@ create table if not exists item (
     `description` varchar(1000),
     `creator` varchar(64) comment 'the initial creator of item',
     `supply` integer comment 'the initial supply of item',
+    `urls` varchar(300),
+    `verifier` varchar(64),
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
 );
 
-create table if not exists ledger (
-    `id` varchar(128) comment 'item_id:user_id format',
-    `asset_id` varchar(32) comment 'asset id',
-    `item_id` varchar(32) comment 'item id',
-    `user_id` varchar(64) comment 'user id',
-    `balance` integer comment 'balance of item',
+create table if not exists asset (
+    `id` varchar(128),
+    `item_id` varchar(32),
+    `user_id` varchar(64),
+    `balance` integer,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)

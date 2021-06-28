@@ -2,10 +2,10 @@ from flask import Blueprint, request, session, current_app as app, jsonify
 import json
 
 from app import db
-from app.blueprints.admin.routine import update_deal, update_ledger
+from app.blueprints.admin.routine import update_deal, update_asset
 from app.models.deal import Deal
 from app.models.item import Item
-from app.models.ledger import Ledger
+from app.models.asset import Asset
 from app.models.purchase import Purchase
 from app.utils.response import get_error_response
 from app.utils.security import login_required
@@ -17,7 +17,7 @@ asset_blueprint = Blueprint('asset', __name__)
 
 @asset_blueprint.route('/<asset_id>', methods=['GET'])
 def get_asset(asset_id):
-    asset = db.session.query(Ledger).filter(Ledger.asset_id == asset_id).first()
+    asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
     if asset:
         asset = jsonify_data(asset)
         item = db.session.query(Item).filter(Item.id == asset['item_id']).first()
@@ -30,17 +30,17 @@ def get_asset(asset_id):
 
 @asset_blueprint.route('/owned-by/<user_id>', methods=['GET'])
 def get_assets_owned_by_user(user_id):
-    assets = db.session.query(Ledger).filter(Ledger.user_id == user_id).all()
+    assets = db.session.query(Asset).filter(Asset.user_id == user_id).all()
     if len(assets) > 0:
         assets = jsonify_data(assets)
         item_ids = [v['item_id'] for v in assets]
         items = db.session.query(Item).filter(Item.id.in_(item_ids)).all()
         for asset in assets:
-            ledger_id = asset['id']
+            asset_id = asset['id']
             item_id = asset['item_id']
             item = [v for v in items if v.id == item_id][0]
             item = jsonify_data(item)
-            deal = db.session.query(Deal).filter(Deal.id == ledger_id).first()
+            deal = db.session.query(Deal).filter(Deal.id == asset_id).first()
             asset['item'] = item
             if deal:
                 asset['deal'] = deal
@@ -52,13 +52,13 @@ def get_latest_assets():
     deals = db.session.query(Deal).order_by(Deal.created_at.desc()).limit(50).all()
     purchase_ids = ['{}:{}'.format(v.item_id, v.seller) for v in purchases]
     deal_ids = ['{}:{}'.format(v.item_id, v.user_id) for v in deals]
-    ledger_ids = purchase_ids + deal_ids
+    asset_ids = purchase_ids + deal_ids
     assets = []
     item_ids = []
     count = 0
-    for ledger_id in ledger_ids:
-        asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
-        deal = db.session.query(Deal).filter(Deal.id == ledger_id).first()
+    for asset_id in asset_ids:
+        asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
+        deal = db.session.query(Deal).filter(Deal.id == asset_id).first()
         if asset and deal and deal.remain > 0:
             asset = jsonify_data(asset)
             item = db.session.query(Item).filter(Item.id == asset['item_id']).first()
@@ -87,8 +87,8 @@ def get_on_sale_assets(item_id):
         for deal in deals:
             if deal.remain > 0:
                 user_id = deal.user_id
-                ledger_id = '{}:{}'.format(item_id, user_id)
-                asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+                asset_id = '{}:{}'.format(item_id, user_id)
+                asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
                 if asset:
                     asset = jsonify_data(asset)
                     deal = jsonify_data(deal)
@@ -113,16 +113,16 @@ def release_asset():
 
     item_id = asset_data['token']
     seller = asset_data['seller']
-    ledger_id = '{}:{}'.format(item_id, seller)
-    asset = db.session.query(Ledger).filter(Ledger.id == ledger_id).first()
+    asset_id = '{}:{}'.format(item_id, seller)
+    asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
 
     # submit item to pact server
     result = send_req(post_data)
         
     if result['status'] == 'success':
-        deal_id = ledger_id
+        deal_id = asset_id
         update_deal(deal_id)
-        update_ledger(ledger_id)
+        update_asset(asset_id)
 
     return result
 
@@ -137,15 +137,15 @@ def recall_asset():
 
     item_id = asset_data['token']
     seller = asset_data['seller']
-    ledger_id = '{}:{}'.format(item_id, seller)
+    asset_id = '{}:{}'.format(item_id, seller)
 
     # submit item to pact server
     result = send_req(post_data)
         
     if result['status'] == 'success':
-        deal_id = ledger_id
+        deal_id = asset_id
         update_deal(deal_id)
-        update_ledger(ledger_id)
+        update_asset(asset_id)
 
     return result
 
@@ -161,20 +161,20 @@ def purchase_asset():
     item_id = asset_data['token']
     buyer = asset_data['buyer']
     seller = asset_data['seller']
-    ledger_buyer_id = '{}:{}'.format(item_id, buyer)
-    ledger_seller_id = '{}:{}'.format(item_id, seller)
+    asset_buyer_id = '{}:{}'.format(item_id, buyer)
+    asset_seller_id = '{}:{}'.format(item_id, seller)
 
     # submit item to pact server
     result = send_req(post_data)
         
     if result['status'] == 'success':
-        deal_id = ledger_seller_id
+        deal_id = asset_seller_id
         update_deal(deal_id)
-        update_ledger(ledger_buyer_id)
-        update_ledger(ledger_seller_id)
+        update_asset(asset_buyer_id)
+        update_asset(asset_seller_id)
         
         result['data'] = {
-            'assetId': hash_id(ledger_buyer_id)
+            'assetId': hash_id(asset_buyer_id)
         }
 
     return result

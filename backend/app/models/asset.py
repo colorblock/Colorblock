@@ -3,7 +3,7 @@ from sqlalchemy.schema import FetchedValue
 from app import db
 
 @dataclass
-class Ledger(db.Model):
+class Asset(db.Model):
     id: str
     item_id: str
     user_id: int
@@ -19,4 +19,4 @@ class Ledger(db.Model):
     updated_at = db.Column(db.DateTime, server_default=FetchedValue())
 
     def __repr__(self):
-        return '<Ledger {}>'.format(self.id)
+        return '<Asset {}>'.format(self.id)

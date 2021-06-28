@@ -29,11 +29,11 @@ const ItemList = (props) => {
               <div data-role='creator and price' className='h-8 flex items-end justify-between'>
                 <div>
                   <p className='text-xxs text-gray-500'>Creator</p>
-                  <p>{`${item.creator.slice(0, 4)}....${item.creator.slice(-4)}`}</p>
+                  <p>{item.creator ? `${item.creator.slice(0, 4)}....${item.creator.slice(-4)}` : 'NULL'}</p>
                 </div>
                 <div className='text-right'>
                   <p className='text-xxs-r text-gray-500'>Height</p>
-                  <p className='text-cb-pink'>{item.mint.block_height}</p>
+                  <p className='text-cb-pink'>{item.mint ? item.mint.block_height : 'NULL'}</p>
                 </div>
               </div>
             </li>

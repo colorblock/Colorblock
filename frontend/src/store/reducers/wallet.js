@@ -23,6 +23,14 @@ const setAccountAddress = (wallet, address) => {
   return wallet;
 };
 
+const setWallet = (wallet, _wallet) => {
+  wallet = {
+    ...wallet,
+    ..._wallet
+  };
+  return wallet;
+};
+
 const wallet = produce((wallet, action) => {
   switch (action.type) {
     case types.SWITCH_WALLET_MODAL:
@@ -31,6 +39,8 @@ const wallet = produce((wallet, action) => {
       return setAddressList(wallet, action.keyList);
     case types.SET_ACCOUNT_ADDRESS:
       return setAccountAddress(wallet, action.address);
+    case types.SET_WALLET:
+      return setWallet(wallet, action.wallet);
     default:
   }
   return wallet;
