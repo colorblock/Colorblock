@@ -91,7 +91,7 @@ const App = (props) => {
       const msg = createBaseMsg();
       const id = setInterval(() => window.postMessage({...msg, scene: 'buffer'}), 5000);
       setIntervalId(id);
-    } else {
+    } else if (intervalId) {
       clearInterval(intervalId);
       setIntervalId(null);
     }
@@ -120,7 +120,7 @@ const App = (props) => {
               <ReactLoading type='cubes' color='rgb(254, 94, 174)' height='60px' width='60px' className='mt-10' />
               <span className='text-lg mt-5'>{ loadingText || '' }</span>
               <div className='absolute top-4 right-4 text-gray-300 flex items-center cursor-pointer' onClick={ () => hideLoading() }>
-                <FontAwesomeIcon icon={fa.faTimes} size='2xl' />
+                <FontAwesomeIcon icon={fa.faTimes} size='2x' />
               </div>
             </div>
           </div>

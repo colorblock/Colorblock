@@ -108,7 +108,7 @@ def prepare_item():
     upload_result = cloudinary.uploader.upload(file_path, public_id=item_id)
     app.logger.debug('upload result: {}'.format(upload_result))
     cloudinary_url = upload_result['secure_url']
-    cloudfront_url = '{}/{}'.format(app.config['CLOUDFRONT_HOST'], file_name)
+    cloudfront_url = '{}/{}/{}'.format(app.config['CLOUDFRONT_HOST'], app.config['CLOUDFRONT_BUCKET'], file_name)
     urls = [cloudfront_url, cloudinary_url]
     # add into env_data
     env_data['urls'] = urls
@@ -169,7 +169,7 @@ def submit_item():
                 s3_client = boto3.client('s3')
                 object_name = '{}.{}'.format(item_data['id'], get_image_type(item_data['frames']))
                 file_name = 'app/static/img/{}'.format(object_name)
-                response = s3_client.upload_file(file_name, app.config['S3_BUCKET'], object_name)
+                response = s3_client.upload_file(file_name, app.config['CLOUDFRONT_BUCKET'], object_name)
                 app.logger.debug(response)
             except Exception as e:
                 app.logger.error(e)
@@ -210,7 +210,7 @@ def submit_item():
             result['itemId'] = item_data['id']
             return get_success_response(result)
         else:
-            return get_error_response(result['error'])
+            return get_error_response(result['message'])
     else:
         return get_error_response(result)
 

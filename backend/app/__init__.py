@@ -3,7 +3,6 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_msearch import Search
 import cloudinary
-import cloudinary.uploader
 
 from flask.json import JSONEncoder
 from datetime import datetime
