@@ -593,7 +593,7 @@ const ItemPage = (props) => {
           Manage My Asset +
         </button>
         {
-          showManageAsset && (
+          showManageAsset && selfAsset && (
             <div className='w-full p-4 border rounded-lg'>
             {
               selfAsset && selfAsset.sale && selfAsset.sale.status === 'open' ? (
