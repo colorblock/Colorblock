@@ -24,7 +24,15 @@ const ItemList = (props) => {
                 <p className='text-gray-400'>{item.collection}</p>
               </div>
               <div data-role='thumbnail' className='h-32 py-6 flex justify-center'>
-                <img className='h-full' src={`${serverUrl}/static/img/${item.id}.${item.type === 0 ? 'png' : 'gif'}`} alt={item.title} />
+                <img 
+                  src={firstUrl(item.urls)} 
+                  onError={ (e) => {
+                    e.target.onerror = null; 
+                    e.target.src = secondUrl(item.urls);
+                  } } 
+                  className='h-full' 
+                  alt='img thumbnail' 
+                />
               </div>
               <div data-role='creator and price' className='h-8 flex items-end justify-between'>
                 <div>
