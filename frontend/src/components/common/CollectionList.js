@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { serverUrl } from '../../config';
+import { firstUrl, secondUrl } from '../../utils/tools';
 
 const CollectionList = (props) => {
 
