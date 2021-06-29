@@ -210,7 +210,7 @@ def submit_item():
             result['itemId'] = item_data['id']
             return get_success_response(result)
         else:
-            return get_error_response(result['message'])
+            return get_error_response(rresult['error']['message'])
     else:
         return get_error_response(result)
 
