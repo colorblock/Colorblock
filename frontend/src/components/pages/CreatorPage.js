@@ -338,6 +338,7 @@ const CreatePage = (props) => {
 
   const getCollectionTitle = () => {
     const selectedTitles = collections.filter(clt => clt.selected === true).map(clt => clt.title);
+    console.log('selectedTitles', selectedTitles);
     return selectedTitles.length > 0 ? selectedTitles[0] : 'No Collection';
   };
 
@@ -372,11 +373,11 @@ const CreatePage = (props) => {
           />
         </div>
         <div className='mt-4 text-xs'>
-          <p className='my-2'>Collection</p>
+          <p className='my-2'>Collection222</p>
           <div data-role='collection select' className='relative h-8'>
             <select 
               className='w-full h-full px-10 border rounded-lg cursor-pointer'
-              onChange={(e) => setCollections(collections.map((clt, index) => index === e.target.selectedIndex ? {
+              onChange={(e) => setCollections(collections.map((clt, index) => index === e.target.selectedIndex - 1 ? {
                   ...clt,
                   selected: true
                 } : {
@@ -384,10 +385,10 @@ const CreatePage = (props) => {
                   selected: false
                 }
               ))}
-              value={getCollectionTitle()}
             >
+            <option disabled selected={true} value=''> -- select a collection -- </option>
               {
-                collections.length > 0 ?
+                collections.length > 0 ? 
                 collections.map(collection => (
                   <option 
                     className='text-center mx-auto'
@@ -395,7 +396,8 @@ const CreatePage = (props) => {
                   >
                     {collection.title}
                   </option>
-                )) :
+                ))
+                :
                 <option className='text-center mx-auto'>{getCollectionTitle()}</option>
               }
             </select>
@@ -582,7 +584,7 @@ const CreatePage = (props) => {
       if (source.startsWith('colorful') && data.context === 'creatorPage') {
         if (data.action === types.SIGN_CMD && data.scene === 'mint') {
           if (data.status === 'success') {
-            console.log(data);
+            console.log('in mint success', data);
             dpt.hideLoading();
             const signedCmd = {
               hash: data.hash,
@@ -598,9 +600,12 @@ const CreatePage = (props) => {
             fetch(url, mkReq(postData))
               .then(res => res.json())
               .then(data => {
-                dpt.showLoading('Uploading item to Chainweb, please wait 30 ~ 90 seconds');
-                setTimeout(() => dpt.hideLoading(), 2000);
-                document.location.href = `/item/${data.itemId}`;
+                dpt.hideLoading();
+                if (data.itemId) {
+                  document.location.href = `/item/${data.itemId}`;
+                } else {
+                  toast.error(data);
+                }
               })
               .catch(error => console.log(error));
           }
