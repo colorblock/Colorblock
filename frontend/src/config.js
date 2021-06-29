@@ -75,4 +75,3 @@ export const creatorConfig = {
   maxHeight: 64
 };
 
-export const editorExtensionId = 'dddjfmamjmnlpmghgilbnmmjnppdkefm';

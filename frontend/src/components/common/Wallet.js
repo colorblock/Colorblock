@@ -117,7 +117,7 @@ export const Wallet = (props) => {
               1. Download Colorful wallet chrome extension (build zip).
               <a  
                 target='_blank' rel='noopener noreferrer' 
-                href='https://static.colorblock.art/build.zip'
+                href='https://static.colorblock.art/colorful-build-v1.0.zip'
                 className='text-cb-pink ml-1 underline'
               >Link</a>
             </p>

@@ -308,7 +308,7 @@ const CreatePage = (props) => {
       frames: JSON.stringify(frames),
       palette: JSON.stringify(palette)
     };
-    const url = projects ? `${serverUrl}/project/save/${projects[0].id}` : `${serverUrl}/project/new`;
+    const url = projects && projects.length > 0 ? `${serverUrl}/project/save/${projects[0].id}` : `${serverUrl}/project/new`;
     const result = await fetch(url, mkReq(postData))
       .then(res => res.json())
       .catch(error => {

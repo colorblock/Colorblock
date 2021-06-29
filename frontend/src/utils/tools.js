@@ -26,8 +26,16 @@ export const getTimestamp = () => {
 };
 
 export const firstUrl = (urls) => {
-  return JSON.parse(urls)[0];
+  if (Array.isArray(urls)) {
+    return urls[0]
+  } else {
+    return JSON.parse(urls)[0];
+  }
 };
 export const secondUrl = (urls) => {
-  return JSON.parse(urls)[1];
+  if (Array.isArray(urls)) {
+    return urls[1]
+  } else {
+    return JSON.parse(urls)[1];
+  }
 };
