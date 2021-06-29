@@ -74,7 +74,7 @@ const UserPage = (props) => {
   }, [userId, showLoading, hideLoading, wallet]);
 
   return !user || loading ? <></> : (
-    <div>
+    <div className='pb-20'>
       <div data-role='user info' className='my-8 flex flex-col items-center justify-center'>
         <img 
           src={user.avatar} 

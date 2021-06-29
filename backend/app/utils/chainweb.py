@@ -83,3 +83,7 @@ def fetch_payloads(blocks):
         payloads.append(block)
     
     return payloads
+
+def truncate_precision(number):
+    times = 10 ** 12
+    return int(number * times) / times

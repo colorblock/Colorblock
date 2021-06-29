@@ -9,7 +9,8 @@ import { getSignedCmd, mkReq } from '../../utils/sign';
 import { serverUrl, contractModules, marketConfig } from '../../config';
 import { shortAddress } from '../../utils/polish';
 import { toPricePrecision, toAmountPrecision } from '../../utils/tools';
-import { showLoading, hideLoading } from '../../store/actions/actionCreator';
+import { showLoading, hideLoading, createBaseMsg } from '../../store/actions/actionCreator';
+import * as types from '../../store/actions/actionTypes';
 
 const AssetPage = (props) => {
   const { assetId } = useParams();
@@ -72,60 +73,38 @@ const AssetPage = (props) => {
     }
     
     // post release request
-    const itemId = asset.item.id;
-    const seller = wallet.address;
-    const cmd = {
-      code: `(${contractModules.colorblockMarket}.release (read-msg "token") (read-msg "seller") (read-decimal "price") (read-decimal "amount"))`,
-      caps: [{
-        role: 'Transfer',
-        description: 'Transfer item to market pool',
-        cap: {
-          name: `${contractModules.colorblock}.TRANSFER`,
-          args: [itemId, seller, contractModules.marketPoolAccount, amount]
-        }
-      }, {
-        role: 'Pay Gas',
-        description: 'Pay Gas',
-        cap: {
-          name: `${contractModules.colorblockGasStation}.GAS_PAYER`,
-          args: ['colorblock-gas', {int: 1.0}, 1.0]
-        }
-      }
-      ],
-      sender: contractModules.gasPayerAccount,
-      signingPubKey: seller,
-      data: {
-        token: itemId,
-        seller,
-        price,
-        amount
-      }
+    const envData = {
+      id: asset.item.id,
+      price,
+      amount
     };
-    const signedCmd = await getSignedCmd(cmd);
+    const postData = {
+      envData
+    };
+    const addition = {
+    };
 
-    console.log('get signedCmd', signedCmd);
-    if (!signedCmd) {
-      return;
-    }
-
-    showLoading();
-
-    const result = await fetch(`${serverUrl}/asset/release`, signedCmd)
+    const url = `${serverUrl}/asset/release/prepare`;
+    const result = await fetch(url, mkReq(postData))
       .then(res => res.json())
       .catch(error => {
         console.log(error);
         toast.error(error.message);
       });
 
-    console.log('get result', result);
-    if (result) {
-      if (result.status === 'success') {
-        toast.success('Release successfully');
-        routerHistory.push('/tmp');
-        routerHistory.goBack();
-      } else {
-        toast.error(result.data);
-      }
+    if (result && result.status === 'success') {
+      const msg = createBaseMsg();
+      window.postMessage({
+        ...msg,
+        ...result.data,
+        addition,
+        walletIndex: 0,
+        action: types.SIGN_CMD,
+        context: 'assetPage',
+        scene: 'release',
+      });
+      showLoading('Please confirm in Colorful Wallet...');
+      return;
     }
 
     hideLoading();
@@ -194,9 +173,9 @@ const AssetPage = (props) => {
     // post recall request
     const itemId = asset.item.id;
     const buyer = wallet.address;
-    const seller = asset.deal.user_id;
+    const seller = asset.sale.user_id;
 
-    const price = toPricePrecision(asset.deal.price);
+    const price = toPricePrecision(asset.sale.price);
 
     if (!purchaseAmount) {
       toast.error('Please enter correct purchase amount');
@@ -210,8 +189,8 @@ const AssetPage = (props) => {
     if (amount <= 0) {
       toast.error(`Please enter correct purchase amount`);
       return;
-    } else if (amount > asset.deal.remain) {
-      toast.error(`Purchase amount must not exceed deal's remained amount`);
+    } else if (amount > asset.sale.remain) {
+      toast.error(`Purchase amount must not exceed sale's remained amount`);
       return;
     }
 
@@ -349,22 +328,26 @@ const AssetPage = (props) => {
 
       if (assetData) {
         assetData.url = `${serverUrl}/static/img/${assetData.item.id}.${assetData.item.type === 0 ? 'png' : 'gif'}`;
-        assetData.dealOpen = assetData.deal ? assetData.deal.open : false;
+        assetData.saleOpen = assetData.sale ? assetData.sale.open : false;
         setItem(assetData);
       }
 
       hideLoading();
     };
 
+
     fetchAsset(assetId);
   }, [assetId, showLoading, hideLoading]);
 
   return loading ? <></> : (
     <div data-role='asset page'>
-      <div data-role='asset info' className='flex my-10'>
+      <div data-role='asset info' className='flex my-10 pb-20'>
       {
         asset &&
         <div className='w-1/3 border-r-2 flex flex-col items-center justify-center'>
+          <div className='border rounded'>
+            <p></p>
+          </div>
           <p>Asset ID: {assetId}</p>
           <p>Item ID: {asset.item.id}</p>
           <p>Item title: {asset.item.title}</p>
@@ -378,9 +361,9 @@ const AssetPage = (props) => {
         </div>
       }
       </div>
-      <div data-role='deal info' className='bg-white border-t-2 my-10 py-6'>
+      <div data-role='sale info' className='bg-white border-t-2 my-10 py-6'>
       {
-        asset && asset.user_id === wallet.address && asset.dealOpen === false &&
+        asset && asset.user_id === wallet.address && asset.saleOpen === false &&
         <div data-role='market board' className='flex space-x-3 items-center'>
           <span>Price</span>
           <input 
@@ -410,12 +393,12 @@ const AssetPage = (props) => {
         </div>
       }
       {
-        asset && asset.user_id === wallet.address && asset.dealOpen === true &&
+        asset && asset.user_id === wallet.address && asset.saleOpen === true &&
         <div data-role='market board' className='flex flex-col space-y-2 items-center'>
-          <p>Deal seller: {shortAddress(asset.deal.user_id)}</p>
-          <p>Deal price: {asset.deal.price}</p>
-          <p>Deal total amount: {asset.deal.total}</p>
-          <p>Deal remain amount: {asset.deal.remain}</p>
+          <p>Sale seller: {shortAddress(asset.sale.user_id)}</p>
+          <p>Sale price: {asset.sale.price}</p>
+          <p>Sale total amount: {asset.sale.total}</p>
+          <p>Sale remain amount: {asset.sale.remain}</p>
           <button
             className='px-3 py-2 bg-cb-pink text-white'
             onClick={ () => onRecall() }
@@ -425,12 +408,12 @@ const AssetPage = (props) => {
         </div>
       }
       {
-        asset && asset.user_id !== wallet.address && asset.dealOpen === true &&
+        asset && asset.user_id !== wallet.address && asset.saleOpen === true &&
         <div data-role='market board' className='flex flex-col space-y-3 items-center'>
-          <p>Deal seller: {asset.deal.user_id}</p>
-          <p>Deal price: {asset.deal.price}</p>
-          <p>Deal total amount: {asset.deal.total}</p>
-          <p>Deal remain amount: {asset.deal.remain}</p>
+          <p>Sale seller: {asset.sale.user_id}</p>
+          <p>Sale price: {asset.sale.price}</p>
+          <p>Sale total amount: {asset.sale.total}</p>
+          <p>Sale remain amount: {asset.sale.remain}</p>
           <span>Amount</span>
           <input 
             type='number' 
@@ -463,7 +446,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-  showLoading: () => dispatch(showLoading()),
+  showLoading: (text=null) => dispatch(showLoading(text)),
   hideLoading: () => dispatch(hideLoading())
 });
 

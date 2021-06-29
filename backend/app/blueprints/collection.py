@@ -36,6 +36,18 @@ def get_collections_owned_by_user(user_id):
             collection['collectibles'] = collectibles
     return jsonify(collections)
 
+@collection_blueprint.route('/of-item/<item_id>')
+def get_collection_of_item(item_id):
+    collectible = db.session.query(Collectible).filter(Collectible.item_id == item_id).order_by(Collectible.created_at).first()
+    collection_id = collectible.collection_id
+    collection = db.session.query(Collection).filter(Collection.id == collection_id).first()
+    collectibles = db.session.query(Collectible).filter(Collectible.collection_id == collection_id).order_by(Collectible.created_at).limit(20).all()
+    collection = jsonify_data(collection)
+    collectibles = jsonify_data(collectibles)
+    collection['collectibles'] = collectibles
+    
+    return jsonify(collection)
+
 @collection_blueprint.route('/latest')
 def get_latest_collections():
     collections = db.session.query(Collection).order_by(Collection.created_at.desc()).limit(50).all()

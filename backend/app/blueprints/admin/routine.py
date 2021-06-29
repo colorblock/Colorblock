@@ -218,9 +218,9 @@ def sync_block(chain_id):
 
     return 'end of sync'
 
-def update_asset(asset_id):
-    app.logger.debug('now update asset: {}'.format(asset_id))
-    (item_id, user_id) = asset_id.split(':')
+def update_asset(combined_asset_id):
+    app.logger.debug('now update asset: {}'.format(combined_asset_id))
+    (item_id, user_id) = combined_asset_id.split(':')
     pact_code = '({}.details "{}" "{}")'.format(get_module_names()['colorblock'], item_id, user_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
@@ -228,7 +228,7 @@ def update_asset(asset_id):
         return result
 
     data = result['data']
-    asset_id = hash_id(asset_id)
+    asset_id = hash_id(combined_asset_id)
     balance = data['balance']
     asset = db.session.query(Asset).filter(Asset.id == asset_id).first()
     app.logger.debug('before modification, asset = {}'.format(asset))
@@ -238,7 +238,6 @@ def update_asset(asset_id):
     else:
         asset = Asset(
             id=asset_id,
-            asset_id=asset_id,
             item_id=item_id,
             user_id=user_id,
             balance=balance
@@ -290,7 +289,7 @@ def update_item(item_id, item_info={}, add_image=False):
         return
 
     app.logger.info('now update item: {}'.format(item_id))
-    pact_code = '({}.item-details "{}")'.format(get_module_names()['colorblock'], item_id)
+    pact_code = '({}.item-details-full "{}")'.format(get_module_names()['colorblock'], item_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
     if result['status'] != 'success':

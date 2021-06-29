@@ -38,8 +38,7 @@ def create_wallet():
     print(result)
 
 
-    api_host = 'https://api.chainweb.com/chainweb/0.0/{}/chain/{}/pact'.format(network_id, chain_id)
-    result = pact.send_signed(cmd, api_host)
+    result = pact.send_signed(cmd, app.config['API_HOST'])
     print(result)
 
     if isinstance(result, dict):
@@ -47,7 +46,7 @@ def create_wallet():
             'listen': result['requestKeys'][0]
         }
         app.logger.debug('now listen to: {}'.format(listen_cmd))
-        result = pact.fetch_listen(listen_cmd, api_host)
+        result = pact.fetch_listen(listen_cmd, app.config['API_HOST'])
         print(result)
         return get_success_response(result)
     else:

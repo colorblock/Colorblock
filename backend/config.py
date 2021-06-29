@@ -73,6 +73,7 @@ ACCOUNTS = {
         'verifier': 'colorblock-official-verifier',
     },
 }
+COLORBLOCK_MARKET_FEES = 0.01
 
 # item
 ITEM_ID_PREFIX = 'CB'

@@ -373,7 +373,7 @@ const CreatePage = (props) => {
           />
         </div>
         <div className='mt-4 text-xs'>
-          <p className='my-2'>Collection222</p>
+          <p className='my-2'>Collection</p>
           <div data-role='collection select' className='relative h-8'>
             <select 
               className='w-full h-full px-10 border rounded-lg cursor-pointer'
@@ -585,7 +585,6 @@ const CreatePage = (props) => {
         if (data.action === types.SIGN_CMD && data.scene === 'mint') {
           if (data.status === 'success') {
             console.log('in mint success', data);
-            dpt.hideLoading();
             const signedCmd = {
               hash: data.hash,
               cmd: data.cmd,
@@ -601,13 +600,16 @@ const CreatePage = (props) => {
               .then(res => res.json())
               .then(data => {
                 dpt.hideLoading();
-                if (data.itemId) {
+                if (data.status === 'success') {
                   document.location.href = `/item/${data.itemId}`;
                 } else {
-                  toast.error(data);
+                  toast.error(data.data);
                 }
               })
-              .catch(error => console.log(error));
+              .catch(error => {
+                console.log(error);
+                toast.error(error.message);
+              });
           }
         }
       }

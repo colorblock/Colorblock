@@ -179,3 +179,16 @@ create table if not exists project (
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     primary key (`id`)
 );
+
+create table if not exists sale (
+    `id` varchar(64),
+    `item_id` varchar(64),
+    `user_id` varchar(64),
+    `price` decimal(22, 12),
+    `total` integer,
+    `remaining` integer,
+    `status` varchar(64),
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    primary key (`id`)
+);

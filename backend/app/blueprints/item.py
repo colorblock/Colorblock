@@ -132,14 +132,17 @@ def prepare_item():
     if post_data['onSale']:
         pact_code += '({}.release "{}" "{}" (read-decimal "price") (read-decimal "amount"))'.format(modules['colorblock_market'], item_id, user_id)
         for key_pair in key_pairs:
-            cap = mk_cap('release', 'release item', '{}.TRANSFER'.format(modules['colorblock-market']), [item_id, user_id, accounts['market-pool'], env_data['amount']])['cap']
-            key_pair['clist'].append(cap)
+            cap1 = mk_cap('transfer', 'transfer item', '{}.TRANSFER'.format(modules['colorblock']), [item_id, user_id, accounts['market-pool'], env_data['amount']])['cap']
+            cap2 = mk_cap('deposit', 'deposit item', '{}.DEPOSIT-ITEM'.format(modules['colorblock-market']), [item_id, user_id, env_data['amount']])['cap']
+            key_pair['clist'].append(cap1)
+            key_pair['clist'].append(cap2)
 
     chainweb_config = app.config['CHAINWEB']
     meta = mk_meta(accounts['gas-payer'], chainweb_config['CHAIN_ID'], chainweb_config['GAS_PRICE'], chainweb_config['GAS_LIMIT'], current_timestamp(), chainweb_config['TTL'])
     partial_signed_cmd = prepare_exec_cmd(pact_code, env_data, key_pairs, current_utc_string(), meta, chainweb_config['NETWORK_ID'])
     app.logger.debug('partial_signed_cmd, {}'.format(partial_signed_cmd))
 
+    partial_signed_cmd['itemUrls'] = urls
     return get_success_response(partial_signed_cmd)
 
 @item_blueprint.route('/', methods=['POST'])
@@ -161,56 +164,60 @@ def submit_item():
         }
         app.logger.debug('now listen to: {}'.format(listen_cmd))
         result = fetch_listen(listen_cmd, app.config['API_HOST'])['result']
-        print(result)
         app.logger.debug('result = {}'.format(result))
+        
         if result['status'] == 'success':
-            # upload to s3
             try:
+                # upload to s3
                 s3_client = boto3.client('s3')
                 object_name = '{}.{}'.format(item_data['id'], get_image_type(item_data['frames']))
                 file_name = 'app/static/img/{}'.format(object_name)
                 response = s3_client.upload_file(file_name, app.config['CLOUDFRONT_BUCKET'], object_name)
                 app.logger.debug(response)
+
+                item_id = item_data['id']
+                item_info = {}
+                if 'tags' in post_data:
+                    item_info['tags'] = post_data['tags']
+                if 'description' in post_data:
+                    item_info['description'] = post_data['description']
+
+                update_item(item_id, item_info)
+                asset_id = '{}:{}'.format(item_data['id'], item_data['account'])
+                update_asset(asset_id)
+                
+                if post_data.get('collection'):
+                    # update collectible
+                    collection = post_data['collection']
+                    collection_id = collection['id']
+                    collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
+                    collectible = Collectible(
+                        id=collectible_id,
+                        item_id=item_id,
+                        collection_id=collection_id
+                    )
+                    db.session.add(collectible)
+                    db.session.commit()
+
+                    collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
+                    if not collection_db:
+                        collection = Collection(
+                            id=collection_id,
+                            title=collection['title'],
+                            user_id=collection['user_id'],
+                        )
+                        db.session.add(collection)
+                        db.session.commit()
+                    
+                result['itemId'] = item_data['id']
+                app.logger.debug('return message: {}'.format(result))
+                return get_success_response(result)
             except Exception as e:
                 app.logger.error(e)
                 return get_error_response(str(e))
-
-            item_id = item_data['id']
-            item_info = {
-                'tags': post_data['tags'],
-                'description': post_data['description'],
-            }
-            update_item(item_id, item_info)
-            asset_id = '{}:{}'.format(item_data['id'], item_data['account'])
-            update_asset(asset_id)
-            
-            if post_data.get('collection'):
-                # update collectible
-                collection = post_data['collection']
-                collection_id = collection['id']
-                collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
-                collectible = Collectible(
-                    id=collectible_id,
-                    item_id=item_id,
-                    collection_id=collection_id
-                )
-                db.session.add(collectible)
-                db.session.commit()
-
-                collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
-                if not collection_db:
-                    collection = Collection(
-                        id=collection_id,
-                        title=collection['title'],
-                        user_id=collection['user_id'],
-                    )
-                    db.session.add(collection)
-                    db.session.commit()
-                
-            result['itemId'] = item_data['id']
-            return get_success_response(result)
         else:
-            return get_error_response(rresult['error']['message'])
+            app.logger.debug('return message: {}'.format(result['error']['message']))
+            return get_error_response(result['error']['message'])
     else:
         return get_error_response(result)
 

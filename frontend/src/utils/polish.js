@@ -1,5 +1,5 @@
 export const shortAddress = (address) => {
-  return address.slice(0, 4) + '****' + address.slice(-4);
+  return address.length > 10 ? address.slice(0, 4) + '***' + address.slice(-4) : address;
 };
 
 export const capitalize = (s) => {
