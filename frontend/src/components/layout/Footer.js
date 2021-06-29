@@ -27,7 +27,7 @@ export const Footer = (props) => {
       onLoaded();
     };
 
-    //fetchItemCnt();
+    fetchItemCnt();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

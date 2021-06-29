@@ -601,6 +601,7 @@ const CreatePage = (props) => {
               .then(data => {
                 dpt.hideLoading();
                 if (data.status === 'success') {
+                  console.log('after create', data);
                   document.location.href = `/item/${data.itemId}`;
                 } else {
                   toast.error(data.data);

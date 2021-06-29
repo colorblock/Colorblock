@@ -460,7 +460,7 @@ const ItemPage = (props) => {
 
   return loading ? <></> : (
     <div data-role='item page'>
-      <div className='flex my-10 w-10/12 mx-auto'>
+      <div className='flex my-10 w-10/12 mx-auto justify-between'>
       {
         item &&
         <div data-role='item info' className='w-60 flex flex-col items-center justify-center'>

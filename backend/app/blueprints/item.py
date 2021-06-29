@@ -123,6 +123,14 @@ def prepare_item():
             mk_cap('mint', 'mint item', '{}.MINT'.format(modules['colorblock']), [item_id, user_id, env_data['supply']])['cap'],
         ]
     }, {
+        'public_key': app.config['MANAGER']['public_key'],
+        'secret_key': app.config['MANAGER']['secret_key'],
+        'clist': [
+            mk_cap('gas', 'pay gas', '{}.GAS_PAYER'.format(modules['colorblock-gas-payer']), ['colorblock-gas', {'int': 1.0}, 1.0])['cap'],
+            mk_cap('mint', 'mint item', '{}.MINT'.format(modules['colorblock']), [item_id, user_id, env_data['supply']])['cap'],
+        ]
+    }, {
+        'public_key': public_key,
         'public_key': public_key,
         'clist': [
             mk_cap('gas', 'pay gas', '{}.GAS_PAYER'.format(modules['colorblock-gas-payer']), ['colorblock-gas', {'int': 1.0}, 1.0])['cap'],
@@ -130,12 +138,14 @@ def prepare_item():
         ]
     }]
     if post_data['onSale']:
-        pact_code += '({}.release "{}" "{}" (read-decimal "price") (read-decimal "amount"))'.format(modules['colorblock_market'], item_id, user_id)
+        pact_code += '({}.deposit-item "{}" "{}" (read-decimal "saleAmount"))'.format(modules['colorblock-market'], item_id, user_id)
         for key_pair in key_pairs:
-            cap1 = mk_cap('transfer', 'transfer item', '{}.TRANSFER'.format(modules['colorblock']), [item_id, user_id, accounts['market-pool'], env_data['amount']])['cap']
-            cap2 = mk_cap('deposit', 'deposit item', '{}.DEPOSIT-ITEM'.format(modules['colorblock-market']), [item_id, user_id, env_data['amount']])['cap']
+            cap1 = mk_cap('transfer', 'transfer item', '{}.TRANSFER'.format(modules['colorblock']), [item_id, user_id, accounts['market-pool'], env_data['saleAmount']])['cap']
+            cap2 = mk_cap('deposit', 'deposit item', '{}.DEPOSIT-ITEM'.format(modules['colorblock-market']), [item_id, user_id, env_data['saleAmount']])['cap']
             key_pair['clist'].append(cap1)
             key_pair['clist'].append(cap2)
+    else:
+        key_pairs = key_pairs[:1] + key_pairs[2:]  # remove manager
 
     chainweb_config = app.config['CHAINWEB']
     meta = mk_meta(accounts['gas-payer'], chainweb_config['CHAIN_ID'], chainweb_config['GAS_PRICE'], chainweb_config['GAS_LIMIT'], current_timestamp(), chainweb_config['TTL'])

@@ -194,17 +194,23 @@ def release_asset():
             try:
                 update_asset(combined_asset_id)
 
-                sale = Sale(
-                    id=sale_id,
-                    item_id=item_id,
-                    user_id=user_id,
-                    price=asset_data['price'],
-                    total=asset_data['amount'],
-                    remaining=asset_data['amount'],
-                    status='open'
-                )
-                db.session.add(sale)
-                db.session.commit()
+                if not sale:
+                    sale = Sale(
+                        id=sale_id,
+                        item_id=item_id,
+                        user_id=user_id,
+                        price=asset_data['price'],
+                        total=asset_data['amount'],
+                        remaining=asset_data['amount'],
+                        status='open'
+                    )
+                    db.session.add(sale)
+                    db.session.commit()
+                else:
+                    sale.price = asset_data['price']
+                    sale.total = asset_data['amount']
+                    sale.remaining = asset_data['amount']
+                    sale.status = 'open'
                     
                 app.logger.debug('return message: {}'.format(result))
                 return get_success_response(result)
