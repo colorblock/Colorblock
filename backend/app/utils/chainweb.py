@@ -87,3 +87,6 @@ def fetch_payloads(blocks):
 def truncate_precision(number):
     times = 10 ** 12
     return int(number * times) / times
+
+def combined_id(item_id, user_id):
+    return '{}:{}'.format(item_id, user_id)

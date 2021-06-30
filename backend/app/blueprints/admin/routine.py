@@ -21,7 +21,7 @@ from app.utils.crypto import hash_id, random
 from app.utils.render import generate_image_from_item
 from app.utils.pact import local_req, build_local_cmd, get_module_names
 from app.utils.security import admin_required
-from app.utils.chainweb import fetch_latest_block, fetch_previous_blocks, fetch_payloads
+from app.utils.chainweb import combined_id, fetch_latest_block, fetch_previous_blocks, fetch_payloads
 from app.utils.tools import get_datetime_from_timestamp
 
 routine_blueprint = Blueprint('routine', __name__)
@@ -218,9 +218,8 @@ def sync_block(chain_id):
 
     return 'end of sync'
 
-def update_asset(combined_asset_id):
-    app.logger.debug('now update asset: {}'.format(combined_asset_id))
-    (item_id, user_id) = combined_asset_id.split(':')
+def update_asset(item_id, user_id):
+    app.logger.debug('now update asset: {}, {}'.format(item_id, user_id))
     pact_code = '({}.details "{}" "{}")'.format(get_module_names()['colorblock'], item_id, user_id)
     local_cmd = build_local_cmd(pact_code)
     result = local_req(local_cmd)
@@ -228,6 +227,7 @@ def update_asset(combined_asset_id):
         return result
 
     data = result['data']
+    combined_asset_id = combined_id(item_id, user_id)
     asset_id = hash_id(combined_asset_id)
     balance = data['balance']
     asset = db.session.query(Asset).filter(Asset.id == asset_id).first()

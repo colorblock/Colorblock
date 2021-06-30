@@ -2,6 +2,7 @@ from flask import Blueprint, request, session, current_app as app, jsonify
 import cloudinary.uploader
 import boto3
 import json
+import copy
 
 from app import db
 from app.blueprints.tool import get_image_type
@@ -16,11 +17,12 @@ from app.models.recall import Recall
 from app.models.purchase import Purchase
 
 from app.blueprints.admin.routine import update_item, update_asset
+from app.utils.chainweb import combined_id
 from app.utils.pact_lang_api import fetch_listen, mk_cap, mk_meta, prepare_exec_cmd, send_signed, sign, verify
 from app.utils.render import generate_image_from_item
-from app.utils.crypto import check_hash, hash_id
+from app.utils.crypto import check_hash, hash_id, random
 from app.utils.pact import get_accounts, get_module_names, send_req
-from app.utils.tools import current_timestamp, current_utc_string, jsonify_data
+from app.utils.tools import current_timestamp, current_utc_string, dt_from_ts, jsonify_data
 from app.utils.response import get_error_response, get_success_response
 from app.utils.security import get_current_public_key, get_current_user, login_required, validate_account
 
@@ -98,8 +100,10 @@ def get_item_log(item_id):
 @login_required
 def prepare_item():
     post_data = request.json
+    app.logger.debug('Execute mint for {}'.format(str(post_data)[:300]))
+    
     env_data = post_data['envData']
-    item_id = env_data['id']
+    item_id = env_data['itemId']
     user_id = get_current_user()
     public_key = get_current_public_key()
     
@@ -107,6 +111,7 @@ def prepare_item():
     accounts = get_accounts()
     verifier_account = accounts['verifier']
     
+    # validate item
     item_valid_result = validate_item(env_data)
     if item_valid_result['status'] != 'success':
         return item_valid_result
@@ -116,16 +121,22 @@ def prepare_item():
         file_path = generate_image_from_item(env_data)
         file_name = file_path.split('/')[-1]
     except Exception as e:
+        # return error message if generate image failed
         app.logger.exception(e)
         return get_error_response('generage image error: {}'.format(e))
 
     # upload image
-    upload_result = cloudinary.uploader.upload(file_path, public_id=item_id)
-    app.logger.debug('upload result: {}'.format(upload_result))
-    cloudinary_url = upload_result['secure_url']
+    try:
+        upload_result = cloudinary.uploader.upload(file_path, public_id=item_id)
+        cloudinary_url = upload_result['secure_url']
+    except Exception as e:
+        # return error message if upload image failed
+        app.logger.exception(e)
+        return get_error_response('upload image error: {}'.format(e))
+
+    # add into env_data
     cloudfront_url = '{}/{}'.format(app.config['CLOUDFRONT_HOST'], file_name)
     urls = [cloudfront_url, cloudinary_url]
-    # add into env_data
     env_data['urls'] = urls
     env_data['verifier'] = verifier_account
 
@@ -162,10 +173,13 @@ def prepare_item():
     else:
         key_pairs = key_pairs[:1] + key_pairs[2:]  # remove manager
 
+    env_data['itemId'] = item_id
+    env_data['userId'] = user_id
+
     chainweb_config = app.config['CHAINWEB']
     meta = mk_meta(accounts['gas-payer'], chainweb_config['CHAIN_ID'], chainweb_config['GAS_PRICE'], chainweb_config['GAS_LIMIT'], current_timestamp(), chainweb_config['TTL'])
     partial_signed_cmd = prepare_exec_cmd(pact_code, env_data, key_pairs, current_utc_string(), meta, chainweb_config['NETWORK_ID'])
-    app.logger.debug('partial_signed_cmd, {}'.format(partial_signed_cmd))
+    app.logger.debug('partial_signed_cmd finished')
 
     partial_signed_cmd['itemUrls'] = urls
     return get_success_response(partial_signed_cmd)
@@ -174,95 +188,154 @@ def prepare_item():
 @login_required
 def submit_item():
     post_data = request.json
+    app.logger.debug('Execute mint for {}'.format(str(post_data)[:300]))
+
     signed_cmd = post_data['signedCmd']
 
     # parse cmd
     cmd = json.loads(signed_cmd['cmd'])
     item_data = cmd['payload']['exec']['data']
 
+    # tx info
+    item_id = item_data['itemId']
+    user_id = item_data['userId']
+    amount = item_data['supply']
+
     # submit item to pact server
     result = send_signed(signed_cmd, app.config['API_HOST'])
-    
-    if isinstance(result, dict):
-        listen_cmd = {
-            'listen': result['requestKeys'][0]
-        }
-        app.logger.debug('now listen to: {}'.format(listen_cmd))
-        result = fetch_listen(listen_cmd, app.config['API_HOST'])
-        app.logger.debug('result = {}'.format(result))
-        
-        if not isinstance(result, dict):
-            return get_error_response(result)
-        result = result['result']
-        
-        if result['status'] == 'success':
-            try:
-                # upload to s3
-                s3_client = boto3.client('s3')
-                object_name = '{}.{}'.format(item_data['id'], get_image_type(item_data['frames']))
-                file_name = 'app/static/img/{}'.format(object_name)
-                response = s3_client.upload_file(file_name, app.config['CLOUDFRONT_BUCKET'], object_name)
-                app.logger.debug(response)
-
-                item_id = item_data['id']
-                user_id = item_data['account']
-                item_info = {}
-                if 'tags' in post_data:
-                    item_info['tags'] = post_data['tags']
-                if 'description' in post_data:
-                    item_info['description'] = post_data['description']
-
-                update_item(item_id, item_info)
-                asset_id = '{}:{}'.format(item_data['id'], item_data['account'])
-                update_asset(asset_id)
-                
-                if post_data.get('collection'):
-                    # update collectible
-                    collection = post_data['collection']
-                    collection_id = collection['id']
-                    collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
-                    collectible = Collectible(
-                        id=collectible_id,
-                        item_id=item_id,
-                        collection_id=collection_id
-                    )
-                    db.session.add(collectible)
-                    db.session.commit()
-
-                    collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
-                    if not collection_db:
-                        collection = Collection(
-                            id=collection_id,
-                            title=collection['title'],
-                            user_id=collection['user_id'],
-                        )
-                        db.session.add(collection)
-                        db.session.commit()
-
-                if post_data.get('onSale'):
-                    sale = Sale(
-                        id=asset_id,
-                        item_id=item_id,
-                        user_id=user_id,
-                        price=post_data['price'],
-                        total=item_data['saleAmount'],
-                        remaining=item_data['saleAmount'],
-                        status='open'
-                    )
-                    db.session.add(sale)
-                    db.session.commit()
-                    
-                result['itemId'] = item_data['id']
-                app.logger.debug('return message: {}'.format(result))
-                return get_success_response(result)
-            except Exception as e:
-                app.logger.error(e)
-                return get_error_response(str(e))
-        else:
-            app.logger.debug('return message: {}'.format(result['error']['message']))
-            return get_error_response(result['error']['message'])
-    else:
+    app.logger.debug('send result = {}'.format(result))
+    if not isinstance(result, dict):
+        # return error message if CMD sending occurs error
+        app.logger.debug('SEND error', result)
         return get_error_response(result)
+
+    # fetch result from pact server
+    listen_cmd = {
+        'listen': result['requestKeys'][0]
+    }
+    result = fetch_listen(listen_cmd, app.config['API_HOST'])
+    app.logger.debug('listen result = {}'.format(result))
+    if not isinstance(result, dict):
+        # return error message if CMD listening occurs error
+        app.logger.debug('LISTEN error', result)
+        return get_error_response(result)
+
+    # record mint action
+    try:
+        app.logger.debug('now update mint for {}, {}'.format(item_id, user_id))
+        mint_id = random()
+        mint = Mint(
+            id=mint_id,
+            chain_id=app.config['CHAINWEB']['CHAIN_ID'],
+            block_height=result['metaData']['blockHeight'],
+            block_hash=result['metaData']['blockHash'],
+            block_time=dt_from_ts(result['metaData']['blockTime']),
+            tx_id=result['txId'],
+            tx_hash=result['reqKey'],
+            tx_status=result['result']['status'],
+            item_id=item_id,
+            user_id=user_id,
+            supply=amount
+        )
+        db.session.add(mint)
+        db.session.commit()
+    except Exception as e:
+        app.logger.exception(e)
+    
+    # unpack result and record
+    result = result['result']
+    if result['status'] != 'success':
+        error_msg = result['error']['message']
+        # return error message if CMD failed
+        app.logger.debug('CMD execution failed', result)
+        return get_error_response(error_msg)
+
+    # upload to s3
+    try:
+        app.logger.debug('now upload mint for {}, {}'.format(item_id, user_id))
+        s3_client = boto3.client('s3')
+        object_name = '{}.{}'.format(item_data['itemId'], get_image_type(item_data['frames']))
+        file_name = 'app/static/img/{}'.format(object_name)
+        response = s3_client.upload_file(file_name, app.config['CLOUDFRONT_BUCKET'], object_name)
+        app.logger.debug(response)
+    except Exception as e:
+        app.logger.exception(e)
+
+    # create item
+    try:
+        app.logger.debug('now update item for {}, {}'.format(item_id, user_id))
+        item_info = {}
+        if 'tags' in post_data:
+            item_info['tags'] = post_data['tags']
+        if 'description' in post_data:
+            item_info['description'] = post_data['description']
+        update_item(item_id)
+
+    except Exception as e:
+        app.logger.exception(e)
+
+    # update asset
+    try:
+        app.logger.debug('now update asset for {}, {}'.format(item_id, user_id))
+        update_asset(item_id, user_id)
+    except Exception as e:
+        app.logger.exception(e)
+ 
+    # update collection
+    try:
+        app.logger.debug('now update collection for {}, {}'.format(item_id, user_id))
+        if post_data.get('collection'):
+            # update collectible
+            collection = post_data['collection']
+            collection_id = collection['id']
+            collectible_id = hash_id('{}:{}'.format(item_id, collection_id))
+            collectible = Collectible(
+                id=collectible_id,
+                item_id=item_id,
+                collection_id=collection_id
+            )
+            db.session.add(collectible)
+            db.session.commit()
+
+            collection_db = db.session.query(Collection).filter(Collection.id == collection_id).first()
+            if not collection_db:
+                collection = Collection(
+                    id=collection_id,
+                    title=collection['title'],
+                    user_id=collection['user_id'],
+                )
+                db.session.add(collection)
+                db.session.commit()
+        else:
+            app.logger.debug('no specific collection')
+
+    except Exception as e:
+        app.logger.exception(e)
+
+    # update sale
+    try:
+        app.logger.debug('now update sale for {}, {}'.format(item_id, user_id))
+        if post_data.get('onSale'):
+            sale_id = combined_id(item_id, user_id)
+            price = post_data['price']
+            amount = item_data['saleAmount']
+            sale = Sale(
+                id=sale_id,
+                item_id=item_id,
+                user_id=user_id,
+                price=price,
+                total=amount,
+                remaining=amount,
+                status='open'
+            )
+            db.session.add(sale)
+            db.session.commit()
+
+    except Exception as e:
+        app.logger.exception(e)
+
+    result['itemId'] = item_data['itemId']
+    return get_error_response(result)
 
 def validate_item(item):
     # validate description
@@ -270,12 +343,12 @@ def validate_item(item):
         return get_error_response('the length of description is too large')
     
     # validate hash
-    if not check_hash(item['colors'], item['id']):
+    item_id = item['itemId']
+    if not check_hash(item['colors'], item_id):
         return get_error_response('hash error')
 
     # check duplication
-    db_item = db.session.query(Item).filter(Item.id == item['id']).first()
-    app.logger.debug('item in db: {}'.format(db_item))
+    db_item = db.session.query(Item).filter(Item.id == item_id).first()
     if db_item:
         return get_error_response('item has already been minted')
 

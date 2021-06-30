@@ -172,32 +172,37 @@ const CreatePage = (props) => {
     
     // get hash id
     const hashCmd = mkReq({'to_hash': colors})
-    const id = await fetch(`${serverUrl}/tool/hash`, hashCmd)
+    const itemId = await fetch(`${serverUrl}/tool/hash`, hashCmd)
       .then(res => res.text())
       .catch(error => {
         console.log(error);
         toast.error(error.message);
       });
 
-    if (!id) {
+    if (!itemId) {
       return;
     }
 
     const rows = savedFrames.height;
     const cols = savedFrames.width;
     const frameCnt = savedFrames.frameIds.length;
+
+    if (rows * cols * frameCnt >= itemConfig.maxColorCount) {
+      toast.error(`The total count of colors must not exceed ${itemConfig.maxColorCount}`);
+      return;
+    }
+
     const intervals = convertFramesToIntervals(savedFrames);
     const account = wallet.address;
     const envData = {
-      id,
+      itemId,
       title,
       colors,
       rows,
       cols,
       frames: frameCnt,
       intervals,
-      supply,
-      account
+      supply
     };
 
     let price;
@@ -341,7 +346,6 @@ const CreatePage = (props) => {
 
   const getCollectionTitle = () => {
     const selectedTitles = collections.filter(clt => clt.selected === true).map(clt => clt.title);
-    console.log('selectedTitles', selectedTitles);
     return selectedTitles.length > 0 ? selectedTitles[0] : 'No Collection';
   };
 

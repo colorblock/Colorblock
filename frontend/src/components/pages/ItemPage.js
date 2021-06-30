@@ -133,7 +133,7 @@ const ItemPage = (props) => {
     
     // post release request
     const envData = {
-      id: itemId,
+      itemId,
       price,
       amount
     };
@@ -174,7 +174,7 @@ const ItemPage = (props) => {
     const asset = selfAsset;
     
     const envData = {
-      id: itemId,
+      itemId,
       amount: parseFloat(asset.sale.remaining)
     };
     const postData = {
@@ -210,8 +210,6 @@ const ItemPage = (props) => {
   };
   
   const onPurchase = async () => {
-    const asset = selfAsset;
-    const price = selectedSale.price;
     if (!purchaseData.amount) {
       toast.error('Please enter correct amount');
       return;
@@ -230,7 +228,7 @@ const ItemPage = (props) => {
     }
     
     const envData = {
-      id: itemId,
+      itemId,
       amount,
       saleId: selectedSale.id
     };
@@ -374,7 +372,7 @@ const ItemPage = (props) => {
                 if (data.status === 'success') {
                   toast.success('Release successfully');
                   history.push('/tmp');
-                  history.push('/originPath');
+                  history.push(originPath);
                 } else {
                   toast.error(data.data);
                 }
@@ -407,7 +405,7 @@ const ItemPage = (props) => {
                 if (data.status === 'success') {
                   toast.success('Recall successfully');
                   history.push('/tmp');
-                  history.push('/originPath');
+                  history.push(originPath);
                 } else {
                   toast.error(data.data);
                 }
@@ -440,7 +438,7 @@ const ItemPage = (props) => {
                 if (data.status === 'success') {
                   toast.success('Purchase successfully');
                   history.push('/tmp');
-                  history.push('/originPath');
+                  history.push(originPath);
                 } else {
                   toast.error(data.data);
                 }
@@ -472,7 +470,7 @@ const ItemPage = (props) => {
         <div data-role='item info' className='w-60 flex flex-col items-center justify-center'>
           <div className='w-full p-4 border rounded-lg'>
             <p className='text-gray-500'>{itemCollection && itemCollection.title || 'Default Collection'}</p>
-            <p className='mt-1 mb-3'>{item.title}<span className='rounded-2xl border border-pink-500 text-pink-500 px-2 ml-3 text-xs'>{item.supply > 1 && 'Polyfungible'}</span></p>
+            <p className='mt-1 mb-3'>{item.title}<span className='rounded-2xl border border-pink-500 text-pink-500 px-2 ml-3 text-xs'>{item.supply > 1 ? 'Polyfungible' : 'Nonfungible'}</span></p>
             <img 
               src={firstUrl(item.urls)} 
               onError={ (e) => {
@@ -550,7 +548,7 @@ const ItemPage = (props) => {
               {
                 sales.map(sale => (
                   <div 
-                    className='flex justify-between px-5 text-center py-3 border rounded-xl' 
+                    className='flex justify-between px-5 text-center py-3 border rounded-xl mb-2' 
                     onClick={ () => setSelectedSale(sale) }
                   >
                     <span className='w-32 text-center text-gray-500'>{shortAddress(sale.user_id)}</span>
@@ -585,6 +583,7 @@ const ItemPage = (props) => {
                 >
                   Buy
                 </button>
+                <p className='text-gray-500 text-sm mt-3 mb-2'>1% exchange fees will be charged</p>
               </div>
             </div> :
             <div>

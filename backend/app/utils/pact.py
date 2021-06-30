@@ -70,7 +70,6 @@ def local_req(local_cmd):
             return_data = get_error_response('network error')
             time.sleep(1)
 
-    app.logger.debug('return data: {}'.format(return_data))
     return return_data
 
 def add_manager_sig(signed_cmd):
@@ -131,7 +130,6 @@ def build_local_cmd(pact_code, pact_data={}):
         'nonce': str(datetime.now()),
     }
     pact_cmd = json.dumps(cmd)
-    app.logger.debug(pact_cmd)
 
     # generate hash
     hash2b = hashlib.blake2b(digest_size=32)
@@ -146,15 +144,13 @@ def build_local_cmd(pact_code, pact_data={}):
     return result
 
 def get_module_names():
-    #in_test = os.environ.get('PACT_MODULE_TEST')
-    in_test = False
+    in_test = os.environ.get('PACT_MODULE_TEST')
     module_type = 'test' if in_test else 'prod'
     modules = app.config['MODULES']
     return modules[module_type]
 
 def get_accounts():
-    #in_test = os.environ.get('PACT_MODULE_TEST')
-    in_test = False
+    in_test = os.environ.get('PACT_MODULE_TEST')
     module_type = 'test' if in_test else 'prod'
     accounts = app.config['ACCOUNTS']
     return accounts[module_type]

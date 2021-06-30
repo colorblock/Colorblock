@@ -24,3 +24,10 @@ def current_timestamp():
 
 def current_utc_string():
     return datetime.utcnow().isoformat()[:-3]+'Z'
+
+def dt_from_ts(ts):
+    if len(str(ts)) == 16 and ts == int(ts):
+        ts = ts // 10 ** 3 / 10 ** 3
+    elif len(str(ts)) == 13 and ts == int(ts):
+        ts = ts / 10 ** 3
+    return datetime.utcfromtimestamp(ts)

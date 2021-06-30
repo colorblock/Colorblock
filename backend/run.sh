@@ -15,9 +15,7 @@ flask run --host=0.0.0.0
 
 
 ## PRODUCTION & MODULE TEST ##
-export PACT_MODULE_TEST=1
-gunicorn run:app --workers=2 --bind 0.0.0.0:5000 --log-file instance/app.log --log-level DEBUG --reload --worker-class gevent
+gunicorn run:app --workers=2 --bind 0.0.0.0:5000 -e PACT_MODULE_TEST=1 --log-file instance/app.log --log-level DEBUG --reload --worker-class gevent
 
 ## PRODUCTION & MODULE PROD ##
-export PACT_MODULE_TEST=0
-gunicorn run:app --workers=2 --bind 0.0.0.0:5000 --log-file instance/app.log --log-level DEBUG --reload --worker-class gevent
+gunicorn run:app --workers=2 --bind 0.0.0.0:5000 -e PACT_MODULE_TEST=0 --log-file instance/app.log --log-level DEBUG --reload --worker-class gevent

@@ -11,7 +11,7 @@ def generate_image_from_item(item_data):
     cols = item_data['cols']
     frames = item_data['frames']
     intervals = item_data['intervals']
-    id = item_data['id']
+    item_id = item_data['itemId']
 
     unit = max(int(100 / cols), 1)
     width = unit * cols
@@ -43,7 +43,7 @@ def generate_image_from_item(item_data):
 
     first_img = img_list[0]
     if frames == 1:
-        file_path = 'app/static/img/{}.png'.format(id)
+        file_path = 'app/static/img/{}.png'.format(item_id)
         first_img.save(file_path)
     else:
         app.logger.debug(intervals)
@@ -51,7 +51,7 @@ def generate_image_from_item(item_data):
             if type(v) == dict:
                 intervals[index] = float(v['decimal'])
         intervals = [v * 1000 for v in intervals]
-        file_path = 'app/static/img/{}.gif'.format(id)
+        file_path = 'app/static/img/{}.gif'.format(item_id)
         first_img.save(file_path, save_all=True, append_images=img_list[1:], duration=intervals, loop=0)
 
     return file_path

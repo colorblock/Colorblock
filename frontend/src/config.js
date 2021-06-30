@@ -59,7 +59,8 @@ export const itemConfig = {
   minFrameHeight: 2,
   maxFrameWidth: 128,
   maxFrameHeight: 128,
-  maxFrameCount: 16
+  maxFrameCount: 16,
+  maxColorCount: 65536
 };
 
 export const collectionConfig = {
@@ -75,3 +76,4 @@ export const creatorConfig = {
   maxHeight: 64
 };
 
+export const editorExtensionId = 'dddjfmamjmnlpmghgilbnmmjnppdkefm';
