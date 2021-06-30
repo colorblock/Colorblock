@@ -207,12 +207,18 @@ def release_asset():
     listen_cmd = {
         'listen': result['requestKeys'][0]
     }
-    result = fetch_listen(listen_cmd, app.config['API_HOST'])
-    app.logger.debug('listen result = {}'.format(result))
-    if not isinstance(result, dict):
-        # return error message if CMD listening occurs error
-        app.logger.debug('LISTEN error', result)
-        return get_error_response(result)
+    for i in range(5):
+        try:
+            result = fetch_listen(listen_cmd, app.config['API_HOST'])
+            app.logger.debug('listen result = {}'.format(result))
+            if not isinstance(result, dict):
+                # return error message if CMD listening occurs error
+                app.logger.debug('LISTEN error', result)
+                return get_error_response(result)
+
+            break
+        except:
+            app.logger.debug('retry')
 
     # record release action
     try:
@@ -366,12 +372,18 @@ def recall_asset():
     listen_cmd = {
         'listen': result['requestKeys'][0]
     }
-    result = fetch_listen(listen_cmd, app.config['API_HOST'])
-    app.logger.debug('listen result = {}'.format(result))
-    if not isinstance(result, dict):
-        # return error message if CMD listening occurs error
-        app.logger.debug('LISTEN error', result)
-        return get_error_response(result)
+    for i in range(5):
+        try:
+            result = fetch_listen(listen_cmd, app.config['API_HOST'])
+            app.logger.debug('listen result = {}'.format(result))
+            if not isinstance(result, dict):
+                # return error message if CMD listening occurs error
+                app.logger.debug('LISTEN error', result)
+                return get_error_response(result)
+
+            break
+        except:
+            app.logger.debug('retry')
 
     # record recall action
     try:
@@ -526,12 +538,18 @@ def purchase_asset():
     listen_cmd = {
         'listen': result['requestKeys'][0]
     }
-    result = fetch_listen(listen_cmd, app.config['API_HOST'])
-    app.logger.debug('listen result = {}'.format(result))
-    if not isinstance(result, dict):
-        # return error message if CMD listening occurs error
-        app.logger.debug('LISTEN error', result)
-        return get_error_response(result)
+    for i in range(5):
+        try:
+            result = fetch_listen(listen_cmd, app.config['API_HOST'])
+            app.logger.debug('listen result = {}'.format(result))
+            if not isinstance(result, dict):
+                # return error message if CMD listening occurs error
+                app.logger.debug('LISTEN error', result)
+                return get_error_response(result)
+
+            break
+        except:
+            app.logger.debug('retry')
 
    # record purchase action
     try:
