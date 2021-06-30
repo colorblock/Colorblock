@@ -15,7 +15,7 @@ from app.utils.pact_lang_api import fetch_listen, mk_cap, mk_meta, prepare_exec_
 from app.utils.response import get_error_response, get_success_response
 from app.utils.security import get_current_public_key, get_current_user, login_required
 from app.utils.tools import current_timestamp, current_utc_string, dt_from_ts, jsonify_data
-from app.utils.pact import get_accounts, get_module_names, send_req
+from app.utils.pact import build_local_cmd, get_accounts, get_module_names, local_req, send_req
 from app.utils.crypto import hash_id, random
 
 asset_blueprint = Blueprint('asset', __name__)
@@ -608,3 +608,61 @@ def purchase_asset():
 
     return get_success_response(result)
 
+
+@asset_blueprint.route('/fix', methods=['POST'])
+@login_required
+def fix_asset():
+    post_data = request.json
+    app.logger.debug('Execute fix for {}'.format(post_data))
+
+    item_id = post_data.get('itemId')
+    user_id = get_current_user
+
+    item_ids = []
+    if not item_id:            
+        pact_code = '({}.all-items "{}")'.format(get_module_names()['colorblock'], user_id)
+        local_cmd = build_local_cmd(pact_code)
+        result = local_req(local_cmd)
+        for fetched_item in result['data']:
+            title = fetched_item['title']
+            creator = fetched_item['creator']
+            for db_item in  db.session.query(Item).filter(Item.title == title, Item.creator == creator).all():
+                item_ids.append(db_item.id)
+    else:
+        item_ids = [item_id]
+
+    for item_id in item_ids:
+        # update asset
+        try:
+            app.logger.debug('now update asset for {}, {}'.format(item_id, user_id))
+            update_asset(item_id, user_id)
+        except Exception as e:
+            app.logger.exception(e)
+
+        # fix sale
+        try:
+            app.logger.debug('now update sale for {}, {}'.format(item_id, user_id))
+            sale_id = combined_id(item_id, user_id)
+            sale = db.session.query(Sale).filter(Sale.id == sale_id).first()
+            if sale and sale.status == 'open':
+                pact_code = '({}.item-deposit-details "{}" "{}")'.format(get_module_names()['colorblock-market'], item_id, user_id)
+                local_cmd = build_local_cmd(pact_code)
+                result = local_req(local_cmd)
+                sale.remaining = result['data']
+                if sale.total < sale.remaining:
+                    sale.total = sale.remaining
+                db.session.commit()
+            elif sale:
+                sale.total = 0
+                sale.remaining = 0
+                sale.status = 'canceled'
+                db.session.commit()
+        except Exception as e:
+            app.logger.exception(e)
+
+    msg = 'No item fixed' if not item_ids else  {'fixed_items': item_ids }
+    result = {
+        'status': 'success',
+        'data': msg
+    }
+    return get_success_response(result)

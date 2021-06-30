@@ -21,6 +21,7 @@ import CollectionPage from './pages/CollectionPage';
 import UserPage from './pages/UserPage';
 import Wallet from './common/Wallet';
 import ContactPage from './pages/ContactPage';
+import FixPage from './pages/FixPage';
 import { gaTrackingID, devMode } from '../config';
 import { createBaseMsg, hideLoading } from '../store/actions/actionCreator';
 import * as types from '../store/actions/actionTypes';
@@ -154,6 +155,9 @@ const App = (props) => {
         </Route>
         <Route path='/contact'>
           <ContactPage />
+        </Route>
+        <Route path='/fix'>
+          <FixPage />
         </Route>
         <Footer 
           onLoading={ () => setLayoutLoading({...layoutLoading, footer: true}) } 
