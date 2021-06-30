@@ -35,17 +35,16 @@ def get_asset(asset_id):
 
 @asset_blueprint.route('/owned-by/<user_id>', methods=['GET'])
 def get_assets_owned_by_user(user_id):
-    assets = db.session.query(Asset).filter(Asset.user_id == user_id).all()
+    assets = db.session.query(Asset).filter(Asset.user_id == user_id, Asset.balance > 0).all()
     if len(assets) > 0:
         assets = jsonify_data(assets)
         item_ids = [v['item_id'] for v in assets]
         items = db.session.query(Item).filter(Item.id.in_(item_ids)).all()
         for asset in assets:
-            asset_id = asset['id']
             item_id = asset['item_id']
             item = [v for v in items if v.id == item_id][0]
             item = jsonify_data(item)
-            sale = db.session.query(Sale).filter(Sale.id == asset_id).first()
+            sale = db.session.query(Sale).filter(Sale.item_id == item_id, Sale.user_id == user_id).first()
             asset['item'] = item
             if sale:
                 asset['sale'] = sale
@@ -57,7 +56,6 @@ def get_assets_of_item(item_id):
     if len(assets) > 0:
         assets = jsonify_data(assets)
         for asset in assets:
-            asset_id = asset['id']
             user_id = asset['user_id']
             sale = db.session.query(Sale).filter(Sale.item_id == item_id, Sale.user_id == user_id).first()
             if sale:

@@ -188,7 +188,7 @@ const HomePage = (props) => {
           <p className='text-lg font-bold text-cb-pink py-10'>Create your NFTs in Colorblock Creator</p>
           <p>Get started with NFTs on Colorblock by designing your own in Colorblock Creator. Use</p>
           <p> Colorblock's suite of tools to design and deploy with no fees!</p>
-          <button className='w-40 py-2 my-10 bg-cb-pink border rounded-lg border-white text-white'>Get Started</button>
+          <a href='/create'><button className='w-40 py-2 my-10 bg-cb-pink border rounded-lg border-white text-white'>Get Started</button></a>
         </div>
         <div className='w-1/3'>
           <img src='/img/banner_right.png' className='w-96' alt='banner right' />

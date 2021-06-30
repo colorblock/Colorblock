@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 
 import { shortAddress } from '../../utils/polish';
 import { withCors } from '../../utils/sign';
-import AssetList from '../common/AssetList';
+import ItemList from '../common/ItemList';
 import { serverUrl } from '../../config';
 import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 
@@ -15,7 +15,7 @@ const UserPage = (props) => {
   const { userId } = useParams();
   const { loading, showLoading, hideLoading, wallet } = props;
   const [user, setUser] = useState(null);
-  const [assets, setAssets] = useState([]);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     const fetchData = async (userId) => {
@@ -66,8 +66,8 @@ const UserPage = (props) => {
       // fetch assets
       const assetsUrl = `${serverUrl}/asset/owned-by/${userId || wallet.address }`;
       const assetsData = await fetch(assetsUrl).then(res => res.json());
-      console.log(assetsData);
-      setAssets(assetsData);
+      const items = assetsData.map(asset => asset.item);
+      setItems(items);
     };
 
     fetchData(userId);
@@ -85,9 +85,9 @@ const UserPage = (props) => {
         <p className='py-2 text-xs text-gray-400'>{user.address}</p>
       </div>
       {
-        assets.length > 0 ? (
-          <div data-role='asset list'>
-            <AssetList assets={assets} display='grid' />
+        items.length > 0 ? (
+          <div data-role='item list'>
+            <ItemList items={items} display='grid' />
           </div>
         ) : (
           <div>

@@ -289,7 +289,6 @@ const ItemPage = (props) => {
         });
 
       if (itemData) {
-        itemData.url = `${serverUrl}/static/img/${itemId}.${itemData.type === 0 ? 'png' : 'gif'}`;
         setItem(itemData);
       }
     };
