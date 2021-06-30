@@ -1,0 +1,13 @@
+codeFile: "../../colorblock-market.pact"
+publicMeta:
+  chainId: "7"
+  sender: "colorblock-admin"
+  gasLimit: 10000
+  gasPrice: 0.00000001
+  ttl: 28800
+data:
+  ns: "free"
+  upgrade: true
+signers:
+  - public: "8bbab6b2730f6d0273f31a37f28009e76818872a712f4e1bcb9be67c7fe13943"
+networkId: "mainnet01"

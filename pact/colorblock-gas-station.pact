@@ -52,6 +52,6 @@
 (if (read-msg "upgrade")
   ["upgrade"]
   [
-    (coin.transfer-create "colorblock-admin-test" "colorblock-gas-payer-test" (free.colorblock-gas-station.create-gas-payer-guard) 1)
+    (coin.transfer-create "colorblock-admin" "colorblock-gas-payer" (free.colorblock-gas-station.create-gas-payer-guard) 0.01)
   ]
 )

@@ -6,7 +6,7 @@
       \2. supporting pricing and trading efficiently. "
 
   (use coin [ details ])
-  (use colorblock "Lb1eL_5WLesufHYftlr8tZErwn0SRkv09BlsTbO6k44")
+  (use colorblock)
 
   ; -------------------------------------------------------
   ; Schemas and Tables

@@ -144,10 +144,10 @@
   (defconst MIN_FRAME_COLS 2
     "The min cols for each frames"
   )
-  (defconst MAX_FRAME_ROWS 128
+  (defconst MAX_FRAME_ROWS 256
     "The max rows for each frames"
   )
-  (defconst MAX_FRAME_COLS 128
+  (defconst MAX_FRAME_COLS 256
     "The max cols for each frames"
   )
   (defconst CELL_LENGTH 6
