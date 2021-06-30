@@ -63,6 +63,26 @@ class TaskBot:
         url = 'http://localhost:5000/routine/migrate'
         res = self.s.post(url)
 
+    def update(self):
+        item_id = 'EH4zibPsYeAoeZU6gsmi77'
+        user_id = 'colormaster'
+        combined_asset_id = '{}:{}'.format(item_id, user_id)
+        description = "Generated from https://avatars.dicebear.com/"
+        url = 'http://localhost:5000/routine/update/item'
+        res = self.s.post(url, json={
+            'item_id': item_id,
+            'item_info': {
+                'description': description
+            }
+        })
+        print(res.text)
+
+        url = 'http://localhost:5000/routine/update/asset'
+        res = self.s.post(url, json={
+            'combined_asset_id': combined_asset_id,
+        })
+        print(res.text)
+
 
 if __name__ == '__main__':
     bot = TaskBot()
@@ -75,4 +95,5 @@ if __name__ == '__main__':
     #bot.mint()
     #bot.index()
     #bot.generate_images()
-    bot.migrate()
+    #bot.migrate()
+    bot.update()

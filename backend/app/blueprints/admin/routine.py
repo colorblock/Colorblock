@@ -507,3 +507,17 @@ def create_user_index():
     return 'finished'
     search.create_index(User)
     return 'finished'
+
+@routine_blueprint.route('/update/item', methods=['POST'])
+@admin_required
+def manual_update_item():
+    post_data = request.json
+    update_item(post_data['item_id'], post_data['item_info'])
+    return 'finished'
+
+@routine_blueprint.route('/update/asset', methods=['POST'])
+@admin_required
+def manual_update_asset():
+    post_data = request.json
+    update_asset(post_data['combined_asset_id'])
+    return 'finished'

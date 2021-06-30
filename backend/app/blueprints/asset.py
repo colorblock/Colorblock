@@ -187,8 +187,12 @@ def release_asset():
             'listen': result['requestKeys'][0]
         }
         app.logger.debug('now listen to: {}'.format(listen_cmd))
-        result = fetch_listen(listen_cmd, app.config['API_HOST'])['result']
+        result = fetch_listen(listen_cmd, app.config['API_HOST'])
         app.logger.debug('result = {}'.format(result))
+        
+        if not isinstance(result, dict):
+            return get_error_response(result)
+        result = result['result']
         
         if result['status'] == 'success':
             try:
@@ -302,8 +306,12 @@ def recall_asset():
             'listen': result['requestKeys'][0]
         }
         app.logger.debug('now listen to: {}'.format(listen_cmd))
-        result = fetch_listen(listen_cmd, app.config['API_HOST'])['result']
+        result = fetch_listen(listen_cmd, app.config['API_HOST'])
         app.logger.debug('result = {}'.format(result))
+        
+        if not isinstance(result, dict):
+            return get_error_response(result)
+        result = result['result']
         
         if result['status'] == 'success':
             try:
@@ -339,7 +347,7 @@ def prepare_purchase():
     accounts = get_accounts()
 
     item = db.session.query(Item).filter(Item.id == item_id).first()
-    sale = db.session.query(Sale).filter(Sale.id == post_data['saleId']).first()
+    sale = db.session.query(Sale).filter(Sale.id == env_data['saleId']).first()
     sale_price = sale.price
     purchase_amount = env_data['amount']
 
@@ -347,13 +355,13 @@ def prepare_purchase():
         return get_error_response('Sale is not existed')
     elif sale.remaining <= 0:
         return get_error_response('The remaining amount of sale should be larger than 0')
-    elif sale.status == 'open':
+    elif sale.status != 'open':
         return get_error_response('Sale status is not open')
 
     payment = truncate_precision(purchase_amount * sale_price)
     fees = truncate_precision(payment * app.config['COLORBLOCK_MARKET_FEES'])
 
-    pact_code = '({}.purcahse "{}" "{}" "{}" (read-decimal "amount"))'.format(modules['colorblock-market'], item_id, user_id, sale.user_id, purchase_amount, payment, fees)
+    pact_code = '({}.purchase "{}" "{}" "{}" (read-decimal "amount") {} {})'.format(modules['colorblock-market'], item_id, user_id, sale.user_id, payment, fees)
     key_pairs = [{
         'public_key': app.config['MANAGER']['public_key'],
         'secret_key': app.config['MANAGER']['secret_key'],
@@ -401,7 +409,7 @@ def purchase_asset():
         return get_error_response('Sale is not existed')
     elif sale.remaining <= 0:
         return get_error_response('The remaining amount of sale should be larger than 0')
-    elif sale.status == 'open':
+    elif sale.status != 'open':
         return get_error_response('Sale status is not open')
 
     # submit item to pact server
@@ -412,8 +420,12 @@ def purchase_asset():
             'listen': result['requestKeys'][0]
         }
         app.logger.debug('now listen to: {}'.format(listen_cmd))
-        result = fetch_listen(listen_cmd, app.config['API_HOST'])['result']
+        result = fetch_listen(listen_cmd, app.config['API_HOST'])
         app.logger.debug('result = {}'.format(result))
+        
+        if not isinstance(result, dict):
+            return get_error_response(result)
+        result = result['result']
         
         if result['status'] == 'success':
             try:
@@ -422,8 +434,6 @@ def purchase_asset():
                 sale.remaining = sale.remaining - purchase_amount
                 if (sale.remaining == 0):
                     sale.status = 'closed'
-                else:
-                    sale.status = 'canceled'
                 db.session.commit()
                     
                 app.logger.debug('return message: {}'.format(result))

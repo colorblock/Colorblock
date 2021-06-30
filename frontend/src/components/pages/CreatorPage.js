@@ -200,13 +200,14 @@ const CreatePage = (props) => {
       account
     };
 
+    let price;
     if (onSale) {
       // if item is directly posted into market, then add release action
       if (!submitItem.price) {
         toast.error('Please enter correct listing price');
         return;
       }
-      const price = toPricePrecision(submitItem.price);
+      price = toPricePrecision(submitItem.price);
       if (price <= 0) {
         toast.error('Please enter correct listing price');
         return;
@@ -236,7 +237,9 @@ const CreatePage = (props) => {
     const addition = {
       tags,
       description,
-      collection
+      collection,
+      price,
+      onSale
     };
     const postData = {
       envData,
@@ -602,7 +605,7 @@ const CreatePage = (props) => {
                 dpt.hideLoading();
                 if (data.status === 'success') {
                   console.log('after create', data);
-                  document.location.href = `/item/${data.itemId}`;
+                  document.location.href = `/item/${data.data.itemId}`;
                 } else {
                   toast.error(data.data);
                 }

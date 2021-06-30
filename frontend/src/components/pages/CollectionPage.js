@@ -46,7 +46,7 @@ export const CollectionPage = (props) => {
   }, [collectionId, showLoading, hideLoading]);
 
   return loading ? <></> : (
-    <div data-role='market container' className='bg-cb-gray text-sm'>
+    <div data-role='market container' className='bg-cb-gray text-sm pb-20'>
       <div data-role='item filter and sort' className='w-5/6 mx-auto my-10 flex justify-between'>
         <div data-role='filter at left' className='flex space-x-4'>
           <span className='py-1 px-6 flex items-center hover:bg-gray-200 cursor-pointer'>Animated</span>

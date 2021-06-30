@@ -181,7 +181,7 @@ create table if not exists project (
 );
 
 create table if not exists sale (
-    `id` varchar(64),
+    `id` varchar(128),
     `item_id` varchar(64),
     `user_id` varchar(64),
     `price` decimal(22, 12),

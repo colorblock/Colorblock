@@ -12,7 +12,7 @@ import { showLoading, hideLoading } from '../../store/actions/actionCreator';
 const HomePage = (props) => {
 
   const [items, setItems] = useState([]);
-  const [assets, setAssets] = useState([]);
+  const [trendingItems, setTrendingItems] = useState([]);
   const [collections, setCollections] = useState([]);
   const [latestHeight, setLatestHeight] = useState(null);
 
@@ -24,7 +24,7 @@ const HomePage = (props) => {
 
       await Promise.all([
         fetchLatestItems(),
-        fetchLatestAssets(),
+        fetchTrendingItems(),
         fetchLatestCollections(),
         fetchLatestHeight()
       ]);
@@ -47,18 +47,18 @@ const HomePage = (props) => {
       }
     };
 
-    const fetchLatestAssets = async () => {
-      const assetsUrl = `${serverUrl}/asset/latest`;
-      const assetsData = await fetch(assetsUrl)
+    const fetchTrendingItems = async () => {
+      const itemsUrl = `${serverUrl}/item/trending`;
+      const itemsData = await fetch(itemsUrl)
         .then(res => res.json())
         .catch(error => {
           console.log(error);
           toast.error(error.message);
         });
 
-      console.log(assetsData);
-      if (assetsData) {
-        setAssets(assetsData);
+      console.log(itemsData);
+      if (itemsData) {
+        setTrendingItems(itemsData);
       }
     };
 
@@ -142,11 +142,11 @@ const HomePage = (props) => {
           <div className='text-base'>
             Trending
           </div>
-          <a className='text-gray-400' href='/market/assets'>
+          <a className='text-gray-400' href='/market/items'>
             View More
           </a>
         </div>
-        <AssetList assets={assets} display='flex' />
+        <ItemList items={trendingItems} display='flex' />
       </div>
       {
         items.length > 0 &&

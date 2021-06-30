@@ -41,8 +41,8 @@ const ItemList = (props) => {
                   <p>{item.creator ? `${item.creator.slice(0, 4)}....${item.creator.slice(-4)}` : 'NULL'}</p>
                 </div>
                 <div className='text-right'>
-                  <p className='text-xxs-r text-gray-500'>Height</p>
-                  <p className='text-cb-pink'>{item.mint ? item.mint.block_height : 'NULL'}</p>
+                  <p className='text-xxs-r text-gray-500'>Supply</p>
+                  <p className='text-cb-pink'>{item.supply}</p>
                 </div>
               </div>
             </li>

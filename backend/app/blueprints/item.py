@@ -10,6 +10,7 @@ from app.models.collection import Collection
 from app.models.item import Item
 from app.models.asset import Asset
 from app.models.mint import Mint
+from app.models.sale import Sale
 from app.models.release import Release
 from app.models.recall import Recall
 from app.models.purchase import Purchase
@@ -38,6 +39,20 @@ def get_items_created_by_user(user_id):
 @item_blueprint.route('/latest')
 def get_latest_items():
     items = db.session.query(Item).order_by(Item.created_at.desc()).limit(20).all()
+    if len(items) > 0:
+        items = jsonify_data(items)
+        for item in items:
+            item_id = item['id']
+            mint = db.session.query(Mint).filter(Mint.item_id == item_id).first()
+            if mint:
+                mint = jsonify_data(mint)
+                item['mint'] = mint
+
+    return jsonify(items)
+
+@item_blueprint.route('/trending')
+def get_trending_items():
+    items = db.session.query(Item).order_by(Item.supply).limit(20).all()
     if len(items) > 0:
         items = jsonify_data(items)
         for item in items:
@@ -108,7 +123,7 @@ def prepare_item():
     upload_result = cloudinary.uploader.upload(file_path, public_id=item_id)
     app.logger.debug('upload result: {}'.format(upload_result))
     cloudinary_url = upload_result['secure_url']
-    cloudfront_url = '{}/{}/{}'.format(app.config['CLOUDFRONT_HOST'], app.config['CLOUDFRONT_BUCKET'], file_name)
+    cloudfront_url = '{}/{}'.format(app.config['CLOUDFRONT_HOST'], file_name)
     urls = [cloudfront_url, cloudinary_url]
     # add into env_data
     env_data['urls'] = urls
@@ -173,8 +188,12 @@ def submit_item():
             'listen': result['requestKeys'][0]
         }
         app.logger.debug('now listen to: {}'.format(listen_cmd))
-        result = fetch_listen(listen_cmd, app.config['API_HOST'])['result']
+        result = fetch_listen(listen_cmd, app.config['API_HOST'])
         app.logger.debug('result = {}'.format(result))
+        
+        if not isinstance(result, dict):
+            return get_error_response(result)
+        result = result['result']
         
         if result['status'] == 'success':
             try:
@@ -186,6 +205,7 @@ def submit_item():
                 app.logger.debug(response)
 
                 item_id = item_data['id']
+                user_id = item_data['account']
                 item_info = {}
                 if 'tags' in post_data:
                     item_info['tags'] = post_data['tags']
@@ -218,6 +238,19 @@ def submit_item():
                         )
                         db.session.add(collection)
                         db.session.commit()
+
+                if post_data.get('onSale'):
+                    sale = Sale(
+                        id=asset_id,
+                        item_id=item_id,
+                        user_id=user_id,
+                        price=post_data['price'],
+                        total=item_data['saleAmount'],
+                        remaining=item_data['saleAmount'],
+                        status='open'
+                    )
+                    db.session.add(sale)
+                    db.session.commit()
                     
                 result['itemId'] = item_data['id']
                 app.logger.debug('return message: {}'.format(result))

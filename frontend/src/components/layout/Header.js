@@ -86,7 +86,7 @@ const Header = (props) => {
             fetch(url, mkReq(postData));
 
           } else {
-            console.log('get account error', data.data);
+            toast.error('get account error', data.data);
             logout();
           }
         } else if (data.action === types.LOCK_ACCOUNT) {

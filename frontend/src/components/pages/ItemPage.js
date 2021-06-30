@@ -19,6 +19,7 @@ const ItemPage = (props) => {
   const [item, setItem] = useState(null);
   const [relatedItems, setRelatedItems] = useState([]);
   const [itemLog, setItemLog] = useState(null);
+  const [itemCollection, setItemCollection] = useState(null);
   const [assets, setAssets] = useState(null);
   const [sales, setSales] = useState(null);
   const [selectedSale, setSelectedSale] = useState(null);
@@ -230,12 +231,14 @@ const ItemPage = (props) => {
     
     const envData = {
       id: itemId,
-      amount
+      amount,
+      saleId: selectedSale.id
     };
     const postData = {
       envData
     };
     const addition = {
+      saleId: selectedSale.id
     };
 
     const url = `${serverUrl}/asset/purchase/prepare`;
@@ -337,8 +340,8 @@ const ItemPage = (props) => {
           toast.error(error.message);
         });
 
-      if ( collections) {
-        console.log(collection);
+      if (collection) {
+        setItemCollection(collection);
       }
     };
 
@@ -379,6 +382,7 @@ const ItemPage = (props) => {
               .catch(error => {
                 console.log(error);
                 toast.error(error.message);
+                hideLoading();
               });
           }
         } else if (data.action === types.SIGN_CMD && data.scene === 'recall') {
@@ -411,6 +415,7 @@ const ItemPage = (props) => {
               .catch(error => {
                 console.log(error);
                 toast.error(error.message);
+                hideLoading();
               });
           }
         } else if (data.action === types.SIGN_CMD && data.scene === 'purchase') {
@@ -443,6 +448,7 @@ const ItemPage = (props) => {
               .catch(error => {
                 console.log(error);
                 toast.error(error.message);
+                hideLoading();
               });
           }
         }
@@ -465,7 +471,7 @@ const ItemPage = (props) => {
         item &&
         <div data-role='item info' className='w-60 flex flex-col items-center justify-center'>
           <div className='w-full p-4 border rounded-lg'>
-            <p className='text-gray-500'>{item.collection || 'Default Collection'}</p>
+            <p className='text-gray-500'>{itemCollection && itemCollection.title || 'Default Collection'}</p>
             <p className='mt-1 mb-3'>{item.title}<span className='rounded-2xl border border-pink-500 text-pink-500 px-2 ml-3 text-xs'>{item.supply > 1 && 'Polyfungible'}</span></p>
             <img 
               src={firstUrl(item.urls)} 
@@ -547,9 +553,9 @@ const ItemPage = (props) => {
                     className='flex justify-between px-5 text-center py-3 border rounded-xl' 
                     onClick={ () => setSelectedSale(sale) }
                   >
-                    <span className='w-20 text-center text-gray-500'>{sale.user_id}</span>
-                    <span className='w-20 text-center'>{sale.remaining}</span>
-                    <span className='w-20 text-center text-gray-500'>{sale.price} KDA</span>
+                    <span className='w-32 text-center text-gray-500'>{shortAddress(sale.user_id)}</span>
+                    <span className='w-32 text-center'>{sale.remaining}</span>
+                    <span className='w-32 text-center text-gray-500'>{sale.price} KDA</span>
                   </div>
                 ))
               }
@@ -564,7 +570,7 @@ const ItemPage = (props) => {
             sales && selectedSale ? 
             <div>
               <p className='text-right text-sm'>Asset ID: <span className='text-gray-500 text-xs'>{assets.filter(v => v.sale && v.sale.id == selectedSale.id)[0].id}</span></p>
-              <p className='text-right text-sm'>Seller: <span className='text-gray-500 text-xs'>{selectedSale.user_id}</span></p>
+              <p className='text-right text-sm'>Seller: <span className='text-gray-500 text-xs'>{shortAddress(selectedSale.user_id)}</span></p>
               <p className='text-right text-xl font-medium my-4 px-2'>{selectedSale.price} KDA</p>
               <div data-role='self sale'>
                 <p className='text-gray-500 text-sm mt-3 mb-2'>{selectedSale.total} total {selectedSale.remaining} remained</p>
