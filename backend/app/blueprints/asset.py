@@ -381,7 +381,7 @@ def recall_asset():
         recall_id = random()
         recall = Recall(
             id=recall_id,
-            chain_id=result['metaData']['chainId'],
+            chain_id=app.config['CHAINWEB']['CHAIN_ID'],
             block_height=result['metaData']['blockHeight'],
             block_hash=result['metaData']['blockHash'],
             block_time=dt_from_ts(result['metaData']['blockTime']),
@@ -541,7 +541,7 @@ def purchase_asset():
         purchase_id = random()
         purchase = Purchase(
             id=purchase_id,
-            chain_id=result['metaData']['chainId'],
+            chain_id=app.config['CHAINWEB']['CHAIN_ID'],
             block_height=result['metaData']['blockHeight'],
             block_hash=result['metaData']['blockHash'],
             block_time=dt_from_ts(result['metaData']['blockTime']),
