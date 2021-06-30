@@ -317,3 +317,4 @@
   (colorblock.transfer-create "item-id" "bob" "admin" (read-keyset "bob-keyset") 1.0)
 )
 
+(print (colorblock.all-items "bob"))

@@ -381,7 +381,7 @@
   )
 
   (defun item-details:object (item:object{colorblock-poly-fungible-v1-test.account-details})
-    (take ['title, 'creator, 'supply, 'urls, 'verifier] item)
+    (take ['title, 'creator, 'supply, 'urls, 'verifier] (item-details-full (at 'token item)))
   )
 
 
@@ -434,6 +434,10 @@
 
   (defun all-items:list (account:string)
     (map (item-details) (select ledger (where 'account (= account))))
+  )
+
+  (defun all-items-full:list (account:string)
+    (select ledger (where 'account (= account)))
   )
 
   (defun rotate:string

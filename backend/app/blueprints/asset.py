@@ -35,7 +35,7 @@ def get_asset(asset_id):
 
 @asset_blueprint.route('/owned-by/<user_id>', methods=['GET'])
 def get_assets_owned_by_user(user_id):
-    assets = db.session.query(Asset).filter(Asset.user_id == user_id, Asset.balance > 0).all()
+    assets = db.session.query(Asset).filter(Asset.user_id == user_id).all()
     if len(assets) > 0:
         assets = jsonify_data(assets)
         item_ids = [v['item_id'] for v in assets]
@@ -616,7 +616,7 @@ def fix_asset():
     app.logger.debug('Execute fix for {}'.format(post_data))
 
     item_id = post_data.get('itemId')
-    user_id = get_current_user
+    user_id = get_current_user()
 
     item_ids = []
     if not item_id:            
@@ -624,10 +624,14 @@ def fix_asset():
         local_cmd = build_local_cmd(pact_code)
         result = local_req(local_cmd)
         for fetched_item in result['data']:
+            app.logger.debug(fetched_item)
             title = fetched_item['title']
             creator = fetched_item['creator']
-            for db_item in  db.session.query(Item).filter(Item.title == title, Item.creator == creator).all():
-                item_ids.append(db_item.id)
+            for db_item in db.session.query(Item).filter(Item.title == title, Item.creator == creator).all():
+                app.logger.debug(db_item)
+                item_id = db_item.id
+                if item_id not in item_ids:
+                    item_ids.append(item_id)
     else:
         item_ids = [item_id]
 
@@ -648,7 +652,7 @@ def fix_asset():
                 pact_code = '({}.item-deposit-details "{}" "{}")'.format(get_module_names()['colorblock-market'], item_id, user_id)
                 local_cmd = build_local_cmd(pact_code)
                 result = local_req(local_cmd)
-                sale.remaining = result['data']
+                sale.remaining = result['data']['amount']
                 if sale.total < sale.remaining:
                     sale.total = sale.remaining
                 db.session.commit()
@@ -660,9 +664,10 @@ def fix_asset():
         except Exception as e:
             app.logger.exception(e)
 
-    msg = 'No item fixed' if not item_ids else  {'fixed_items': item_ids }
+    msg = 'No item fixed' if not item_ids else  {'fixed_items': item_ids, 'cnt': len(item_ids) }
     result = {
         'status': 'success',
         'data': msg
     }
     return get_success_response(result)
+

@@ -15,7 +15,7 @@ export const FixPage = (props) => {
 
   const clickFix = async () => {
     const postData = fixData;
-    showLoading();
+    showLoading('It may take some time...');
     const url = `${serverUrl}/asset/fix`;
     const result = await fetch(url, mkReq(postData))
       .then(res => res.json())
@@ -47,7 +47,7 @@ export const FixPage = (props) => {
         <button className='w-full py-1 bg-cb-pink border rounded text-white mt-5' onClick={ () => clickFix() }>
           Start fix
         </button>
-        <p className='text-gray-500 text-sm mt-3 mb-2'>{resultMsg}</p>
+        <p className='w-full whitespace-normal text-gray-500 text-sm mt-3 mb-2'>{resultMsg}</p>
       </div>
     </div>
   );
